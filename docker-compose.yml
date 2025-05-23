@@ -1,0 +1,55 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: finance_backend
+    env_file: ./backend/.env
+    volumes:
+      - ./backend/storage:/var/www/html/storage
+    ports:
+      - "8000:8000"
+    depends_on: 
+      - db
+      - redis
+    networks: 
+      - app_net
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: finance_frontend
+    env_file: ./frontend/.env.local
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - app_net
+
+  db:
+    image: mysql:8.3
+    container_name: finance_db
+    environment:
+      MYSQL_DATABASE: finance
+      MYSQL_USER: finance
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3308:3306"
+    networks:
+      - app_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: finance_redis
+    networks:
+      - app_net
+
+volumes:
+  db_data:
+
+networks:
+  app_net:
+    driver: bridge
