@@ -15,6 +15,13 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AdminSeeder::class,
+            CourseSeeder::class,
+            LessonSeeder::class,
+            ExerciseSeeder::class,
+            AchievementSeeder::class,
+            SimulationSeeder::class,
+            ResultSeeder::class,
+            UserAchievementSeeder::class,
         ]);
     }
 }
