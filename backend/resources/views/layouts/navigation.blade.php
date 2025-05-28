@@ -6,16 +6,20 @@
                 <x-application-logo class="h-10 w-auto text-gray-800"/>
             </a>
         </div>
-        <nav class="mt-6">
+        <nav class="mt-6 flex flex-col gap-2">
             <x-nav-link
+                :href="route('dashboard')" 
+                :active="request()->routeIs('dashboard')" 
                 class="block px-4 py-2">
                 {{ __('Dashboard') }}
             </x-nav-link>
 
             {{-- Otros módulos aquí --}}
             <x-nav-link
+                :href="route('users.index')" 
+                :active="request()->routeIs('users.index')" 
                 class="block px-4 py-2">
-                {{ __('Proyectos') }}
+                {{ __('Users') }}
             </x-nav-link>
 
             <x-nav-link
@@ -40,8 +44,8 @@
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none">
                             <div>{{ Auth::user()->name }}</div>
-                            <svg class="ms-1 h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5.293 7.293…z" clip-rule="evenodd"/>
+                            <svg class="ms-1 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
                     </x-slot>
