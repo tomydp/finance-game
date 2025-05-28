@@ -19,14 +19,14 @@
                 :href="route('users.index')" 
                 :active="request()->routeIs('users.index')" 
                 class="block px-4 py-2">
-                {{ __('Users') }}
+                {{ __('Usuarios') }}
             </x-nav-link>
 
             <x-nav-link
             :href="route('courses.index')" 
             :active="request()->routeIs('courses.index')" 
                 class="block px-4 py-2">
-                {{ __('Courses') }}
+                {{ __('Cursos') }}
             </x-nav-link>
         </nav>
     </aside>
