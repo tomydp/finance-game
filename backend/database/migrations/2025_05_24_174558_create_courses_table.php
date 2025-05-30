@@ -15,7 +15,7 @@ return new class extends Migration
              $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->enum('difficulty', ['basic', 'intermediate', 'advanced'])->default('basic');
+            $table->string('difficulty');        
             $table->timestamps();
         });
     }
