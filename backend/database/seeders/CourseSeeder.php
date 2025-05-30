@@ -16,13 +16,19 @@ class CourseSeeder extends Seeder
         Course::create([
             'name' => 'Finanzas Personales',
             'description' => 'Aprendé a manejar tu dinero de forma eficiente.',
-            'difficulty' => 'basic',
+            'difficulty' => 'Facil',
         ]);
 
         Course::create([
             'name' => 'Inversiones Avanzadas',
             'description' => 'Conocé herramientas financieras para invertir mejor.',
-            'difficulty' => 'advanced',
+            'difficulty' => 'Medio',
+        ]);
+
+        Course::create([
+            'name' => 'Inversiones Dificiles',
+            'description' => 'Crypto.',
+            'difficulty' => 'Dificil',
         ]);
     }
 }
