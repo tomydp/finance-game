@@ -10,8 +10,8 @@ const Navbar: React.FC = () => {
       flex items-center justify-between
     ">
       {/* Logo + nombre */}
-      <div className="flex items-center space-x-2">
-        <div className="w-8 h-8 rounded-full py-7 bg-cyan-700 flex items-center justify-center text-white font-semibold">
+      <div className=" flex items-center space-x-2">
+        <div className="w-8 h-8 rounded-full py-7 bg-[var(--Blue2)] flex items-center justify-center text-white font-semibold">
           F
         </div>
         <span className="text-xl font-semibold text-cyan-400">
@@ -25,7 +25,6 @@ const Navbar: React.FC = () => {
           <li className="hover:text-cyan-300 cursor-pointer">Características</li>
           <li className="hover:text-cyan-300 cursor-pointer">Cómo funciona</li>
           <li className="hover:text-cyan-300 cursor-pointer">Testimonios</li>
-          <li className="hover:text-cyan-300 cursor-pointer">Iniciar sesión</li>
         </ul>
       </nav>
     </header>

@@ -1,120 +1,155 @@
 // src/components/Login.tsx
 import React, { useState } from 'react';
-import { FaGoogle, FaFacebookF, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaGoogle, FaFacebook } from 'react-icons/fa';
+import { FiEye, FiEyeOff, FiArrowLeft } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
-
-  
-  const [isRegister, setIsRegister] = useState(false);
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+    remember: false,
+  });
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setForm(f => ({
+      ...f,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: lógica de inicio de sesión
+    navigate('/app');
+  };
 
   return (
-    <div className="min-h-screen bg-[#0d1321] text-white flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-[#121c30] rounded-xl p-8 shadow-xl">
-        {/* Logo + Título */}
-        <div className="flex items-center justify-center mb-6 space-x-2">
-          <div className="w-10 h-10 rounded-full bg-cyan-700 flex items-center justify-center font-bold text-white text-lg">
+    <div className="relative min-h-screen bg-[var(--Blue1)] flex items-center justify-center px-4">
+      {/* Flecha de regreso */}
+      <button
+        onClick={() => navigate('/')}
+        className="absolute top-4 left-4 text-white hover:text-gray-200 transition text-2xl"
+        aria-label="Volver al landing"
+      >
+        <FiArrowLeft />
+      </button>
+
+      <div className="w-full max-w-md bg-[#121c30] rounded-2xl shadow-xl p-8 space-y-6">
+        {/* Logo */}
+        <div className="flex justify-center">
+          <div className="w-12 h-12 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold text-lg">
             F
           </div>
-          <h1 className="text-2xl font-bold text-cyan-400">FinanzApp</h1>
         </div>
 
-        <h2 className="text-xl font-semibold text-center mb-1">¡Bienvenido de vuelta!</h2>
-        <p className="text-sm text-center mb-6 text-gray-400">
-          Continúa tu viaje de aprendizaje financiero
-        </p>
-
-
-        <div className="flex mb-6">
-  <button
-    className={`flex-1 py-2 rounded-l-lg font-semibold ${!isRegister ? 'bg-cyan-700 text-white' : 'bg-[#1f2937] text-white'}`}
-    onClick={() => setIsRegister(false)}
-    type="button"
-  >
-    Iniciar sesión
-  </button>
-  <button
-    className={`flex-1 py-2 rounded-r-lg font-semibold ${isRegister ? 'bg-cyan-700 text-white' : 'bg-[#1f2937] text-white'}`}
-    onClick={() => setIsRegister(true)}
-    type="button"
-  >
-    Registrarse
-  </button>
-</div>
-
-
-        {/* Tabs */}
-        <div className="flex mb-6">
-          <button className="flex-1 bg-cyan-700 text-white font-semibold py-2 rounded-l-lg">Iniciar sesión</button>
-          <button className="flex-1 bg-[#1f2937] text-white py-2 rounded-r-lg">Registrarse</button>
+        {/* Heading */}
+        <div className="text-center space-y-1">
+          <h2 className="text-2xl font-extrabold text-white">Iniciar sesión</h2>
+          <p className="text-gray-400">Ingresa tus credenciales para continuar</p>
         </div>
 
         {/* Formulario */}
-        <form>
-          <label className="block text-sm mb-1">Correo electrónico</label>
-          <input
-            type="email"
-            placeholder="tu@email.com"
-            className="w-full mb-4 px-4 py-2 bg-[#1a2332] border border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500"
-            required
-          />
-
-          <label className="block text-sm mb-1">Contraseña</label>
-          <div className="relative mb-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm text-gray-300 mb-1" htmlFor="email">
+              Correo electrónico
+            </label>
             <input
+              id="email"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="tu@email.com"
+              className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              required
+            />
+          </div>
+
+          <div className="relative">
+            <label className="block text-sm text-gray-300 mb-1" htmlFor="password">
+              Contraseña
+            </label>
+            <input
+              id="password"
+              name="password"
               type={showPassword ? 'text' : 'password'}
+              value={form.password}
+              onChange={handleChange}
               placeholder="Tu contraseña"
-              className="w-full px-4 py-2 bg-[#1a2332] border border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 pr-10 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
               required
             />
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-2.5 text-gray-400 hover:text-white"
+              onClick={() => setShowPassword(s => !s)}
+              className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-200"
             >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
+              {showPassword ? <FiEyeOff /> : <FiEye />}
             </button>
           </div>
 
-          {/* Recordarme + link */}
-          <div className="flex justify-between items-center text-sm mb-4">
-            <label className="flex items-center space-x-2">
-              <input type="checkbox" className="accent-cyan-500" />
-              <span>Recordarme</span>
+          <div className="flex items-center justify-between text-sm">
+            <label className="inline-flex items-center text-gray-300">
+              <input
+                type="checkbox"
+                name="remember"
+                checked={form.remember}
+                onChange={handleChange}
+                className="form-checkbox h-4 w-4 text-cyan-500 bg-[var(--Blue2)] border-gray-600 rounded"
+              />
+              <span className="ml-2">Recordarme</span>
             </label>
-            <a href="#" className="text-cyan-400 hover:underline">
+            <button
+              type="button"
+              onClick={() => navigate('/reset-password')}
+              className="text-cyan-400 hover:underline"
+            >
               ¿Olvidaste tu contraseña?
-            </a>
+            </button>
           </div>
 
-          <button className="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-2 rounded font-semibold mb-4">
+          <button
+            type="submit"
+            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 rounded-md transition"
+          >
             INICIAR SESIÓN
           </button>
+        </form>
 
-          <div className="text-center text-sm text-gray-400 mb-4">
-            — O CONTINÚA CON —
-          </div>
+        {/* Divider */}
+        <div className="flex items-center text-gray-500 text-sm my-4">
+          <div className="flex-grow h-px bg-gray-700" />
+          <span className="px-3">O CONTINÚA CON</span>
+          <div className="flex-grow h-px bg-gray-700" />
+        </div>
 
-          {/* Botones sociales */}
-          <div className="flex space-x-4 mb-4">
-            <button className="flex-1 bg-white text-black py-2 rounded flex items-center justify-center space-x-2">
-              <FaGoogle />
-              <span>Google</span>
-            </button>
-            <button className="flex-1 bg-blue-600 text-white py-2 rounded flex items-center justify-center space-x-2">
-              <FaFacebookF />
-              <span>Facebook</span>
-            </button>
-          </div>
+        {/* Social buttons */}
+        <div className="flex gap-4">
+          <button className="flex-1 flex items-center justify-center bg-white bg-opacity-10 hover:bg-opacity-20 border border-gray-700 rounded-md py-2 space-x-2 transition">
+            <FaGoogle className="text-red-400" />
+            <span>Google</span>
+          </button>
+          <button className="flex-1 flex items-center justify-center bg-white bg-opacity-10 hover:bg-opacity-20 border border-gray-700 rounded-md py-2 space-x-2 transition">
+            <FaFacebook className="text-blue-600" />
+            <span>Facebook</span>
+          </button>
+        </div>
 
-          <p className="text-sm text-center text-gray-400">
-            ¿Prefieres empezar sin cuenta?{' '}
-            <a href="#" className="text-cyan-400 hover:underline">
-              Continúa como invitado
-            </a>
-          </p>
-        </form> {/* ✅ Acá se cerró el form correctamente */}
+        {/* Guest link */}
+        <p className="text-center text-gray-400 text-sm mt-4">
+          ¿Prefieres empezar sin cuenta?{' '}
+          <button
+            onClick={() => navigate('/app')}
+            className="text-cyan-400 hover:underline"
+          >
+            Continúa como invitado
+          </button>
+        </p>
       </div>
     </div>
   );
