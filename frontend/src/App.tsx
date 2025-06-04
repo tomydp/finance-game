@@ -14,6 +14,7 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashbord';
 import Login from './components/Login';
 import Aprender from './components/Aprender';
+import Mas from './components/ Más';
 
 function App() {
   return (
@@ -50,6 +51,16 @@ function App() {
           element={
             <Layout>
               <Aprender />
+            </Layout>
+          }
+        />
+
+        {/* Ruta privada: Más */}
+        <Route
+          path="/mas"
+          element={
+            <Layout>
+              <Mas />
             </Layout>
           }
         />

@@ -22,8 +22,10 @@ const routeMap: Record<string, string> = {
   Desafíos: '#',
   Tienda: '#',
   Perfil: '#',
-  Más: '#',
+    Más: '/mas',
+
 };
+
 
 const Layout: React.FC<LayoutProps> = ({ children }) => (
   <div className="flex min-h-screen bg-[#0d1321] text-white">
