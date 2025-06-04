@@ -13,6 +13,7 @@ import Footer from './components/landing/Footer';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashbord';
 import Login from './components/Login';
+import Aprender from './components/Aprender';
 
 function App() {
   return (
@@ -43,6 +44,16 @@ function App() {
           }
         />
 
+        {/* Ruta privada: Aprender */}
+        <Route
+          path="/aprendizaje"
+          element={
+            <Layout>
+              <Aprender />
+            </Layout>
+          }
+        />
+
         {/* Ruta de login (si la necesitas) */}
         <Route path="/login" element={<Login />} />
       </Routes>
@@ -51,5 +62,3 @@ function App() {
 }
 
 export default App;
-
-

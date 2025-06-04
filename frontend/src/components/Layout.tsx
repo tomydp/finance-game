@@ -1,5 +1,5 @@
-// src/components/Layout.tsx
 import React, { type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 
 interface LayoutProps {
   children: ReactNode;
@@ -15,6 +15,16 @@ const menuItems = [
   'Más',
 ];
 
+const routeMap: Record<string, string> = {
+  Aprender: '/aprendizaje',
+  Sonidos: '#',
+  Ligas: '#',
+  Desafíos: '#',
+  Tienda: '#',
+  Perfil: '#',
+  Más: '#',
+};
+
 const Layout: React.FC<LayoutProps> = ({ children }) => (
   <div className="flex min-h-screen bg-[#0d1321] text-white">
     {/* Sidebar izquierdo */}
@@ -24,12 +34,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => (
       {/* Menú */}
       <nav className="flex flex-col w-full space-y-2">
         {menuItems.map((item) => (
-          <button
+          <Link
             key={item}
+            to={routeMap[item] || '#'}
             className="w-full text-left text-sm text-gray-400 px-2 py-1 rounded hover:text-white hover:bg-[#1f2937] transition"
           >
             {item}
-          </button>
+          </Link>
         ))}
       </nav>
     </aside>
