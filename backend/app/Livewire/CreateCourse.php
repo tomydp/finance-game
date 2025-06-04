@@ -35,6 +35,12 @@ class CreateCourse extends Component
         $difficulties = ['Facil', 'Medio', 'Dificil'];
         return view('livewire.create-course',compact('difficulties'));
     }
-
+    public function closeModal()
+    {
+        $this->reset(['name', 'description', 'difficulty', 'showModal']);
+        $this->resetErrorBag();
+        $this->resetValidation();
+    }
+    
 
 }
