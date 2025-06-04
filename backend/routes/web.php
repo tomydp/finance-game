@@ -24,5 +24,7 @@ Route::get('/users', [UserController::class, 'index'])->name('users.index');
 
 //Course 
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
+Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->name('courses.edit');
+Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
 
 require __DIR__.'/auth.php';
