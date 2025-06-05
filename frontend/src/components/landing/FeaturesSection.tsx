@@ -49,7 +49,7 @@ const features = [
 ];
 
 const FeaturesSection: React.FC = () => (
-  <section className=" bg-[var(--Blue2]  text-white py-16 px-6 md:px-16">
+  <section className=" bg-[var(--Blue2)]  text-white py-16 px-6 md:px-16">
     <div className="max-w-6xl mx-auto">
       {/* Título */}
       <h2 className="text-center text-3xl md:text-4xl font-extrabold">

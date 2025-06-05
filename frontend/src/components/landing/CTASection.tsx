@@ -7,7 +7,7 @@ const CTASection: React.FC = () => {
   };
 
   return (
-    <section className="bg-[#0d1321] text-white py-20 px-6 md:px-16">
+    <section className="bg-[var(--Blue2)] text-white py-20 px-6 md:px-16">
       <div className="max-w-6xl mx-auto text-center">
         <h2 className="text-3xl md:text-4xl font-extrabold">
           ¿Listo para transformar tus finanzas?

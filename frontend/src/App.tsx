@@ -1,25 +1,55 @@
-import Navbar from './components/Navbar';
-import HeroSection from './components/HeroSection';
-import FeaturesSection from './components/FeaturesSection';
-import StepsSection from './components/StepsSection';
-import CTASection from './components/CTASection';
-import Footer from './components/Footer';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
+// Landing page components
+import Navbar from './components/landing/Navbar';
+import HeroSection from './components/landing/HeroSection';
+import FeaturesSection from './components/landing/FeaturesSection';
+import StepsSection from './components/landing/StepsSection';
+import CTASection from './components/landing/CTASection';
+import Footer from './components/landing/Footer';
+
+// App (post-login) components
+import Layout from './components/Layout';
+import Dashboard from './components/Dashbord';
+import Login from './components/Login';
 
 function App() {
   return (
-    <>
-    <div className="bg-[#0d1321] min-h-screen text-white">
-      <Navbar />
-      <HeroSection />
-      <FeaturesSection />
-      <StepsSection />
-      <CTASection />
-      <Footer />
-    </div>
-  </>
-   );
+    <Router>
+      <Routes>
+        {/* Ruta pública: Landing */}
+        <Route
+          path="/"
+          element={
+            <>
+              <Navbar />
+              <HeroSection />
+              <FeaturesSection />
+              <StepsSection />
+              <CTASection />
+              <Footer />
+            </>
+          }
+        />
+
+        {/* Ruta privada: Layout englobando al Dashboard */}
+        <Route
+          path="/app"
+          element={
+            <Layout>
+              <Dashboard />
+            </Layout>
+          }
+        />
+
+        {/* Ruta de login (si la necesitas) */}
+        <Route path="/login" element={<Login />} />
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;
+
 

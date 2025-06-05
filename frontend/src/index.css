@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
+
 :root {
     --Blue1: #0f1831;
     --Blue2: #121c38;
+    --Morado: #9495ca
   }
