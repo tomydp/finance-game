@@ -11,7 +11,6 @@ import Footer from './components/landing/Footer';
 
 // App (post-login) components
 import Layout from './components/Layout';
-import Dashboard from './components/Dashbord';
 import Login from './components/Login';
 import Aprender from './components/Aprender';
 import Mas from './components/ Más';
@@ -38,11 +37,7 @@ function App() {
         {/* Ruta privada: Layout englobando al Dashboard */}
         <Route
           path="/app"
-          element={
-            <Layout>
-              <Dashboard />
-            </Layout>
-          }
+
         />
 
         {/* Ruta privada: Aprender */}
