@@ -1,21 +1,43 @@
 // src/components/Login.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaGoogle, FaFacebook } from 'react-icons/fa';
 import { FiEye, FiEyeOff, FiArrowLeft } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+interface LocationState {
+  mode?: 'login' | 'register';
+}
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as LocationState;
+
+  // Si se viene con state.mode = 'register', arrancamos en modo registro; si no, modo login
+  const initialMode = state?.mode === 'register' ? 'register' : 'login';
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
+
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
+    name: '',
     email: '',
     password: '',
+    confirm: '',
     remember: false,
   });
 
+  // Cada vez que cambie location.state.mode, actualizamos el modo
+  useEffect(() => {
+    if (state?.mode === 'register') {
+      setMode('register');
+    } else {
+      setMode('login');
+    }
+  }, [state?.mode]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setForm(f => ({
+    setForm((f) => ({
       ...f,
       [name]: type === 'checkbox' ? checked : value,
     }));
@@ -23,13 +45,18 @@ const Login: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: lógica de inicio de sesión
-    navigate('/app');
+    if (mode === 'login') {
+      // Aquí va la lógica de inicio de sesión...
+      navigate('/app');
+    } else {
+      // Aquí va la lógica de registro...
+      navigate('/app');
+    }
   };
 
   return (
     <div className="relative min-h-screen bg-[var(--Blue1)] flex items-center justify-center px-4">
-      {/* Flecha de regreso */}
+      {/* Flecha de regreso al landing */}
       <button
         onClick={() => navigate('/')}
         className="absolute top-4 left-4 text-white hover:text-gray-200 transition text-2xl"
@@ -48,12 +75,35 @@ const Login: React.FC = () => {
 
         {/* Heading */}
         <div className="text-center space-y-1">
-          <h2 className="text-2xl font-extrabold text-white">Iniciar sesión</h2>
-          <p className="text-gray-400">Ingresa tus credenciales para continuar</p>
+          <h2 className="text-2xl font-extrabold text-white">
+            {mode === 'login' ? '¡Bienvenido de vuelta!' : 'Crea tu cuenta'}
+          </h2>
+          <p className="text-gray-400">
+            {mode === 'login'
+              ? 'Ingresa tus credenciales para continuar'
+              : 'Únete a FinanzApp y comienza a aprender finanzas gratis'}
+          </p>
         </div>
 
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {mode === 'register' && (
+            <div>
+              <label className="block text-sm text-gray-300 mb-1" htmlFor="name">
+                Nombre completo
+              </label>
+              <input
+                id="name"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Tu nombre completo"
+                className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                required
+              />
+            </div>
+          )}
+
           <div>
             <label className="block text-sm text-gray-300 mb-1" htmlFor="email">
               Correo electrónico
@@ -80,18 +130,36 @@ const Login: React.FC = () => {
               type={showPassword ? 'text' : 'password'}
               value={form.password}
               onChange={handleChange}
-              placeholder="Tu contraseña"
+              placeholder={mode === 'register' ? 'Crea una contraseña' : 'Tu contraseña'}
               className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 pr-10 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
               required
             />
             <button
               type="button"
-              onClick={() => setShowPassword(s => !s)}
+              onClick={() => setShowPassword((s) => !s)}
               className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-200"
             >
               {showPassword ? <FiEyeOff /> : <FiEye />}
             </button>
           </div>
+
+          {mode === 'register' && (
+            <div>
+              <label className="block text-sm text-gray-300 mb-1" htmlFor="confirm">
+                Confirmar contraseña
+              </label>
+              <input
+                id="confirm"
+                name="confirm"
+                type="password"
+                value={form.confirm}
+                onChange={handleChange}
+                placeholder="Confirma tu contraseña"
+                className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                required
+              />
+            </div>
+          )}
 
           <div className="flex items-center justify-between text-sm">
             <label className="inline-flex items-center text-gray-300">
@@ -104,20 +172,22 @@ const Login: React.FC = () => {
               />
               <span className="ml-2">Recordarme</span>
             </label>
-            <button
-              type="button"
-              onClick={() => navigate('/reset-password')}
-              className="text-cyan-400 hover:underline"
-            >
-              ¿Olvidaste tu contraseña?
-            </button>
+            {mode === 'login' && (
+              <button
+                type="button"
+                onClick={() => navigate('/reset-password')}
+                className="text-cyan-400 hover:underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            )}
           </div>
 
           <button
             type="submit"
             className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 rounded-md transition"
           >
-            INICIAR SESIÓN
+            {mode === 'login' ? 'INICIAR SESIÓN' : 'CREAR CUENTA'}
           </button>
         </form>
 

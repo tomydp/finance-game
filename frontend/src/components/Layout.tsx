@@ -1,45 +1,24 @@
 // src/components/Layout.tsx
-import React, { type ReactNode } from 'react';
+import React from 'react';
+import { Outlet } from 'react-router-dom';
+import Sidebar from './Sidebar';
 
-interface LayoutProps {
-  children: ReactNode;
-}
+const Layout: React.FC = () => {
+  return (
+    <div className="min-h-screen flex bg-[#0d1321] text-white">
+      {/* Sidebar izquierdo */}
+      <Sidebar />
 
-const menuItems = [
-  'Aprender',
-  'Sonidos',
-  'Ligas',
-  'Desafíos',
-  'Tienda',
-  'Perfil',
-  'Más',
-];
+      {/* Aquí React Router inyecta la ruta hija (Dashboard u otra) */}
+      <main className="flex-1 p-6 overflow-y-auto">
+        <Outlet />
+      </main>
 
-const Layout: React.FC<LayoutProps> = ({ children }) => (
-  <div className="flex min-h-screen bg-[#0d1321] text-white">
-    {/* Sidebar izquierdo */}
-    <aside className="w-24 bg-[#121c30] flex flex-col items-start py-6 px-2 space-y-4">
-      {/* Logo */}
-      <div className="w-full text-center text-cyan-400 text-xl font-bold">F</div>
-      {/* Menú */}
-      <nav className="flex flex-col w-full space-y-2">
-        {menuItems.map((item) => (
-          <button
-            key={item}
-            className="w-full text-left text-sm text-gray-400 px-2 py-1 rounded hover:text-white hover:bg-[#1f2937] transition"
-          >
-            {item}
-          </button>
-        ))}
-      </nav>
-    </aside>
-
-    {/* Contenido principal */}
-    <main className="flex-1 p-6 overflow-y-auto">{children}</main>
-
-    {/* Sidebar derecho vacío */}
-    <aside className="w-24 bg-[#121c30]" />
-  </div>
-);
+      {/* Sidebar derecho vacío (puedes quitarlo o cambiar su ancho) */}
+      <aside className="w-24 bg-[#121c30]" />
+    </div>
+  );
+};
 
 export default Layout;
+
