@@ -19,6 +19,7 @@ import Aprender         from './components/Aprender';
 import Desafios         from './components/Desafios';
 import Mas              from './components/Mas';
 import Sonidos          from './components/Sonidos';
+import Ligas            from './components/Ligas';
 // (importa aquí cualquier otro componente que quieras bajo /app, p.ej. Sonidos, Ligas, etc.)
 
 function App() {
@@ -51,7 +52,7 @@ function App() {
           {/* Rutas hijas dentro de /app */}
           <Route path="aprender" element={<Aprender />} />
           <Route path="sonidos"  element={<Sonidos />} />
-          {/* <Route path="ligas"    element={<Ligas />} /> */}
+          <Route path="ligas"    element={<Ligas />} />
           <Route path="desafios" element={<Desafios />} />
           {/* <Route path="tienda"   element={<Tienda />} /> */}
           {/* <Route path="perfil"   element={<Perfil />} /> */}

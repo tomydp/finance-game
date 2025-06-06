@@ -21,7 +21,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { to: '/app/aprender', label: 'Aprender',  icon: FaHome,           enabled: true  },
   { to: '/app/sonidos',  label: 'Sonidos',   icon: FaMusic,          enabled: true  },
-  { to: '/app/ligas',    label: 'Ligas',     icon: FaTrophy,         enabled: false },
+  { to: '/app/ligas',    label: 'Ligas',     icon: FaTrophy,         enabled: true  },
   { to: '/app/desafios', label: 'Desafíos',  icon: FaBolt,           enabled: true  },
   { to: '/app/tienda',   label: 'Tienda',    icon: FaShoppingCart,   enabled: false },
   { to: '/app/perfil',   label: 'Perfil',    icon: FaUser,           enabled: false },
