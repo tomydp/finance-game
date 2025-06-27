@@ -5,11 +5,11 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Creado</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium text-gray-500 uppercase tracking-wider leading-normal">ID</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium text-gray-500 uppercase tracking-wider leading-normal">Nombre</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium text-gray-500 uppercase tracking-wider leading-normal">Email</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium text-gray-500 uppercase tracking-wider leading-normal">Rol</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium text-gray-500 uppercase tracking-wider leading-normal">Creado</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">

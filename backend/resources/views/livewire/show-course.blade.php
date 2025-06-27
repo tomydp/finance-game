@@ -5,19 +5,20 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripcion</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dificultad</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium text-gray-500 uppercase tracking-wider leading-normal">ID</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium text-gray-500 uppercase tracking-wider leading-normal">Nombre</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium text-gray-500 uppercase tracking-wider leading-normal">Descripcion</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium text-gray-500 uppercase tracking-wider leading-normal">Dificultad</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium text-gray-500 uppercase tracking-wider leading-normal">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @foreach($courses as $course)
                         <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">{{ $course->id }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">{{ $course->name }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">{{ $course->description }}</td>
+                            <td class="px-6 py-2 whitespace-nowrap">{{ $course->id }}</td>
+                            <td class="px-6 py-2 whitespace-nowrap">{{ $course->name }}</td>
+                            <x-tooltip-cell :text="$course->description" />
+
                             <td class="px-6 py-4 whitespace-nowrap">{{ $course->difficulty }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <button wire:click="editCourse({{ $course->id }})"
