@@ -12,13 +12,13 @@ import Footer           from './components/landing/Footer';
 
 // Login / Registro
 import Login            from './components/landing/Login';
+import Register         from './components/landing/Register';
 
 // Layout con Sidebar + rutas internas
 import Layout           from './components/Layout';
 import Aprender         from './components/Aprender';
 import Desafios         from './components/Desafios';
-import Mas              from './components/ Mas';
-// (importa aquí cualquier otro componente que quieras bajo /app, p.ej. Sonidos, Ligas, etc.)
+import Mas from './components/landing/Mas';
 
 function App() {
   return (
@@ -39,28 +39,20 @@ function App() {
           }
         />
 
-        {/* ────────────── Ruta de login/registro ────────────── */}
+        {/* ────────────── Rutas públicas: login y registro ────────────── */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* ────────────── Rutas protegidas bajo /app ────────────── */}
         <Route path="/app/*" element={<Layout />}>
-          {/* Cuando la URL es exactamente "/app", redirige a "/app/aprender" */}
           <Route index element={<Navigate to="aprender" replace />} />
-
-          {/* Rutas hijas dentro de /app */}
           <Route path="aprender" element={<Aprender />} />
-          {/* <Route path="sonidos"  element={<Sonidos />} /> */}
-          {/* <Route path="ligas"    element={<Ligas />} /> */}
           <Route path="desafios" element={<Desafios />} />
-          {/* <Route path="tienda"   element={<Tienda />} /> */}
-          {/* <Route path="perfil"   element={<Perfil />} /> */}
           <Route path="mas" element={<Mas />} />
-
-          {/* Cualquier otra ruta inválida dentro de /app redirige a "/app/aprender" */}
           <Route path="*" element={<Navigate to="aprender" replace />} />
         </Route>
 
-        {/* ────────────── Cualquier otra ruta redirige a "/" ────────────── */}
+        {/* ────────────── Catch-all: redirige a landing ────────────── */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

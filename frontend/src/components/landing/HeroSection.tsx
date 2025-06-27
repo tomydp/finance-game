@@ -11,9 +11,8 @@ const HeroSection: React.FC = () => {
     navigate('/login', { state: { mode: 'login' } });
   };
 
-  const goToRegister = () => {
-    navigate('/login', { state: { mode: 'register' } });
-  };
+ const goToRegister = () => navigate('/register');
+
 
   return (
     <section className="bg-[var(--Blue1)] text-white min-h-screen flex items-center justify-center px-4 md:px-16">
@@ -140,11 +139,12 @@ const HeroSection: React.FC = () => {
 
             {/* Botón “Ya tengo una cuenta” → Iniciar sesión */}
             <button
-              onClick={goToLogin}
-              className="px-8 py-4 border border-cyan-500 text-cyan-500 font-semibold rounded hover:bg-cyan-500 hover:text-white transition"
-            >
-              YA TENGO CUENTA
-            </button>
+  onClick={goToRegister}
+  className="flex-1 px-8 py-4 bg-cyan-500 hover:bg-cyan-600 transition text-white font-semibold rounded"
+>
+  EMPIEZA AHORA
+</button>
+
           </div>
         </div>
       </div>
