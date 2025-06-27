@@ -13,6 +13,10 @@ import Footer           from './components/landing/Footer';
 // Login / Registro
 import Login            from './components/auth/Login';
 import Register         from './components/auth/Register';
+import ConfirmPassword  from './components/auth/ConfirmPassword';
+import ForgotPassword   from './components/auth/ForgotPassword';
+import ResetPassword    from './components/auth/ResetPassword';
+import VerifyEmail      from './components/auth/VerifyEmail';
 
 // Layout con Sidebar + rutas internas
 import Layout           from './components/app/Layout';
@@ -44,6 +48,10 @@ function App() {
         {/* ────────────── Rutas públicas: login y registro ────────────── */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/confirm-password" element={<ConfirmPassword />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         {/* ────────────── Rutas protegidas bajo /app ────────────── */}
         <Route path="/app/*" element={<Layout />}>
