@@ -10,6 +10,7 @@ services:
             - 'host.docker.internal:host-gateway'
         ports:
             - '${APP_PORT:-80}:80'
+            - '5173:5173'
             - '${VITE_PORT:-5174}:${VITE_PORT:-5174}'
         environment:
             WWWUSER: '${WWWUSER}'
@@ -47,6 +48,13 @@ services:
                 - '-p${DB_PASSWORD}'
             retries: 3
             timeout: 5s
+    mailhog:
+        image: mailhog/mailhog
+        ports:
+            - "1025:1025" # SMTP
+            - "8025:8025" # Interfaz web
+        networks:
+            - sail
 networks:
     sail:
         driver: bridge

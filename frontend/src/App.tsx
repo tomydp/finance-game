@@ -18,7 +18,13 @@ import Register         from './components/landing/Register';
 import Layout           from './components/Layout';
 import Aprender         from './components/Aprender';
 import Desafios         from './components/Desafios';
+<<<<<<< HEAD
 import Mas from './components/landing/Mas';
+=======
+import Mas              from './components/Mas';
+import Sonidos          from './components/Sonidos';
+// (importa aquí cualquier otro componente que quieras bajo /app, p.ej. Sonidos, Ligas, etc.)
+>>>>>>> develop
 
 function App() {
   return (
@@ -47,6 +53,11 @@ function App() {
         <Route path="/app/*" element={<Layout />}>
           <Route index element={<Navigate to="aprender" replace />} />
           <Route path="aprender" element={<Aprender />} />
+<<<<<<< HEAD
+=======
+          <Route path="sonidos"  element={<Sonidos />} />
+          {/* <Route path="ligas"    element={<Ligas />} /> */}
+>>>>>>> develop
           <Route path="desafios" element={<Desafios />} />
           <Route path="mas" element={<Mas />} />
           <Route path="*" element={<Navigate to="aprender" replace />} />

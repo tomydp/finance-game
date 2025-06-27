@@ -11,14 +11,7 @@ class ShowCourse extends Component
     use WithPagination;
     public $courses;
 
-    // Escuchar el evento desde CreateCourse
     public $listeners = ['courseCreated' => 'refreshCourses','courseUpdated' => 'refreshCourses'];
-
-
-    public function editCourse($id)
-    {
-        $this->dispatch('editCourse', id: $id)->to(\App\Livewire\EditCourse::class);
-    }
 
 
     public function mount()
@@ -26,7 +19,11 @@ class ShowCourse extends Component
         $this->courses = Course::all();
     }
 
-    // Método que se ejecuta al recibir el evento
+    public function editCourse($id)
+    {
+        $this->dispatch('editCourse', id: $id)->to(\App\Livewire\EditCourse::class);
+    }
+
     public function refreshCourses()
     {
         $this->courses = Course::all();
