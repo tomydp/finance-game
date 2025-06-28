@@ -1,8 +1,10 @@
-// src/components/Login.tsx
-import React, { useState, useEffect } from 'react';
+// src/components/auth/Login.tsx
+import React, { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { FaGoogle, FaFacebook } from 'react-icons/fa';
 import { FiEye, FiEyeOff, FiArrowLeft } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import type { AuthPayload } from '../../services/authService';
 
 interface LocationState {
   mode?: 'login' | 'register';
@@ -10,14 +12,17 @@ interface LocationState {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const { handleLogin, handleRegister, errors, setErrors } = useAuth();
   const location = useLocation();
   const state = location.state as LocationState;
 
-  // Si se viene con state.mode = 'register', arrancamos en modo registro; si no, modo login
+  // Definimos el modo inicial según state.mode
   const initialMode = state?.mode === 'register' ? 'register' : 'login';
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
 
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -26,31 +31,46 @@ const Login: React.FC = () => {
     remember: false,
   });
 
-  // Cada vez que cambie location.state.mode, actualizamos el modo
+  // Si cambian las props de la ruta, actualizamos el modo
   useEffect(() => {
-    if (state?.mode === 'register') {
-      setMode('register');
-    } else {
-      setMode('login');
-    }
-  }, [state?.mode]);
+    setMode(state?.mode === 'register' ? 'register' : 'login');
+    setErrors(null);
+    setForm({ name: '', email: '', password: '', confirm: '', remember: false });
+  }, [state?.mode, setErrors]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setForm((f) => ({
+    setForm(f => ({
       ...f,
       [name]: type === 'checkbox' ? checked : value,
     }));
+    // Limpiar error de ese campo
+    if (errors?.[name]) {
+      setErrors(prev => ({ ...(prev ?? {}), [name]: [] }));
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (mode === 'login') {
-      // Aquí va la lógica de inicio de sesión...
+    setSubmitting(true);
+    try {
+      if (mode === 'login') {
+        // Sólo email y password
+        await handleLogin({ email: form.email, password: form.password } as AuthPayload);
+      } else {
+        // Registro: name, email, password, password_confirmation
+        await handleRegister({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          password_confirmation: form.confirm,
+        } as AuthPayload);
+      }
       navigate('/app');
-    } else {
-      // Aquí va la lógica de registro...
-      navigate('/app');
+    } catch {
+      // errores ya están en `errors`
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -89,7 +109,7 @@ const Login: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'register' && (
             <div>
-              <label className="block text-sm text-gray-300 mb-1" htmlFor="name">
+              <label htmlFor="name" className="block text-sm text-gray-300 mb-1">
                 Nombre completo
               </label>
               <input
@@ -101,11 +121,12 @@ const Login: React.FC = () => {
                 className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 required
               />
+              {errors?.name && <p className="text-red-500 text-sm mt-1">{errors.name[0]}</p>}
             </div>
           )}
 
           <div>
-            <label className="block text-sm text-gray-300 mb-1" htmlFor="email">
+            <label htmlFor="email" className="block text-sm text-gray-300 mb-1">
               Correo electrónico
             </label>
             <input
@@ -118,10 +139,11 @@ const Login: React.FC = () => {
               className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
               required
             />
+            {errors?.email && <p className="text-red-500 text-sm mt-1">{errors.email[0]}</p>}
           </div>
 
           <div className="relative">
-            <label className="block text-sm text-gray-300 mb-1" htmlFor="password">
+            <label htmlFor="password" className="block text-sm text-gray-300 mb-1">
               Contraseña
             </label>
             <input
@@ -136,16 +158,19 @@ const Login: React.FC = () => {
             />
             <button
               type="button"
-              onClick={() => setShowPassword((s) => !s)}
+              onClick={() => setShowPassword(s => !s)}
               className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-200"
             >
               {showPassword ? <FiEyeOff /> : <FiEye />}
             </button>
+            {errors?.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password[0]}</p>
+            )}
           </div>
 
           {mode === 'register' && (
             <div>
-              <label className="block text-sm text-gray-300 mb-1" htmlFor="confirm">
+              <label htmlFor="confirm" className="block text-sm text-gray-300 mb-1">
                 Confirmar contraseña
               </label>
               <input
@@ -158,6 +183,11 @@ const Login: React.FC = () => {
                 className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 required
               />
+              {errors?.password_confirmation && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.password_confirmation[0]}
+                </p>
+              )}
             </div>
           )}
 
@@ -185,10 +215,17 @@ const Login: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 rounded-md transition"
+            disabled={submitting}
+            className={`w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 rounded-md transition ${
+              submitting ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             {mode === 'login' ? 'INICIAR SESIÓN' : 'CREAR CUENTA'}
           </button>
+
+          {errors?.general && (
+            <p className="text-red-500 text-center mt-2">{errors.general[0]}</p>
+          )}
         </form>
 
         {/* Divider */}
@@ -200,17 +237,15 @@ const Login: React.FC = () => {
 
         {/* Social buttons */}
         <div className="flex gap-4">
-          <button className="flex-1 flex items-center justify-center bg-white bg-opacity-10 hover:bg-opacity-20 border border-gray-700 rounded-md py-2 space-x-2 transition">
-            <FaGoogle className="text-red-400" />
-            <span>Google</span>
+          <button disabled className="flex-1 flex items-center justify-center bg-white bg-opacity-10 border border-gray-700 rounded-md py-2 space-x-2 opacity-50">
+            <FaGoogle /> <span>Google</span>
           </button>
-          <button className="flex-1 flex items-center justify-center bg-white bg-opacity-10 hover:bg-opacity-20 border border-gray-700 rounded-md py-2 space-x-2 transition">
-            <FaFacebook className="text-blue-600" />
-            <span>Facebook</span>
+          <button disabled className="flex-1 flex items-center justify-center bg-white bg-opacity-10 border border-gray-700 rounded-md py-2 space-x-2 opacity-50">
+            <FaFacebook /> <span>Facebook</span>
           </button>
         </div>
 
-        {/* Guest link */}
+        {/* Invitado */}
         <p className="text-center text-gray-400 text-sm mt-4">
           ¿Prefieres empezar sin cuenta?{' '}
           <button

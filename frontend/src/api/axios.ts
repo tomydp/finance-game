@@ -1,0 +1,28 @@
+import axios, { type AxiosInstance } from 'axios';
+
+const api: AxiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
+  headers: { Accept: 'application/json' },
+});
+
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('token');
+  if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  res => res,
+  err => {
+    if (err.response?.status === 401) {
+      // aquí podrías llamar a logout automático
+      localStorage.clear();
+      window.location.href = '/login';
+    }
+    return Promise.reject(err);
+  }
+);
+
+export default api;
