@@ -11,14 +11,15 @@ import CTASection       from './components/landing/CTASection';
 import Footer           from './components/landing/Footer';
 
 // Login / Registro
-import Login            from './components/landing/Login';
+import Login            from './components/auth/Login';
+import Register         from './components/auth/Register';
 
 // Layout con Sidebar + rutas internas
-import Layout           from './components/Layout';
-import Aprender         from './components/Aprender';
-import Desafios         from './components/Desafios';
-import Mas              from './components/Mas';
-import Sonidos          from './components/Sonidos';
+import Layout           from './components/app/Layout';
+import Aprender         from './components/app/Aprender';
+import Desafios         from './components/app/Desafios';
+import Mas              from './components/app/Mas';
+import Sonidos          from './components/app/Sonidos';
 // (importa aquí cualquier otro componente que quieras bajo /app, p.ej. Sonidos, Ligas, etc.)
 
 function App() {
@@ -40,28 +41,22 @@ function App() {
           }
         />
 
-        {/* ────────────── Ruta de login/registro ────────────── */}
+        {/* ────────────── Rutas públicas: login y registro ────────────── */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* ────────────── Rutas protegidas bajo /app ────────────── */}
         <Route path="/app/*" element={<Layout />}>
-          {/* Cuando la URL es exactamente "/app", redirige a "/app/aprender" */}
           <Route index element={<Navigate to="aprender" replace />} />
-
-          {/* Rutas hijas dentro de /app */}
           <Route path="aprender" element={<Aprender />} />
           <Route path="sonidos"  element={<Sonidos />} />
           {/* <Route path="ligas"    element={<Ligas />} /> */}
           <Route path="desafios" element={<Desafios />} />
-          {/* <Route path="tienda"   element={<Tienda />} /> */}
-          {/* <Route path="perfil"   element={<Perfil />} /> */}
           <Route path="mas" element={<Mas />} />
-
-          {/* Cualquier otra ruta inválida dentro de /app redirige a "/app/aprender" */}
           <Route path="*" element={<Navigate to="aprender" replace />} />
         </Route>
 
-        {/* ────────────── Cualquier otra ruta redirige a "/" ────────────── */}
+        {/* ────────────── Catch-all: redirige a landing ────────────── */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
