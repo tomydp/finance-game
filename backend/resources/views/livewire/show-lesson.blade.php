@@ -3,13 +3,13 @@
         <h2 class="text-2xl font-bold mb-4">Lecciones</h2>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+                <thead class="bg-gray-300">
                     <tr>
-                        <th class="px-6 py-7 text-left text-sm font-medium text-gray-500 uppercase tracking-wider leading-normal">ID</th>
-                        <th class="px-6 py-7 text-left text-sm font-medium text-gray-500 uppercase tracking-wider leading-normal">Nombre</th>
-                        <th class="px-6 py-7 text-left text-sm font-medium text-gray-500 uppercase tracking-wider leading-normal">Descripcion</th>
-                        <th class="px-6 py-7 text-left text-sm font-medium text-gray-500 uppercase tracking-wider leading-normal">Dificultad</th>
-                        <th class="px-6 py-7 text-left text-sm font-medium text-gray-500 uppercase tracking-wider leading-normal">Acciones</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium text-black-500 uppercase tracking-wider leading-normal">ID</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium text-black-500 uppercase tracking-wider leading-normal">Nombre</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium text-black-500 uppercase tracking-wider leading-normal">Descripcion</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium text-black-500 uppercase tracking-wider leading-normal">Dificultad</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium text-black-500 uppercase tracking-wider leading-normal">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
