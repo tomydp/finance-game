@@ -24,9 +24,10 @@
             @enderror
    
             <div class="flex justify-end gap-2 mt-4">
-                <button wire:click="update" class="bg-blue-600 text-white px-4 py-2 rounded">Actualizar</button>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Editar</button>
                 <button type="button" wire:click="closeModal" class="ml-2 text-red-500">Cancelar</button>
             </div>
+            
         </form>
 
         </div>

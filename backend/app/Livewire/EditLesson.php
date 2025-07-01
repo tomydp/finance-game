@@ -4,19 +4,20 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Lesson;
+use App\Models\Course;
 
 class EditLesson extends Component
 {
     public $showModal = false;
 
     public $lessonId;
-    public $name;
+    public $title;
     public $description;
     public $course_id;
 
     protected $rules = [
-        'name' => 'required|string|max:255',
-        'description' => 'required|string',
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string',
         'course_id' => 'required|exists:courses,id',
     ];
 
@@ -24,13 +25,16 @@ class EditLesson extends Component
 
     public function loadLesson($id)
     {
+        $this->resetErrorBag();
+        $this->resetValidation();
+    
         $lesson = Lesson::findOrFail($id);
-
+    
         $this->lessonId = $lesson->id;
-        $this->name = $lesson->name;
+        $this->title = $lesson->title;
         $this->description = $lesson->description;
         $this->course_id = $lesson->course_id;
-
+    
         $this->showModal = true;
     }
 
@@ -39,24 +43,27 @@ class EditLesson extends Component
         $this->validate();
 
         Lesson::findOrFail($this->lessonId)->update([
-            'name' => $this->name,
+            'title' => $this->title,
             'description' => $this->description,
             'course_id' => $this->course_id,
         ]);
 
-        $this->reset(['lessonId', 'name', 'description', 'course_id', 'showModal']);
+        $this->reset(['lessonId', 'title', 'description', 'course_id', 'showModal']);
 
         $this->dispatch('lessonUpdated')->to(ShowLesson::class);
     }
+
     public function closeModal()
     {
-        $this->reset(['lessonId', 'name', 'description', 'course_id', 'showModal']);
+        $this->reset(['lessonId', 'title', 'description', 'course_id', 'showModal']);
         $this->resetErrorBag();
         $this->resetValidation();
     }
 
     public function render()
     {
-        return view('livewire.edit-lesson');
+        return view('livewire.edit-lesson', [
+            'courses' => Course::all()
+        ]);
     }
 }
