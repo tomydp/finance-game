@@ -11,6 +11,12 @@ class Lesson extends Model
     protected $fillable = [
         'course_id',
         'title',
+        'description',
         'order',
     ];
+
+    public function course()
+    {
+        return $this->belongsTo(Course::class);
+    }
 }
