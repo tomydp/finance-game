@@ -44,4 +44,11 @@
             </x-primary-button>
         </div>
     </form>
+
+    <a href="{{ route('socialite.redirect', 'google') }}"
+            class="mt-6 flex w-full justify-center rounded-md bg-red-600 px-4 py-2
+           font-semibold text-white hover:bg-red-700 focus:outline-none
+           focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+        Iniciar sesión con Google
+    </a>
 </x-guest-layout>
