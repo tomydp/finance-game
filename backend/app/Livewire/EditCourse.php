@@ -24,15 +24,19 @@ class EditCourse extends Component
 
     public function loadCourse($id)
     {
-        $course = Course::findOrFail($id);
+    $this->resetErrorBag();
+    $this->resetValidation();
 
-        $this->courseId = $course->id;
-        $this->name = $course->name;
-        $this->description = $course->description;
-        $this->difficulty = $course->difficulty;
+    $course = Course::findOrFail($id);
 
-        $this->showModal = true;
+    $this->courseId = $course->id;
+    $this->name = $course->name;
+    $this->description = $course->description;
+    $this->difficulty = $course->difficulty;
+
+    $this->showModal = true;
     }
+
 
     public function update()
     {
