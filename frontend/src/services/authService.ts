@@ -1,25 +1,35 @@
-import api from '../api/axios';
+import api from '../lib/axios';
 
-export interface AuthPayload {
-  name?: string;
-  email: string;
-  password: string;
-  password_confirmation?: string;
-}
+export interface Credentials { email: string; password: string }
+export interface User        { id: number; name: string; email: string }
 
-export interface AuthResponse {
-  user: { id: number; name: string; email: string };
-  token: string;
-}
+export const csrf = () => api.get('/sanctum/csrf-cookie');
 
-export const register = (data: AuthPayload) =>
-  api.post<AuthResponse>('/register', data);
+export const login = async (data: Credentials) => {
+  // 1) Trae la cookie XSRF-TOKEN
+  await csrf();
 
-export const login = (data: AuthPayload) =>
-  api.post<AuthResponse>('/login', data);
+  // 2) Extrae su valor y lo coloca en el header
+  const xsrf = decodeURIComponent(
+    document.cookie
+      .split('XSRF-TOKEN=')[1]       // parte después de la clave
+      .split(';')[0]                // hasta el próximo ;
+  );
 
-export const logout = () =>
-  api.post('/logout');
+  api.defaults.headers.common['X-XSRF-TOKEN'] = xsrf;  // 👈 header manual
 
-export const me = () =>
-  api.get<{ user: AuthResponse['user'] }>('/user');
+  // 3) Ahora sí, login
+  return api.post('/api/login', data);
+};
+
+export const logout       = () => api.post('/api/logout');
+export const currentUser  = () => api.get<User>('/api/user');
+
+export const syncXsrfHeader = () => {
+  const token = decodeURIComponent(
+    document.cookie.split('XSRF-TOKEN=')[1]?.split(';')[0] ?? ''
+  );
+  if (token) {
+    api.defaults.headers.common['X-XSRF-TOKEN'] = token;
+  }
+};

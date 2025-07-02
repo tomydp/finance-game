@@ -1,195 +1,136 @@
 // src/components/auth/Login.tsx
-import React, { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
-import { FaGoogle, FaFacebook } from 'react-icons/fa';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiEye, FiEyeOff, FiArrowLeft } from 'react-icons/fi';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import type { AuthPayload } from '../../services/authService';
+import { FaGoogle, FaFacebook } from 'react-icons/fa';
 
-interface LocationState {
-  mode?: 'login' | 'register';
+import { useAuth } from '../../context/AuthContext';
+import type { Credentials } from '../../services/authService';
+
+interface FieldErrors {
+  email?: string[];
+  password?: string[];
+  general?: string[];
 }
 
-const Login: React.FC = () => {
-  const navigate = useNavigate();
-  const { handleLogin, handleRegister, errors, setErrors } = useAuth();
-  const location = useLocation();
-  const state = location.state as LocationState;
+export default function Login() {
+  const { login } = useAuth();
+  const { user } = useAuth();
+  const navigate  = useNavigate();
 
-  // Definimos el modo inicial según state.mode
-  const initialMode = state?.mode === 'register' ? 'register' : 'login';
-  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirm: '',
-    remember: false,
-  });
-
-  // Si cambian las props de la ruta, actualizamos el modo
   useEffect(() => {
-    setMode(state?.mode === 'register' ? 'register' : 'login');
-    setErrors(null);
-    setForm({ name: '', email: '', password: '', confirm: '', remember: false });
-  }, [state?.mode, setErrors]);
+    if (user) navigate('/app/aprender', { replace: true });
+  }, [user, navigate]);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setForm(f => ({
-      ...f,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-    // Limpiar error de ese campo
-    if (errors?.[name]) {
-      setErrors(prev => ({ ...(prev ?? {}), [name]: [] }));
+  const [form, setForm]   = useState({ email: '', password: '', remember: false });
+  const [showPwd, setPwd] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [errors, setErrors]   = useState<FieldErrors>({});
+
+  /* ───────────────────────── handlers ───────────────────────── */
+  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, type, checked, value } = e.target;
+    setForm(f => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
+    if (errors[name as keyof FieldErrors]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));          // limpia error puntual
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
+    setSending(true);
+    setErrors({});
+
     try {
-      if (mode === 'login') {
-        // Sólo email y password
-        await handleLogin({ email: form.email, password: form.password } as AuthPayload);
+      await login({   // ←  **AQUÍ** está la llamada que quizá no veías
+        email: form.email,
+        password: form.password,
+      } as Credentials);
+      navigate('/app/aprender', { replace: true });                                                // dashboard privado
+    } catch (err: any) {
+      // Laravel Breeze devuelve 422 (validation) o 401 (unauth)
+      const backend = err.response?.data;
+
+      if (backend?.errors) {
+        setErrors(backend.errors);
       } else {
-        // Registro: name, email, password, password_confirmation
-        await handleRegister({
-          name: form.name,
-          email: form.email,
-          password: form.password,
-          password_confirmation: form.confirm,
-        } as AuthPayload);
+        setErrors({ general: [backend?.message ?? 'Error inesperado.'] });
       }
-      navigate('/app');
-    } catch {
-      // errores ya están en `errors`
     } finally {
-      setSubmitting(false);
+      setSending(false);
     }
   };
 
+  /* ───────────────────────── UI ───────────────────────── */
   return (
-    <div className="relative min-h-screen bg-[var(--Blue1)] flex items-center justify-center px-4">
-      {/* Flecha de regreso al landing */}
+    <div className="relative min-h-screen flex items-center justify-center bg-[var(--Blue1)] px-4">
+      {/* Flecha para volver al landing */}
       <button
+        aria-label="Volver al inicio"
         onClick={() => navigate('/')}
-        className="absolute top-4 left-4 text-white hover:text-gray-200 transition text-2xl"
-        aria-label="Volver al landing"
+        className="absolute left-4 top-4 text-white text-2xl hover:text-gray-200"
       >
         <FiArrowLeft />
       </button>
 
-      <div className="w-full max-w-md bg-[#121c30] rounded-2xl shadow-xl p-8 space-y-6">
-        {/* Logo */}
+      <div className="w-full max-w-md space-y-6 rounded-2xl bg-[#121c30] p-8 shadow-xl">
+        {/* Logo / marca */}
         <div className="flex justify-center">
-          <div className="w-12 h-12 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold text-lg">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500 text-lg font-bold text-white">
             F
           </div>
         </div>
 
         {/* Heading */}
-        <div className="text-center space-y-1">
-          <h2 className="text-2xl font-extrabold text-white">
-            {mode === 'login' ? '¡Bienvenido de vuelta!' : 'Crea tu cuenta'}
-          </h2>
-          <p className="text-gray-400">
-            {mode === 'login'
-              ? 'Ingresa tus credenciales para continuar'
-              : 'Únete a FinanzApp y comienza a aprender finanzas gratis'}
-          </p>
+        <div className="space-y-1 text-center">
+          <h2 className="text-2xl font-extrabold text-white">¡Bienvenido de vuelta!</h2>
+          <p className="text-gray-400">Ingresa tus credenciales para continuar</p>
         </div>
 
         {/* Formulario */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === 'register' && (
-            <div>
-              <label htmlFor="name" className="block text-sm text-gray-300 mb-1">
-                Nombre completo
-              </label>
-              <input
-                id="name"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Tu nombre completo"
-                className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                required
-              />
-              {errors?.name && <p className="text-red-500 text-sm mt-1">{errors.name[0]}</p>}
-            </div>
-          )}
-
+        <form onSubmit={onSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm text-gray-300 mb-1">
+            <label htmlFor="email" className="mb-1 block text-sm text-gray-300">
               Correo electrónico
             </label>
             <input
               id="email"
               name="email"
               type="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="tu@email.com"
-              className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
               required
+              value={form.email}
+              onChange={onChange}
+              placeholder="tu@email.com"
+              className="w-full rounded-md border border-gray-700 bg-[var(--Blue2)] px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
-            {errors?.email && <p className="text-red-500 text-sm mt-1">{errors.email[0]}</p>}
+            {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email[0]}</p>}
           </div>
 
           <div className="relative">
-            <label htmlFor="password" className="block text-sm text-gray-300 mb-1">
+            <label htmlFor="password" className="mb-1 block text-sm text-gray-300">
               Contraseña
             </label>
             <input
               id="password"
               name="password"
-              type={showPassword ? 'text' : 'password'}
-              value={form.password}
-              onChange={handleChange}
-              placeholder={mode === 'register' ? 'Crea una contraseña' : 'Tu contraseña'}
-              className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 pr-10 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              type={showPwd ? 'text' : 'password'}
               required
+              value={form.password}
+              onChange={onChange}
+              placeholder="Tu contraseña"
+              className="w-full rounded-md border border-gray-700 bg-[var(--Blue2)] px-4 py-2 pr-10 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
             <button
               type="button"
-              onClick={() => setShowPassword(s => !s)}
+              onClick={() => setPwd(v => !v)}
               className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-200"
             >
-              {showPassword ? <FiEyeOff /> : <FiEye />}
+              {showPwd ? <FiEyeOff /> : <FiEye />}
             </button>
-            {errors?.password && (
-              <p className="text-red-500 text-sm mt-1">{errors.password[0]}</p>
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-500">{errors.password[0]}</p>
             )}
           </div>
-
-          {mode === 'register' && (
-            <div>
-              <label htmlFor="confirm" className="block text-sm text-gray-300 mb-1">
-                Confirmar contraseña
-              </label>
-              <input
-                id="confirm"
-                name="confirm"
-                type="password"
-                value={form.confirm}
-                onChange={handleChange}
-                placeholder="Confirma tu contraseña"
-                className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                required
-              />
-              {errors?.password_confirmation && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.password_confirmation[0]}
-                </p>
-              )}
-            </div>
-          )}
 
           <div className="flex items-center justify-between text-sm">
             <label className="inline-flex items-center text-gray-300">
@@ -197,67 +138,69 @@ const Login: React.FC = () => {
                 type="checkbox"
                 name="remember"
                 checked={form.remember}
-                onChange={handleChange}
-                className="form-checkbox h-4 w-4 text-cyan-500 bg-[var(--Blue2)] border-gray-600 rounded"
+                onChange={onChange}
+                className="form-checkbox h-4 w-4 rounded border-gray-600 bg-[var(--Blue2)] text-cyan-500"
               />
               <span className="ml-2">Recordarme</span>
             </label>
-            {mode === 'login' && (
-              <button
-                type="button"
-                onClick={() => navigate('/reset-password')}
-                className="text-cyan-400 hover:underline"
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
-            )}
+
+            <button
+              type="button"
+              onClick={() => navigate('/reset-password')}
+              className="text-cyan-400 hover:underline"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
           </div>
+
+          {errors.general && (
+            <p className="rounded-md bg-red-100 p-2 text-center text-sm text-red-700">
+              {errors.general[0]}
+            </p>
+          )}
 
           <button
             type="submit"
-            disabled={submitting}
-            className={`w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 rounded-md transition ${
-              submitting ? 'opacity-50 cursor-not-allowed' : ''
+            disabled={sending}
+            className={`w-full rounded-md bg-cyan-500 py-3 font-semibold text-white transition hover:bg-cyan-600 ${
+              sending ? 'cursor-not-allowed opacity-50' : ''
             }`}
           >
-            {mode === 'login' ? 'INICIAR SESIÓN' : 'CREAR CUENTA'}
+            {sending ? 'Ingresando…' : 'INICIAR SESIÓN'}
           </button>
-
-          {errors?.general && (
-            <p className="text-red-500 text-center mt-2">{errors.general[0]}</p>
-          )}
         </form>
 
         {/* Divider */}
-        <div className="flex items-center text-gray-500 text-sm my-4">
-          <div className="flex-grow h-px bg-gray-700" />
+        <div className="my-4 flex items-center text-sm text-gray-500">
+          <div className="h-px flex-grow bg-gray-700" />
           <span className="px-3">O CONTINÚA CON</span>
-          <div className="flex-grow h-px bg-gray-700" />
+          <div className="h-px flex-grow bg-gray-700" />
         </div>
 
-        {/* Social buttons */}
+        {/* Botones sociales (deshabilitados) */}
         <div className="flex gap-4">
-          <button disabled className="flex-1 flex items-center justify-center bg-white bg-opacity-10 border border-gray-700 rounded-md py-2 space-x-2 opacity-50">
+          <button
+            disabled
+            className="flex-1 flex items-center justify-center space-x-2 rounded-md border border-gray-700 bg-white bg-opacity-10 py-2 opacity-50"
+          >
             <FaGoogle /> <span>Google</span>
           </button>
-          <button disabled className="flex-1 flex items-center justify-center bg-white bg-opacity-10 border border-gray-700 rounded-md py-2 space-x-2 opacity-50">
+          <button
+            disabled
+            className="flex-1 flex items-center justify-center space-x-2 rounded-md border border-gray-700 bg-white bg-opacity-10 py-2 opacity-50"
+          >
             <FaFacebook /> <span>Facebook</span>
           </button>
         </div>
 
-        {/* Invitado */}
-        <p className="text-center text-gray-400 text-sm mt-4">
+        {/* Modo invitado */}
+        <p className="mt-4 text-center text-sm text-gray-400">
           ¿Prefieres empezar sin cuenta?{' '}
-          <button
-            onClick={() => navigate('/app')}
-            className="text-cyan-400 hover:underline"
-          >
+          <button onClick={() => navigate('/')} className="text-cyan-400 hover:underline">
             Continúa como invitado
           </button>
         </p>
       </div>
     </div>
   );
-};
-
-export default Login;
+}

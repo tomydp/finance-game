@@ -24,7 +24,7 @@ import VerifyEmail      from './components/auth/VerifyEmail';
 // ----------------------------------------------------------------
 // SPA interna protegida (con Layout + Sidebar + subrutas)
 // ----------------------------------------------------------------
-import PrivateRoute     from './routes/PrivateRoute';  // <-- tu componente guard
+import PrivateRoute     from './components/PrivateRoute';  // <-- tu componente guard
 import Layout           from './components/app/Layout';
 import Aprender         from './components/app/Aprender';
 import Desafios         from './components/app/Desafios';
