@@ -1,6 +1,15 @@
 <?php
 
 use App\Http\Controllers\API\CourseApiController;
+use App\Http\Controllers\API\LessonApiController;
 use Illuminate\Support\Facades\Route;
 
-Route::apiResource('/courses', CourseApiController::class);
+// Cursos (solo lectura, por ahora)
+Route::apiResource('courses', CourseApiController::class)
+     ->only('index')                         // GET /api/courses
+     ->names('api.courses');
+
+// Lecciones de un curso (solo listado)
+Route::apiResource('courses.lessons', LessonApiController::class)
+     ->only('index')                         // GET /api/courses/{course}/lessons
+     ->names('api.courses.lessons');
