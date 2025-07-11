@@ -19,4 +19,9 @@ class Lesson extends Model
     {
         return $this->belongsTo(Course::class);
     }
+
+    public function exercises()
+    {
+        return $this->hasMany(Exercise::class)->orderBy('id');
+    }
 }
