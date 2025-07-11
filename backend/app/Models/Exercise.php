@@ -16,4 +16,9 @@ class Exercise extends Model
         'options',
         'correct_answer',
     ];
+
+    public function lesson()
+    {
+        return $this->belongsTo(Lesson::class);
+    }
 }
