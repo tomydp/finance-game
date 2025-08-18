@@ -50,4 +50,16 @@ class LessonApiController extends Controller
     {
         //
     }
+
+    public function completar($lessonId, Request $request)
+{
+    $userId = $request->input('user_id');
+
+    LessonUser::updateOrCreate(
+        ['user_id' => $userId, 'lesson_id' => $lessonId],
+        ['completed_at' => now()]
+    );
+
+    return response()->json(['message' => 'Lección marcada como completada']);
+}
 }

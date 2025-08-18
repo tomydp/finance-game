@@ -18,3 +18,5 @@ Route::apiResource('courses.lessons', LessonApiController::class)
 Route::apiResource('lessons.exercises', ExerciseApiController::class)
      ->only(['index', 'show'])        // GET /api/lessons/{lesson}/exercises
      ->names('api.lessons.exercises');
+
+Route::post('/lessons/{id}/complete', [\App\Http\Controllers\API\LessonApiController::class, 'completar']);
