@@ -15,4 +15,9 @@ class Result extends Model
         'is_correct',
         'answered_at',
     ];
+    
+     protected $casts = [
+        'is_correct'  => 'boolean',
+        'answered_at' => 'datetime',
+    ];
 }

@@ -14,9 +14,9 @@ class LessonApiController extends Controller
      */
     public function index(Course $course)
     {
-        $lessons = $course->lessons()->orderBy('order')->get();
-
-        return new LessonCollection($lessons);
+        
+    $lessons = $course->lessons()->orderBy('order')->get();
+    return new LessonCollection($lessons);
     }
 
     /**

@@ -24,4 +24,13 @@ class Lesson extends Model
     {
         return $this->hasMany(Exercise::class)->orderBy('id');
     }
+    
+    public function completedExercises(int $userId): int
+{
+    return $this->results()
+                ->where('user_id', $userId)
+                ->where('is_correct', 1)
+                ->count();
+}
+
 }

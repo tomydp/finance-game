@@ -1,29 +1,37 @@
 <?php
 
 namespace Database\Seeders;
-use App\Models\UserAchievements;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Support\Carbon;
+
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class UserAchievementSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        
-        UserAchievements::create([
-            'user_id' => 1,
-            'achievement_id' => 1,
-            'earned_at' => Carbon::now()->subDays(2),
-        ]);
+        $userId = DB::table('users')->where('email', 'alumno@demo.com')->value('id');
+        if (!$userId) return;
 
-        UserAchievements::create([
-            'user_id' => 1,
-            'achievement_id' => 2,
-            'earned_at' => Carbon::now()->subDay(),
-        ]);
+        $achievements = DB::table('achievements')->pluck('id', 'name');
+
+        $pairs = [
+            'Primer paso' => Carbon::now()->subDays(2),
+            'Ahorrista'   => Carbon::now()->subDay(),
+        ];
+
+        foreach ($pairs as $name => $date) {
+            $achId = $achievements[$name] ?? null;
+            if ($achId) {
+                DB::table('user_achievements')->updateOrInsert(
+                    ['user_id' => $userId, 'achievement_id' => $achId],
+                    [
+                        'earned_at' => $date,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+            }
+        }
     }
 }

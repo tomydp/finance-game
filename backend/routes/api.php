@@ -20,3 +20,11 @@ Route::apiResource('lessons.exercises', ExerciseApiController::class)
      ->names('api.lessons.exercises');
 
 Route::post('/lessons/{id}/complete', [\App\Http\Controllers\API\LessonApiController::class, 'completar']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post(
+        'exercises/{exercise}/submit', // POST /api/exercises/{id}/submit
+        [ExerciseApiController::class, 'submit']
+    )->name('api.exercises.submit');
+});
+
+
