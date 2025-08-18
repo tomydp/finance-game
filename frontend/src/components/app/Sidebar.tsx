@@ -24,7 +24,7 @@ const menuItems: MenuItem[] = [
   { to: '/app/ligas',    label: 'Ligas',     icon: FaTrophy,         enabled: false },
   { to: '/app/desafios', label: 'Desafíos',  icon: FaBolt,           enabled: true  },
   { to: '/app/tienda',   label: 'Tienda',    icon: FaShoppingCart,   enabled: false },
-  { to: '/app/perfil',   label: 'Perfil',    icon: FaUser,           enabled: false },
+  { to: '/app/perfil',   label: 'Perfil',    icon: FaUser,           enabled: true },
   { to: '/app/mas',      label: 'Más',       icon: FaEllipsisH,      enabled: true  },
 ];
 
