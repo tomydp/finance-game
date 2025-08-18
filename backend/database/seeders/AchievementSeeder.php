@@ -2,25 +2,25 @@
 
 namespace Database\Seeders;
 
-use App\Models\Achievement;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class AchievementSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-         Achievement::create([
-            'name' => 'Primer curso completado',
-            'description' => 'Completaste tu primer curso en la plataforma.',
-        ]);
+        $rows = [
+            ['name' => 'Primer paso', 'description' => 'Completa tu primera lección'],
+            ['name' => 'Constancia',   'description' => 'Estudia 5 días seguidos'],
+            ['name' => 'Ahorrista',    'description' => 'Aprueba 10 ejercicios'],
+            ['name' => 'Inversor',     'description' => 'Termina el curso de Inversiones'],
+        ];
 
-        Achievement::create([
-            'name' => '10 respuestas correctas',
-            'description' => 'Respondiste correctamente a 10 ejercicios.',
-        ]);
+        foreach ($rows as $r) {
+            DB::table('achievements')->updateOrInsert(
+                ['name' => $r['name']],
+                $r + ['created_at' => now(), 'updated_at' => now()]
+            );
+        }
     }
 }
