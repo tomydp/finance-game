@@ -5,6 +5,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
@@ -25,14 +26,15 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->appendToGroup('api', [
-            // 1) Acepta la cookie + añade headers CORS de confianza
+            // 1) Requests stateful (Sanctum + CORS)
             EnsureFrontendRequestsAreStateful::class,
+            HandleCors::class,
 
-            // 2) Si autenticas con sesión (cookie laravel_session) añade esto:
+            // 2) Si vas a usar sesión/cookies en tu SPA
             EncryptCookies::class,
             StartSession::class,
 
-            // 3) Protege contra CSRF cuando el origen es stateful
+            // 3) CSRF (solo tiene sentido si tu SPA comparte dominio/origen)
             ValidateCsrfToken::class,
         ]);
     })

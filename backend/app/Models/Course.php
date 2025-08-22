@@ -13,4 +13,9 @@ class Course extends Model
         'description',
         'difficulty',
     ];
+
+    public function lessons()
+    {
+        return $this->hasMany(Lesson::class)->orderBy('order');
+    }
 }
