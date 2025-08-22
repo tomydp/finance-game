@@ -39,14 +39,22 @@
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
-            </a>
-
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center text-sm text-gray-600 my-5">
+            <div class="mb-5 sm:mb-0">
+                <x-link :href="route('login')">Iniciar Sesion</x-link>
+            </div>
+            <div>
+                <x-link :href="route('password.request')">Olvidaste tu Contraseña</x-link>
+            </div>
         </div>
+        <x-primary-button class="flex w-full justify-center rounded-md">
+                {{ __('Register') }}
+        </x-primary-button>
     </form>
+    <a href="{{ route('socialite.redirect', 'google') }}"
+            class="mt-2 flex w-full justify-center rounded-md bg-red-600 px-4 py-2
+           font-semibold text-white hover:bg-red-700 focus:outline-none
+           focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+        Registrarse con Google
+    </a>
 </x-guest-layout>
