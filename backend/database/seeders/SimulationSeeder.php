@@ -1,29 +1,37 @@
 <?php
 
 namespace Database\Seeders;
-use App\Models\Simulation;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class SimulationSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-         Simulation::create([
-            'user_id' => 1,
-            'investment_type' => 'Plazo fijo',
-            'amount' => 10000,
-            'simulated_return' => 10400,
-        ]);
+        $userId = DB::table('users')->where('email', 'alumno@demo.com')->value('id');
+        if (!$userId) return;
 
-        Simulation::create([
-            'user_id' => 1,
-            'investment_type' => 'Acciones',
-            'amount' => 15000,
-            'simulated_return' => 17000,
-        ]);
+        $rows = [
+            [
+                'user_id' => $userId,
+                'investment_type' => 'plazo_fijo',
+                'amount' => 100000,
+                'simulated_return' => 112000,
+            ],
+            [
+                'user_id' => $userId,
+                'investment_type' => 'bono_soberano',
+                'amount' => 150000,
+                'simulated_return' => 168000,
+            ],
+        ];
+
+        foreach ($rows as $r) {
+            DB::table('simulations')->insert($r + [
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
     }
 }

@@ -1,37 +1,33 @@
 <?php
 
 namespace Database\Seeders;
-use App\Models\Result;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Support\Carbon;
+
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class ResultSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        Result::create([
-            'user_id' => 1,
-            'exercise_id' => 1,
-            'is_correct' => true,
-            'answered_at' => Carbon::now()->subMinutes(15),
-        ]);
+        $userId = DB::table('users')->where('email', 'alumno@demo.com')->value('id');
+        if (!$userId) return;
 
-        Result::create([
-            'user_id' => 1,
-            'exercise_id' => 2,
-            'is_correct' => false,
-            'answered_at' => Carbon::now()->subMinutes(10),
-        ]);
+        $exerciseIds = DB::table('exercises')->pluck('id');
 
-        Result::create([
-            'user_id' => 1,
-            'exercise_id' => 1,
-            'is_correct' => true,
-            'answered_at' => Carbon::now()->subMinutes(5),
-        ]);
+        $now = Carbon::now();
+        foreach ($exerciseIds as $i => $exId) {
+            DB::table('results')->updateOrInsert(
+                ['user_id' => $userId, 'exercise_id' => $exId],
+                [
+                    'user_id' => $userId,
+                    'exercise_id' => $exId,
+                    'is_correct' => ($i % 2 === 0) ? 1 : 0,
+                    'answered_at' => $now->copy()->subMinutes(5 * $i),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+        }
     }
 }
