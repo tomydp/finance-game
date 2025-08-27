@@ -1,6 +1,6 @@
 @props(['text'])
 
-<td class="px-6 py-4 max-w-xs relative group z-50" style="overflow:visible;">
+<td class="px-6 py-4 max-w-xs relative group overflow-visible">
     <div class="truncate">
         {{ $text }}
     </div>
