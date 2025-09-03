@@ -7,9 +7,9 @@
             <h2 class="text-xl mb-4">Nuevo Curso</h2>
             <form wire:submit.prevent='save'> 
                 
-            <input wire:model="name" type="text" placeholder="Nombre" class="w-full mb-2 border p-2" />
+            <input wire:model="name" type="text" placeholder="Nombre" class="w-full my-2 border p-2" />
             @error('name') 
-            <span class="text-red-500 text-xs">{{ $message }}</span> 
+            <span class="text-red-500 text-sm">{{ $message }}</span> 
             @enderror
             <textarea wire:model="description" placeholder="Descripción" class="w-full mb-2 border p-2"></textarea>
             @error('description') 
