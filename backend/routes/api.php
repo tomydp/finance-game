@@ -24,3 +24,12 @@ Route::apiResource('courses.lessons', LessonApiController::class)
 Route::apiResource('lessons.exercises', ExerciseApiController::class)
      ->only(['index', 'show'])              // GET /api/lessons/{lesson}/exercises
      ->names('api.lessons.exercises');
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post(
+        'exercises/{exercise}/submit', // POST /api/exercises/{id}/submit
+        [ExerciseApiController::class, 'submit']
+    )->name('api.exercises.submit');
+});
+
+

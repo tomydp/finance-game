@@ -7,6 +7,7 @@ use App\Http\Resources\ExerciseCollection;
 use App\Http\Resources\ExerciseResource;
 use App\Models\Exercise;
 use App\Models\Lesson;
+use App\Models\Result;
 use Illuminate\Http\Request;
 
 class ExerciseApiController extends Controller
@@ -16,7 +17,46 @@ class ExerciseApiController extends Controller
      */
     public function index(Lesson $lesson)
     {
-        return new ExerciseCollection($lesson->exercises);
+        $exercises = $lesson->exercises()->orderBy('id')->get();
+        return new ExerciseCollection($exercises);
+    }
+    
+    public function submit(Request $request, Exercise $exercise)
+{
+    $validated = $request->validate([
+        'answer' => 'required',
+    ]);
+
+    $user      = $request->user();
+    $isCorrect = $exercise->checkAnswer($validated['answer']);
+
+    // upsert respetando tu esquema
+    Result::updateOrCreate(
+        [
+            'user_id'     => $user->id,
+            'exercise_id' => $exercise->id,
+        ],
+        [
+            'is_correct'  => $isCorrect,
+            'answered_at' => now(),
+        ]
+    );
+
+    // progreso
+    $lesson    = $exercise->lesson;
+    $total     = $lesson->totalExercises();
+    $completed = $lesson->completedExercises($user->id);   // filtrará por is_correct=1
+    $progress  = round(($completed / $total) * 100);
+
+    if ($completed === $total) {
+        $lesson->unlockNextFor($user->id);
+    }
+
+    return response()->json([
+        'correct'   => $isCorrect,
+        'progress'  => $progress,
+        'completed' => $completed === $total,
+    ]);
     }
 
     /**
@@ -26,7 +66,7 @@ class ExerciseApiController extends Controller
     {
         //
     }
-
+    
     /**
      * Display the specified resource.
      */
