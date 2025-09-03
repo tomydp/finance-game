@@ -31,7 +31,9 @@
             </table>    
         </div>
         
-
+        <div class="mt-4">
+            {{ $courses->onEachSide(1)->links() }}
+          </div>
     </div>
 
 

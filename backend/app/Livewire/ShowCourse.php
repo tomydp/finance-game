@@ -10,6 +10,7 @@ class ShowCourse extends Component
 {
     use WithPagination;
 
+    protected string $paginationTheme = 'tailwind';
     public $listeners = ['courseCreated' => '$refresh', 'courseUpdated' => '$refresh'];
 
     public function editCourse($id)
@@ -20,7 +21,7 @@ class ShowCourse extends Component
     public function render()
     {
         return view('livewire.show-course', [
-            'courses' => Course::paginate(5),
+            'courses' => Course::orderBy('id')->paginate(5),
         ]);
     }
 }
