@@ -35,6 +35,13 @@
                 class="block px-4 py-2">
                 {{ __('Lecciones') }}
             </x-nav-link>
+
+           <x-nav-link 
+           :href="route('exercises.index')" 
+           :active="request()->routeIs('exercises.index')" 
+           class="block px-4 py-2">
+           {{ __('Ejercicios') }}
+            </x-nav-link>
         </nav>
     </aside>
 
