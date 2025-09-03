@@ -1,13 +1,15 @@
 <?php
 
 use App\Http\Middleware\EnsureIsAdmin;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Session\Middleware\AuthenticateSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -25,17 +27,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => EnsureIsAdmin::class,
         ]);
 
-        $middleware->appendToGroup('api', [
-            // 1) Requests stateful (Sanctum + CORS)
-            EnsureFrontendRequestsAreStateful::class,
-            HandleCors::class,
-
-            // 2) Si vas a usar sesión/cookies en tu SPA
+         $middleware->appendToGroup('api', [
+            EnsureFrontendRequestsAreStateful::class, // primero
             EncryptCookies::class,
+            AddQueuedCookiesToResponse::class,
             StartSession::class,
-
-            // 3) CSRF (solo tiene sentido si tu SPA comparte dominio/origen)
-            ValidateCsrfToken::class,
+            AuthenticateSession::class,               // opcional pero recomendado
+            ShareErrorsFromSession::class,           // útil para 422 con mensajes
+            VerifyCsrfToken::class,                  // ¡esta es la clase correcta!
+            // SubstituteBindings ya está en el grupo api por defecto
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
