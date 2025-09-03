@@ -4,7 +4,12 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\LessonController;
+use App\Livewire\Exercise\ShowExercise;
+use App\Livewire\Exercise\CreateExercise;
+use App\Livewire\Exercise\EditExercise;
+
 use Illuminate\Support\Facades\Route;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -32,5 +37,15 @@ Route::put('/courses/{course}', [CourseController::class, 'update'])->name('cour
 Route::get('/lessons', [LessonController::class, 'index'])->name('lessons.index');
 Route::get('/lessons/{lesson}/edit', [LessonController::class, 'edit'])->name('lessons.edit');
 Route::put('/lessons/{lesson}', [LessonController::class, 'update'])->name('lessons.update');
+
+//Exercise 
+Route::middleware(['auth', 'verified'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/exercises', ShowExercise::class)->name('exercises.index');
+        Route::get('/exercises/create', CreateExercise::class)->name('exercises.create');
+        Route::get('/exercises/{exercise}/edit', EditExercise::class)->name('exercises.edit');
+    });
 
 require __DIR__.'/auth.php';
