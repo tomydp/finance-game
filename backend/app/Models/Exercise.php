@@ -17,6 +17,18 @@ class Exercise extends Model
         'correct_answer',
     ];
 
+     protected $casts = [
+        'options' => 'array',
+    ];
+
+    public function checkAnswer(string|array $answer): bool
+    {
+        // Lógica básica; ajusta según tipos:
+        // - multiple_choice / true_false  ➜ comparación directa
+        // - fill_blank                    ➜ strtolower, trim, etc.
+        return $this->correct_answer === $answer;
+    }
+
     public function lesson()
     {
         return $this->belongsTo(Lesson::class);

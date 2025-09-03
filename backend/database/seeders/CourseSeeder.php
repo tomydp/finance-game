@@ -2,33 +2,76 @@
 
 namespace Database\Seeders;
 
-use App\Models\Course;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class CourseSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        Course::create([
-            'name' => 'Finanzas Personales',
-            'description' => 'Aprendé a manejar tu dinero de forma eficiente.',
-            'difficulty' => 'Facil',
-        ]);
+        $courses = [
+            [
+                'name' => 'Fundamentos Financieros',
+                'description' => 'Presupuesto, ahorro, objetivos y manejo básico del dinero.',
+                'difficulty' => 'facil',
+            ],
+            [
+                'name' => 'Introducción a Inversiones',
+                'description' => 'Riesgo vs retorno, plazo fijo, bonos, acciones y fondos.',
+                'difficulty' => 'medio',
+            ],
+            [
+                'name' => 'Crédito y Deuda Responsable 1',
+                'description' => 'Score crediticio, interés compuesto y cómo evitar sobreendeudarte.',
+                'difficulty' => 'dificil',
+            ],
+            [
+                'name' => 'Crédito y Deuda Responsable 2',
+                'description' => 'Score crediticio, interés compuesto y cómo evitar sobreendeudarte.',
+                'difficulty' => 'dificil',
+            ],
+            [
+                'name' => 'Crédito y Deuda Responsable 3',
+                'description' => 'Score crediticio, interés compuesto y cómo evitar sobreendeudarte.',
+                'difficulty' => 'medio',
+            ],
+            [
+                'name' => 'Crédito y Deuda Responsable 4',
+                'description' => 'Score crediticio, interés compuesto y cómo evitar sobreendeudarte.',
+                'difficulty' => 'facil',
+            ],
+            [
+                'name' => 'Crédito y Deuda Responsable 5',
+                'description' => 'Score crediticio, interés compuesto y cómo evitar sobreendeudarte.',
+                'difficulty' => 'dificil',
+            ],
+            [
+                'name' => 'Crédito y Deuda Responsable 6',
+                'description' => 'Score crediticio, interés compuesto y cómo evitar sobreendeudarte.',
+                'difficulty' => 'medio',
+            ],
+            [
+                'name' => 'Crédito y Deuda Responsable 7',
+                'description' => 'Score crediticio, interés compuesto y cómo evitar sobreendeudarte.',
+                'difficulty' => 'facil',
+            ],
+            [
+                'name' => 'Crédito y Deuda Responsable 8',
+                'description' => 'Score crediticio, interés compuesto y cómo evitar sobreendeudarte.',
+                'difficulty' => 'medio',
+            ],
+            [
+                'name' => 'Crédito y Deuda Responsable 9',
+                'description' => 'Score crediticio, interés compuesto y cómo evitar sobreendeudarte.',
+                'difficulty' => 'dificil',
+            ]
+        ];
 
-        Course::create([
-            'name' => 'Inversiones Avanzadas',
-            'description' => 'Conocé herramientas financieras para invertir mejor.',
-            'difficulty' => 'Medio',
-        ]);
-
-        Course::create([
-            'name' => 'Inversiones Dificiles',
-            'description' => 'Crypto.',
-            'difficulty' => 'Dificil',
-        ]);
+        foreach ($courses as $c) {
+            DB::table('courses')->updateOrInsert(
+                ['name' => $c['name']],
+                $c + ['created_at' => now(), 'updated_at' => now()]
+            );
+        }
     }
 }
