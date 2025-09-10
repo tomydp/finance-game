@@ -20,7 +20,7 @@ import Aprender         from './components/app/Aprender';
 import Desafios         from './components/app/Desafios';
 import Mas              from './components/app/Mas';
 import Sonidos          from './components/app/Sonidos';
-import Perfil           from './components/app/Perfil'; // 👈 nuevo import
+import Perfil           from './components/app/Perfil/Perfil'; // 👈 nuevo import
 
 function App() {
   return (
