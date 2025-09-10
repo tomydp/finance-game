@@ -1,37 +1,80 @@
 import React from "react";
-import { format, subDays } from "date-fns";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  getDay,
+  isToday,
+} from "date-fns";
 import { es } from "date-fns/locale";
 
 type Props = {
-  activityDates: string[]; // lista de fechas con actividad ["2025-09-07","2025-09-09"]
+  activityDates: string[]; // ejemplo: ["2025-09-07","2025-09-09"]
 };
 
 export default function ActivityCalendar({ activityDates }: Props) {
-  // Generar últimos 7 días
   const today = new Date();
-  const last7Days = Array.from({ length: 7 }, (_, i) =>
-    subDays(today, 6 - i) // de más antiguo a hoy
-  );
+
+  const daysInMonth = eachDayOfInterval({
+    start: startOfMonth(today),
+    end: endOfMonth(today),
+  });
+
+  const startDay = getDay(startOfMonth(today));
 
   return (
-    <div className="flex justify-between">
-      {last7Days.map((date) => {
-        const dayLabel = format(date, "EEEEE", { locale: es }); // primera letra (L, M, X…)
-        const dateStr = format(date, "yyyy-MM-dd"); // formato clave
-        const isActive = activityDates.includes(dateStr);
+    <div className="p-4 bg-gray-900 rounded-xl shadow-md max-w-md mx-auto">
+      {/* Título */}
+      <h3 className="text-lg font-bold mb-1 text-center">📅 Actividad Reciente</h3>
+      <p className="text-gray-400 text-sm text-center mb-3">
+        {format(today, "MMMM yyyy", { locale: es })}
+      </p>
 
-        return (
-          <div
-            key={dateStr}
-            className={`w-10 h-10 flex items-center justify-center rounded-full font-bold
-              ${isActive ? "bg-cyan-500 text-white" : "bg-gray-700 text-gray-400"}
-            `}
-            title={format(date, "dd/MM")} // tooltip con fecha
-          >
-            {dayLabel.toUpperCase()}
+      {/* Encabezados de días */}
+      <div className="grid grid-cols-7 gap-1 text-center text-gray-400 mb-2 text-xs">
+        {["L", "M", "X", "J", "V", "S", "D"].map((d) => (
+          <div key={d} className="font-semibold">
+            {d}
           </div>
-        );
-      })}
+        ))}
+      </div>
+
+      {/* Días del mes */}
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {/* Espacios vacíos antes del primer día */}
+        {Array.from({ length: startDay === 0 ? 6 : startDay - 1 }).map(
+          (_, i) => (
+            <div key={`empty-${i}`} />
+          )
+        )}
+
+        {/* Renderizar cada día */}
+        {daysInMonth.map((date) => {
+          const dateStr = format(date, "yyyy-MM-dd");
+          const isActive = activityDates.includes(dateStr);
+
+          return (
+            <div
+              key={dateStr}
+              className={`w-8 h-8 flex items-center justify-center rounded-md text-xs font-medium
+                ${
+                  isToday(date)
+                    ? "border-2 border-yellow-400"
+                    : "border border-transparent"
+                }
+                ${
+                  isActive
+                    ? "bg-cyan-500 text-white"
+                    : "bg-gray-800 text-gray-500"
+                }`}
+              title={format(date, "dd/MM/yyyy", { locale: es })}
+            >
+              {format(date, "d")}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
