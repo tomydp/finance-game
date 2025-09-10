@@ -12,7 +12,7 @@ const Footer: React.FC = () => (
             F
           </div>
           <span className="text-xl font-semibold text-cyan-400">
-            FinanzApp
+            Finance Game
           </span>
         </div>
         <p className="text-sm">

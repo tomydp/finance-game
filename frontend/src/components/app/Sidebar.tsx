@@ -36,7 +36,7 @@ const Sidebar: React.FC = () => {
         <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold">
           F
         </div>
-        <span className="text-lg font-semibold text-cyan-400">FinanzApp</span>
+        <span className="text-lg font-semibold text-cyan-400">Finance Game</span>
       </div>
 
       {/* Menú de navegación */}

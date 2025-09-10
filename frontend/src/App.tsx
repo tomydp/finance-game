@@ -1,5 +1,6 @@
 // src/App.tsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from "react-hot-toast"; // 👈 IMPORTANTE
 
 // Landing page
 import Navbar           from './components/landing/Navbar';
@@ -19,11 +20,13 @@ import Aprender         from './components/app/Aprender';
 import Desafios         from './components/app/Desafios';
 import Mas              from './components/app/Mas';
 import Sonidos          from './components/app/Sonidos';
-// (importa aquí cualquier otro componente que quieras bajo /app, p.ej. Sonidos, Ligas, etc.)
 
 function App() {
   return (
     <Router>
+      {/* 👇 Esto renderiza las notificaciones globales en toda la app */}
+      <Toaster position="top-center" reverseOrder={false} />
+
       <Routes>
         {/* ────────────── Ruta pública: Landing completo ────────────── */}
         <Route
@@ -49,9 +52,8 @@ function App() {
           <Route index element={<Navigate to="aprender" replace />} />
           <Route path="aprender" element={<Aprender />} />
           <Route path="sonidos"  element={<Sonidos />} />
-          {/* <Route path="ligas"    element={<Ligas />} /> */}
           <Route path="desafios" element={<Desafios />} />
-          <Route path="mas" element={<Mas />} />
+          <Route path="mas"      element={<Mas />} />
           <Route path="*" element={<Navigate to="aprender" replace />} />
         </Route>
 
