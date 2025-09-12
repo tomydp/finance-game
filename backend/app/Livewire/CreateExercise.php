@@ -12,7 +12,8 @@ class CreateExercise extends Component
     public bool $showModal = false;
 
     public ?int $courseId = null;
-    public ?int $lessonId = null;
+    /** Puede ser '' para quedar en "Seleccionar…" */
+    public $lessonId = '';
 
     public string $type = 'mcq';      // 'mcq' | 'true_false' | 'fill_blank'
     public string $question = '';
@@ -26,6 +27,10 @@ class CreateExercise extends Component
 
     // Fill blank
     public array $answersFill = [''];
+
+    // Catálogos
+    public array $courses = [];
+    public array $lessons = [];
 
     protected function rules(): array
     {
@@ -52,9 +57,46 @@ class CreateExercise extends Component
         };
     }
 
-    public function updatedCourseId(): void
+    public function mount(): void
     {
-        $this->lessonId = null;
+        $this->courses = Course::orderBy('name')->get(['id','name'])->toArray();
+        $this->refreshLessons();
+    }
+
+    /** Abre SIEMPRE vacío */
+    public function openModal(): void
+    {
+        $this->resetForm();
+        $this->showModal = true;
+    }
+
+    /** Limpia campos y repuebla selects */
+    private function resetForm(): void
+    {
+        $this->courseId     = null;
+        $this->lessonId     = '';
+        $this->type         = 'mcq';
+        $this->question     = '';
+        $this->options      = ['', '', '', ''];
+        $this->correctIndex = null;
+        $this->answerBool   = null;
+        $this->answersFill  = [''];
+        $this->refreshLessons();
+    }
+
+    /** Change handler explícito: deja "Seleccionar…" y repuebla */
+    public function handleCourse(string $value): void
+    {
+        $this->courseId = $value !== '' ? (int) $value : null;
+        $this->lessonId = '';
+        $this->refreshLessons();
+    }
+
+    private function refreshLessons(): void
+    {
+        $this->lessons = $this->courseId
+            ? Lesson::where('course_id', $this->courseId)->orderBy('order')->get(['id','title'])->toArray()
+            : [];
     }
 
     public function save(): void
@@ -64,12 +106,11 @@ class CreateExercise extends Component
         [$options, $correct] = match ($this->type) {
             'mcq' => [
                 array_map('trim', $this->options),
-                // guardamos el texto de la opción correcta (tu checkAnswer lo compara ok)
                 (string) ($this->options[$this->correctIndex] ?? ''),
             ],
-            'true_false' => [null, $this->answerBool ? 'true' : 'false'],
+            'true_false' => [[], $this->answerBool ? 'true' : 'false'],
             'fill_blank' => [
-                null,
+                [],
                 json_encode(
                     array_values(array_filter(array_map('trim', $this->answersFill), fn($s) => $s !== '')),
                     JSON_UNESCAPED_UNICODE
@@ -78,31 +119,27 @@ class CreateExercise extends Component
         };
 
         Exercise::create([
-            'lesson_id'      => $this->lessonId,
+            'lesson_id'      => (int) $this->lessonId,
             'type'           => $this->type,
             'question'       => $this->question,
-            'options'        => $options,       // cast a array en el modelo
-            'correct_answer' => $correct,       // string o json-string (soportado por tu checkAnswer)
+            'options'        => $options,
+            'correct_answer' => $correct,
         ]);
 
         $this->dispatch('exerciseCreated');
 
-        $this->reset([
-            'showModal','courseId','lessonId','type','question',
-            'options','correctIndex','answerBool','answersFill'
-        ]);
-        $this->type = 'mcq';
-        $this->options = ['', '', '', ''];
-        $this->answersFill = [''];
+        // Cerrar y dejar todo limpio
+        $this->resetErrorBag();
+        $this->resetValidation();
+        $this->resetForm();
+        $this->showModal = false;
     }
 
     public function render()
     {
         return view('livewire.create-exercise', [
-            'courses' => Course::orderBy('name')->get(['id','name']),
-            'lessons' => $this->courseId
-                ? Lesson::where('course_id', $this->courseId)->orderBy('order')->get(['id','title'])
-                : collect(),
+            'courses' => $this->courses,
+            'lessons' => $this->lessons,
         ]);
     }
 
@@ -110,6 +147,7 @@ class CreateExercise extends Component
     {
         $this->resetErrorBag();
         $this->resetValidation();
+        $this->resetForm();   // ← limpia todo aunque no guarde
         $this->showModal = false;
     }
 }

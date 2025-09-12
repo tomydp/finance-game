@@ -2,45 +2,66 @@
 
 namespace App\Livewire;
 
-use App\Models\Course;
 use Livewire\Component;
+use App\Models\Course;
 
 class CreateCourse extends Component
 {
-    public $name, $description, $difficulty;
-    public $showModal = false;
+    public bool $showModal = false;
 
-    protected $rules = [
-        'name' => 'required|string|max:255',
-        'description' => 'required|string',
-        'difficulty' => 'required|string',
-    ];
+    public string $name = '';
+    public string $description = '';
+    public ?string $difficulty = null; // 'facil' | 'medio' | 'dificil' | null
 
-    public function save()
+    protected function rules(): array
+    {
+        return [
+            'name'        => ['required','string','max:255'],
+            'description' => ['required','string'],
+            'difficulty'  => ['required','in:facil,medio,dificil'],
+        ];
+    }
+
+    /** Abre SIEMPRE limpio */
+    public function openModal(): void
+    {
+        $this->resetForm();
+        $this->showModal = true;
+    }
+
+    /** Cierra y limpia */
+    public function closeModal(): void
+    {
+        $this->resetErrorBag();
+        $this->resetValidation();
+        $this->resetForm();
+        $this->showModal = false;
+    }
+
+    private function resetForm(): void
+    {
+        $this->name = '';
+        $this->description = '';
+        $this->difficulty = null;
+    }
+
+    public function save(): void
     {
         $this->validate();
 
         Course::create([
-            'name' => $this->name,
+            'name'        => $this->name,
             'description' => $this->description,
-            'difficulty' => $this->difficulty,
+            'difficulty'  => $this->difficulty,
         ]);
 
+        // Notifica y cierra limpio
         $this->dispatch('courseCreated');
-
-        $this->reset(['name', 'description', 'difficulty', 'showModal']);
+        $this->closeModal();
     }
+
     public function render()
     {
-        $difficulties = ['Facil', 'Medio', 'Dificil'];
-        return view('livewire.create-course',compact('difficulties'));
+        return view('livewire.create-course');
     }
-    public function closeModal()
-    {
-        $this->reset(['name', 'description', 'difficulty', 'showModal']);
-        $this->resetErrorBag();
-        $this->resetValidation();
-    }
-    
-
 }

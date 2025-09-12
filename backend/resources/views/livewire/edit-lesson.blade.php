@@ -1,36 +1,71 @@
 <div>
-    @if($showModal)
-    <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
-            <h2 class="text-xl mb-4">Editar Leccion</h2>
+    <button
+        type="button"
+        wire:click="openModal"
+        class="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+    >
+        Editar
+    </button>
 
-            <form wire:submit.prevent='update'> 
-            <input wire:model="title" type="text" class="w-full mb-2 border p-2" placeholder="Titulo" />
-            @error('title') 
-            <span class="text-red-500 text-xs">{{ $message }}</span> 
-            @enderror
-            <textarea wire:model="description" class="w-full mb-2 border p-2" placeholder="Descripción"></textarea>
-            @error('description') 
-            <span class="text-red-500 text-xs">{{ $message }}</span> 
-            @enderror
-            <select wire:model="course_id" class="w-full mb-4 border p-2">
-                <option value="">Seleccionar curso</option>
-                @foreach($courses as $courses)
-                    <option value="{{ $courses->id }}">{{ $courses->name }}</option>
-                @endforeach
-            </select>
-            @error('course_id') 
-            <span class="text-red-500 text-xs">{{ $message }}</span> 
-            @enderror
-   
-            <div class="flex justify-end gap-2 mt-4">
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Editar</button>
-                <button type="button" wire:click="closeModal" class="ml-2 text-red-500">Cancelar</button>
+    @if($isOpen)
+        <div class="fixed inset-0 z-[9999]">
+            <div class="flex min-h-screen items-center justify-center">
+                {{-- Fondo: clic fuera cierra --}}
+                <div class="fixed inset-0 bg-black/50" wire:click="closeModal"></div>
+
+                {{-- Modal --}}
+                <div class="relative z-10 w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl">
+                    <div class="flex items-center justify-between bg-blue-600 px-5 py-3 text-white">
+                        <h2 class="text-lg font-semibold">Editar Lección #{{ $lessonId }}</h2>
+                        <button type="button" wire:click="closeModal" class="text-xl leading-none">×</button>
+                    </div>
+
+                    <div class="p-6">
+                        <form wire:submit.prevent="update" class="space-y-5">
+                            {{-- Título --}}
+                            <div class="grid grid-cols-12 items-start gap-3">
+                                <label class="col-span-12 mt-2 text-sm sm:col-span-3">Título</label>
+                                <div class="col-span-12 sm:col-span-9">
+                                    <input
+                                        wire:model="title"
+                                        type="text"
+                                        class="w-full rounded border p-2 @error('title') border-red-500 ring-1 ring-red-500 @enderror"
+                                        placeholder="Título"
+                                    />
+                                    @error('title')
+                                        <span class="mt-1 block text-left text-xs text-red-600">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Curso --}}
+                            <div class="grid grid-cols-12 items-start gap-3">
+                                <label class="col-span-12 mt-2 text-sm sm:col-span-3">Curso</label>
+                                <div class="col-span-12 sm:col-span-9">
+                                    <select
+                                        wire:model="course_id"
+                                        class="w-full rounded border p-2 @error('course_id') border-red-500 ring-1 ring-red-500 @enderror"
+                                    >
+                                        <option value="">Seleccionar curso</option>
+                                        @foreach($courses as $c)
+                                            <option value="{{ $c->id }}">{{ $c->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('course_id')
+                                        <span class="mt-1 block text-left text-xs text-red-600 whitespace-normal">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end gap-2 pt-2">
+                                <button type="submit" class="rounded bg-blue-600 px-4 py-2 text-white">Actualizar</button>
+                                <button type="button" wire:click="closeModal" class="rounded bg-gray-200 px-4 py-2">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {{-- /Modal --}}
             </div>
-            
-        </form>
-
         </div>
-    </div>
     @endif
 </div>

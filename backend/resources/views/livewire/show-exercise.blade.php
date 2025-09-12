@@ -1,31 +1,31 @@
 <div class="container mx-auto p-4">
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="rounded-lg bg-white p-6 shadow">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-blue-500">
                     <tr>
-                        <th class="px-6 py-7 text-left text-sm font-medium text-white uppercase">ID</th>
-                        <th class="px-6 py-7 text-left text-sm font-medium text-white uppercase">Curso / Lección</th>
-                        <th class="px-6 py-7 text-left text-sm font-medium text-white uppercase">Tipo</th>
-                        <th class="px-6 py-7 text-left text-sm font-medium text-white uppercase">Enunciado</th>
-                        <th class="px-6 py-7 text-left text-sm font-medium text-white uppercase">Acciones</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium uppercase text-white">ID</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium uppercase text-white">Curso / Lección</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium uppercase text-white">Tipo</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium uppercase text-white">Enunciado</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium uppercase text-white">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="divide-y divide-gray-200 bg-white">
                     @foreach($exercises as $e)
-                        <tr>
+                        <tr wire:key="exercise-row-{{ $e->id }}">
                             <td class="px-6 py-7">{{ $e->id }}</td>
                             <td class="px-6 py-7">
                                 <div class="font-medium">{{ $e->lesson->course->name ?? '-' }}</div>
                                 <div class="text-gray-500">{{ $e->lesson->title ?? '-' }}</div>
                             </td>
-                            <td class="px-6 py-7 uppercase text-xs font-semibold">{{ str_replace('_',' ',$e->type) }}</td>
+                            <td class="px-6 py-7 text-xs font-semibold uppercase">{{ str_replace('_',' ',$e->type) }}</td>
                             <x-tooltip-cell :text="$e->question" />
-                            <td class="px-6 py-7">
-                                <button wire:click="editExercise({{ $e->id }})"
-                                        class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition">
-                                    Editar
-                                </button>
+                            <td class="px-6 py-7 text-center">
+                                <livewire:edit-exercise
+                                    :exercise-id="$e->id"
+                                    wire:key="edit-exercise-{{ $e->id }}"
+                                />
                             </td>
                         </tr>
                     @endforeach
@@ -33,10 +33,9 @@
             </table>
         </div>
 
+        {{-- Paginación: forzamos nuestra vista Tailwind custom --}}
         <div class="mt-4">
-            {{ $exercises->onEachSide(1)->links() }}
+            {{ $exercises->onEachSide(1)->links('vendor.pagination.tailwind') }}
         </div>
     </div>
-
-    <livewire:edit-exercise />
 </div>
