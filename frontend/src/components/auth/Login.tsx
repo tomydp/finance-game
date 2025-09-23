@@ -1,4 +1,3 @@
-// src/components/auth/Login.tsx
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaGoogle, FaFacebook } from 'react-icons/fa';
@@ -37,10 +36,13 @@ const Login: React.FC = () => {
       </button>
 
       <div className="w-full max-w-md bg-[#121c30] rounded-2xl shadow-xl p-8 space-y-6">
+        {/* Logo en vez del círculo con F */}
         <div className="flex justify-center">
-          <div className="w-12 h-12 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold text-lg">
-            F
-          </div>
+          <img
+            src="/Logo.png"
+            alt="FinanceGame"
+            className="h-12 w-12"
+          />
         </div>
 
         <div className="text-center space-y-1">
