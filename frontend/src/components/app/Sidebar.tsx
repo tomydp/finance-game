@@ -24,7 +24,7 @@ const menuItems: MenuItem[] = [
   { to: '/app/ligas',    label: 'Ligas',     icon: FaTrophy,         enabled: false },
   { to: '/app/desafios', label: 'Desafíos',  icon: FaBolt,           enabled: true  },
   { to: '/app/tienda',   label: 'Tienda',    icon: FaShoppingCart,   enabled: false },
-  { to: '/app/perfil',   label: 'Perfil',    icon: FaUser,           enabled: true },
+  { to: '/app/perfil',   label: 'Perfil',    icon: FaUser,           enabled: true  },
   { to: '/app/mas',      label: 'Más',       icon: FaEllipsisH,      enabled: true  },
 ];
 
@@ -33,17 +33,14 @@ const Sidebar: React.FC = () => {
     <aside className="w-48 bg-[#121c30] text-white flex flex-col items-start px-4 py-6">
       {/* Logo + nombre */}
       <div className="flex items-center space-x-2 mb-6">
-        <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold">
-          F
-        </div>
-        <span className="text-lg font-semibold text-cyan-400">FinanzApp</span>
+        <img src="/Logo.png" alt="FinanceGame" className="h-8 w-8" />
+        <span className="text-lg font-semibold text-cyan-400">FinanceGame</span>
       </div>
 
       {/* Menú de navegación */}
       <nav className="flex-1 w-full space-y-2">
         {menuItems.map(({ to, label, icon: Icon, enabled }) =>
           enabled ? (
-            // Si enabled === true, renderizamos NavLink
             <NavLink
               key={label}
               to={to}
@@ -60,7 +57,6 @@ const Sidebar: React.FC = () => {
               <span>{label}</span>
             </NavLink>
           ) : (
-            // Si enabled === false, renderizamos un <div> sin navegación
             <div
               key={label}
               className="flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium text-gray-600 cursor-not-allowed"
