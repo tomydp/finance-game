@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from "react";
-import {
-  FaPiggyBank,
-  FaUniversity,
-  FaStar,
-} from "react-icons/fa";
+import { FaPiggyBank, FaUniversity, FaStar } from "react-icons/fa";
 import { GoDiamond } from "react-icons/go";
-import QuestionCard from "../ui/QuestionCard"; // 👈 importamos la nueva UI
+import QuestionCard from "../ui/QuestionCard";
+import LessonCompleted from "../ui/LessonCompleted";
 
 interface Leccion {
   id: number;
@@ -23,6 +20,8 @@ interface Module {
   dificultad: string;
 }
 
+type TipoEjercicio = "multiple_choice" | "fill_blank";
+
 const Aprender: React.FC = () => {
   const [fundamentos, setFundamentos] = useState<Module[]>([]);
   const [inversiones, setInversiones] = useState<Module[]>([]);
@@ -32,13 +31,24 @@ const Aprender: React.FC = () => {
   const [ejercicios, setEjercicios] = useState<any[]>([]);
   const [indiceEjercicio, setIndiceEjercicio] = useState(0);
 
-  // Estados para seleccionar y comprobar
   const [respuestaSeleccionada, setRespuestaSeleccionada] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{
     tipo: "correcto" | "incorrecto";
     mensaje: string;
     onContinue: () => void;
   } | null>(null);
+
+  // Estado para la pantalla "¡Lección Completada!"
+  const [finLeccion, setFinLeccion] = useState<null | {
+    totalExercises: number;
+    multipleChoice: number;
+    fillIn: number;
+    completedLessons: number;
+    totalLessons: number;
+    lessonTitle: string;
+    courseTitle: string;
+    lastLessonIndex: number;
+  }>(null);
 
   useEffect(() => {
     const fetchCursos = async () => {
@@ -61,15 +71,15 @@ const Aprender: React.FC = () => {
 
       const modulos: Module[] = await Promise.all(
         cursos.map(async (curso: any, index: number) => {
-          const res = await fetch(`http://localhost/api/courses/${curso.id}/lessons`);
-          const json = await res.json();
-          const lecciones: Leccion[] = json.data;
-          const completadas = lecciones.filter((l) => l.completed).length;
+          const r = await fetch(`http://localhost/api/courses/${curso.id}/lessons`);
+          const j = await r.json();
+          const lecs: Leccion[] = j.data;
+          const completadas = lecs.filter((l) => l.completed).length;
 
           return {
             id: curso.id,
             titulo: curso.name,
-            totalLecciones: lecciones.length,
+            totalLecciones: lecs.length,
             completadas,
             estado: index === 0 ? "activo" : "bloqueado",
             icono: iconoPorDificultad(curso.difficulty),
@@ -93,7 +103,7 @@ const Aprender: React.FC = () => {
     setCursoActual(curso);
     setLecciones(lessons);
 
-    const pendiente = lessons.find((l) => !l.completed);
+    const pendiente = lessons.find((l) => !l.completed) || lessons[0];
     if (pendiente) {
       await cargarEjercicios(pendiente);
     }
@@ -102,31 +112,47 @@ const Aprender: React.FC = () => {
   const cargarEjercicios = async (leccion: Leccion) => {
     const res = await fetch(`http://localhost/api/lessons/${leccion.id}/exercises`);
     const json = await res.json();
+
     setLeccionActual(leccion);
-    setEjercicios(json.data);
+    setEjercicios(json.data || []);
     setIndiceEjercicio(0);
     setRespuestaSeleccionada(null);
     setFeedback(null);
+    setFinLeccion(null);
   };
 
   const marcarLeccionComoCompletada = async (leccionId: number) => {
-    await fetch(`http://localhost/api/lessons/${leccionId}/complete`, {
-      method: "POST",
-    });
-
+    try {
+      await fetch(`http://localhost/api/lessons/${leccionId}/complete`, { method: "POST" });
+    } catch {}
     setLecciones((prev) =>
       prev.map((l) => (l.id === leccionId ? { ...l, completed: true } : l))
     );
   };
 
+  const normalize = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const getTipo = (ej: any): TipoEjercicio => {
+    const t = (ej.type || ej.tipo || "").toString().toLowerCase();
+    if (t === "fill_blank" || t === "fill-blank") return "fill_blank";
+    return ej.options ? "multiple_choice" : "fill_blank";
+  };
+
   const handleRespuesta = () => {
-    if (!leccionActual || !ejercicios[indiceEjercicio]) return;
-
     const ej = ejercicios[indiceEjercicio];
-    const normalize = (s: string) => s.toLowerCase().trim();
+    if (!ej || !leccionActual || !cursoActual) return;
 
-    if (normalize(respuestaSeleccionada || "") === normalize(ej.correct_answer)) {
-      // Correcto
+    const correct = ej.correct_answer ?? ej.correct ?? "";
+    const esCorrecto =
+      normalize(respuestaSeleccionada || "") === normalize(String(correct));
+
+    if (esCorrecto) {
       setFeedback({
         tipo: "correcto",
         mensaje: "¡Respuesta correcta! 🎉",
@@ -135,29 +161,41 @@ const Aprender: React.FC = () => {
           setRespuestaSeleccionada(null);
 
           if (indiceEjercicio + 1 < ejercicios.length) {
-            setIndiceEjercicio(indiceEjercicio + 1);
+            setIndiceEjercicio((i) => i + 1);
           } else {
-            // Lección completa
+            // Fin de la lección: marcar como completada y mostrar pantalla de feedback
             marcarLeccionComoCompletada(leccionActual.id);
 
-            const idx = lecciones.findIndex((l) => l.id === leccionActual.id);
-            const siguiente = lecciones[idx + 1];
+            // Contabilizar tipos de ejercicios
+            const counts = ejercicios.reduce(
+              (acc: any, e: any) => {
+                const t = getTipo(e);
+                acc.totalExercises++;
+                if (t === "multiple_choice") acc.multipleChoice++;
+                else acc.fillIn++;
+                return acc;
+              },
+              { totalExercises: 0, multipleChoice: 0, fillIn: 0 }
+            );
 
-            if (siguiente) {
-              cargarEjercicios(siguiente);
-            } else {
-              setCursoActual(null); // curso completo
-              setLeccionActual(null);
-              setEjercicios([]);
-            }
+            const idx = lecciones.findIndex((l) => l.id === leccionActual.id);
+            const completedNow = lecciones.filter((l) => l.completed).length + 1;
+
+            setFinLeccion({
+              ...counts,
+              completedLessons: completedNow,
+              totalLessons: lecciones.length,
+              lessonTitle: leccionActual.title,
+              courseTitle: cursoActual.titulo,
+              lastLessonIndex: idx,
+            });
           }
         },
       });
     } else {
-      // Incorrecto
       setFeedback({
         tipo: "incorrecto",
-        mensaje: `La respuesta correcta es: ${ej.correct_answer}`,
+        mensaje: `La respuesta correcta es: ${correct}`,
         onContinue: () => {
           setFeedback(null);
           setRespuestaSeleccionada(null);
@@ -166,10 +204,49 @@ const Aprender: React.FC = () => {
     }
   };
 
-  // Vista de ejercicios
+  // ---- RENDER: Pantalla "Lección Completada" ----
+  if (finLeccion && cursoActual) {
+    const esUltima = finLeccion.lastLessonIndex + 1 >= lecciones.length;
+
+    return (
+      <LessonCompleted
+        courseTitle={finLeccion.courseTitle}
+        lessonTitle={finLeccion.lessonTitle}
+        totalLessons={finLeccion.totalLessons}
+        completedLessons={finLeccion.completedLessons}
+        stats={{
+          totalExercises: finLeccion.totalExercises,
+          multipleChoice: finLeccion.multipleChoice,
+          fillIn: finLeccion.fillIn,
+        }}
+        onBackToCourse={() => {
+          setFinLeccion(null);
+          setCursoActual(null); // volver al listado de cursos
+          setLeccionActual(null);
+          setEjercicios([]);
+        }}
+        onNext={() => {
+          setFinLeccion(null);
+          const next = lecciones[finLeccion.lastLessonIndex + 1];
+          if (next && !esUltima) {
+            cargarEjercicios(next);
+          } else {
+            // terminó el curso
+            setCursoActual(null);
+            setLeccionActual(null);
+            setEjercicios([]);
+          }
+        }}
+      />
+    );
+  }
+
+  // ---- RENDER: Vista de ejercicios ----
   if (leccionActual && cursoActual) {
     const ejercicio = ejercicios[indiceEjercicio];
     if (!ejercicio) return null;
+
+    const tipo = getTipo(ejercicio);
 
     let opciones: string[] = [];
     try {
@@ -182,6 +259,11 @@ const Aprender: React.FC = () => {
       console.error("Error parseando opciones:", ejercicio.options, e);
     }
 
+    const disabled =
+      tipo === "fill_blank"
+        ? !((respuestaSeleccionada || "").trim())
+        : respuestaSeleccionada === null;
+
     return (
       <div className="p-6 text-white space-y-6">
         <button onClick={() => setCursoActual(null)} className="text-cyan-400 hover:underline">
@@ -192,20 +274,23 @@ const Aprender: React.FC = () => {
           curso={cursoActual.titulo}
           leccion={leccionActual.title}
           pregunta={ejercicio.question}
+          tipo={tipo}
           opciones={opciones}
           seleccionada={respuestaSeleccionada}
           setSeleccionada={setRespuestaSeleccionada}
           onComprobar={handleRespuesta}
-          disabled={!respuestaSeleccionada}
+          disabled={disabled}
           feedback={feedback || undefined}
+          progress={{ current: indiceEjercicio + 1, total: ejercicios.length }}
+          onBack={() => setCursoActual(null)}
         />
       </div>
     );
   }
 
-  // Vista de cursos
+  // ---- RENDER: Vista de cursos ----
   const renderModulo = (m: Module) => {
-    const porcentaje = Math.round((m.completadas / m.totalLecciones) * 100);
+    const porcentaje = Math.round((m.completadas / Math.max(1, m.totalLecciones)) * 100);
     return (
       <div
         key={m.id}

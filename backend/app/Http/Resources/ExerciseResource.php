@@ -18,7 +18,8 @@ class ExerciseResource extends JsonResource
             'id'               => $this->id,
             'type'             => $this->type,          // p.ej. multiple_choice
             'question'         => $this->question,
-            'options'          => $this->options,       // array (JSON)
+            'options'          => $this->options,
+            'correct_answer' => $this->correct_answer,     // array (JSON)
         ];
     }
 }
