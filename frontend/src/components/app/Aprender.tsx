@@ -24,6 +24,7 @@ interface Module {
 }
 
 const Aprender: React.FC = () => {
+
   // 1. Estados para Fundamentos e Inversiones
   const [fundamentos, setFundamentos] = useState<Module[]>([]);
   const [inversiones, setInversiones] = useState<Module[]>([]);

@@ -20,7 +20,10 @@ import Aprender         from './components/app/Aprender';
 import Desafios         from './components/app/Desafios';
 import Mas              from './components/app/Mas';
 import Sonidos          from './components/app/Sonidos';
-import Perfil           from './components/app/Perfil/Perfil'; // 👈 nuevo import
+import Perfil           from './components/app/Perfil/Perfil';
+
+// 👇 Importá el AuthGuard
+import AuthGuard        from './guards/AuthGuard';
 
 function App() {
   return (
@@ -46,12 +49,19 @@ function App() {
         <Route path="/register" element={<Register />} />
 
         {/* ────────────── Rutas protegidas bajo /app ────────────── */}
-        <Route path="/app/*" element={<Layout />}>
+        <Route
+          path="/app/*"
+          element={
+            <AuthGuard>
+              <Layout />
+            </AuthGuard>
+          }
+        >
           <Route index element={<Navigate to="aprender" replace />} />
           <Route path="aprender" element={<Aprender />} />
           <Route path="sonidos"  element={<Sonidos />} />
           <Route path="desafios" element={<Desafios />} />
-          <Route path="perfil"   element={<Perfil />} /> {/* 👈 nueva ruta */}
+          <Route path="perfil"   element={<Perfil />} />
           <Route path="mas"      element={<Mas />} />
           <Route path="*"        element={<Navigate to="aprender" replace />} />
         </Route>

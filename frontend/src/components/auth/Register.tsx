@@ -1,36 +1,35 @@
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { FaGoogle, FaFacebook } from 'react-icons/fa';
 import { FiEye, FiEyeOff, FiArrowLeft } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
-
-interface FormData {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
+import { register } from '../../services/authService';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState(''); 
+  const [password, setPassword] = useState('');
+  const [password_confirmation, setPasswordConfirmation] = useState('');
+  const [errors, setErrors] = useState([]);
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm<FormData>();
-
-  const onSubmit = (data: FormData) => {
-    console.log(data);
-    navigate('/app');
-  };
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors([]);
+    register({name:name, email:email, password:password, password_confirmation:password_confirmation}).then((res) => {
+      if(res.data.errors) {
+        setErrors(res.data.errors);
+      } else {
+        localStorage.setItem("user", JSON.stringify(res.data));
+        localStorage.setItem("isAuthenticated", true);
+        navigate('/');
+      }
+    });
+  }
 
   return (
     <div className="relative min-h-screen bg-[var(--Blue1)] flex items-center justify-center px-4">
       <button
-        onClick={() => navigate('/')}
         className="absolute top-4 left-4 text-white hover:text-gray-200 transition text-2xl"
         aria-label="Volver al landing"
       >
@@ -47,63 +46,50 @@ const Register: React.FC = () => {
         <div className="text-center space-y-1">
           <h2 className="text-2xl font-extrabold text-white">Crear cuenta</h2>
           <p className="text-gray-400">Empieza a dominar tus finanzas</p>
+          {errors.length > 0 && (
+            <div className="text-red-500">
+              {errors.map((error: string, index: number) => (
+                <p key={index}>{error}</p>
+              ))}
+            </div>
+          )}
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={submit} className="space-y-4">
           {/* Nombre */}
           <div>
             <label className="block text-sm text-gray-300 mb-1">Nombre completo</label>
             <input
-              {...register("name", {
-                required: "Este campo es obligatorio",
-                pattern: {
-                  value: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/,
-                  message: "El nombre no debe contener números ni caracteres especiales",
-                },
-              })}
+              type="text"
+              name="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               placeholder="Tu nombre"
               className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200"
             />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
           </div>
 
           {/* Email */}
           <div>
             <label className="block text-sm text-gray-300 mb-1">Correo electrónico</label>
             <input
-              {...register("email", {
-                required: "El email es obligatorio",
-                pattern: {
-                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: "Email inválido",
-                },
-                validate: (value) =>
-                  value !== "test@example.com" || "Este email ya está registrado", // Simulado
-              })}
+              type="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@email.com"
               className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200"
             />
-            {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
           </div>
 
           {/* Contraseña */}
           <div className="relative">
             <label className="block text-sm text-gray-300 mb-1">Contraseña</label>
             <input
-              type={showPassword ? 'text' : 'password'}
-              {...register("password", {
-                required: "La contraseña es obligatoria",
-                minLength: {
-                  value: 8,
-                  message: "Debe tener al menos 8 caracteres",
-                },
-                validate: (value) =>
-                  /[A-Z]/.test(value) &&
-                  /[a-z]/.test(value) &&
-                  /[0-9]/.test(value) &&
-                  /[^A-Za-z0-9]/.test(value) ||
-                  "Debe contener mayúsculas, minúsculas, número y símbolo",
-              })}
+              type="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Tu contraseña"
               className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 pr-10 text-gray-200"
             />
@@ -114,19 +100,16 @@ const Register: React.FC = () => {
             >
               {showPassword ? <FiEyeOff /> : <FiEye />}
             </button>
-            {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
           </div>
 
           {/* Confirmación de contraseña */}
           <div className="relative">
             <label className="block text-sm text-gray-300 mb-1">Confirmar contraseña</label>
             <input
-              type={showPassword ? 'text' : 'password'}
-              {...register("confirmPassword", {
-                required: "Confirmá tu contraseña",
-                validate: value =>
-                  value === watch('password') || "Las contraseñas no coinciden",
-              })}
+              type="password"
+              name="confirmPassword"
+              value={password_confirmation}
+              onChange={(e) => setPasswordConfirmation(e.target.value)}
               placeholder="Repetí tu contraseña"
               className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 pr-10 text-gray-200"
             />
@@ -137,9 +120,6 @@ const Register: React.FC = () => {
             >
               {showPassword ? <FiEyeOff /> : <FiEye />}
             </button>
-            {errors.confirmPassword && (
-              <p className="text-red-500 text-sm">{errors.confirmPassword.message}</p>
-            )}
           </div>
 
           <button
