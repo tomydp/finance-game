@@ -5,15 +5,17 @@ use App\Http\Controllers\API\ExerciseApiController;
 use App\Http\Controllers\API\LessonApiController;
 use Illuminate\Support\Facades\Route;
 
-// Cursos (solo lectura, por ahora)
-Route::apiResource('courses', CourseApiController::class)
-     ->only('index')                         // GET /api/courses
-     ->names('api.courses');
+// Públicos (solo lectura)
+Route::get('courses', [CourseApiController::class, 'index'])
+    ->name('api.courses.index'); // GET /api/courses
 
-// Lecciones de un curso (solo listado)
-Route::apiResource('courses.lessons', LessonApiController::class)
-     ->only('index')                         // GET /api/courses/{course}/lessons
-     ->names('api.courses.lessons');
+Route::get('courses/{course}/lessons', [LessonApiController::class, 'index'])
+    ->whereNumber('course')
+    ->name('api.courses.lessons.index'); // GET /api/courses/{course}/lessons
+
+Route::get('lessons/{lesson}/exercises', [ExerciseApiController::class, 'index'])
+    ->whereNumber('lesson')
+    ->name('api.lessons.exercises.index'); // GET /api/lessons/{lesson}/exercises
 
 Route::apiResource('lessons.exercises', ExerciseApiController::class)
      ->only(['index', 'show'])        // GET /api/lessons/{lesson}/exercises
@@ -26,5 +28,3 @@ Route::middleware('auth:sanctum')->group(function () {
         [ExerciseApiController::class, 'submit']
     )->name('api.exercises.submit');
 });
-
-

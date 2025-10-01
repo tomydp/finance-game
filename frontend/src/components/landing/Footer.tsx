@@ -1,4 +1,3 @@
-// src/components/Footer.tsx
 import React from 'react';
 
 const Footer: React.FC = () => (
@@ -8,9 +7,12 @@ const Footer: React.FC = () => (
       {/* Logo y descripción */}
       <div>
         <div className="flex items-center mb-3">
-          <div className="w-8 h-8 rounded-full bg-cyan-700 flex items-center justify-center text-white font-semibold mr-2">
-            F
-          </div>
+          {/* Logo oficial */}
+          <img
+            src="/Logo.png"
+            alt="FinanceGame"
+            className="w-8 h-8 mr-2"
+          />
           <span className="text-xl font-semibold text-cyan-400">
             Finance Game
           </span>
@@ -54,7 +56,7 @@ const Footer: React.FC = () => (
     <hr className="border-gray-700 my-8" />
 
     <p className="text-center text-gray-500 text-sm">
-      © {new Date().getFullYear()} FinanzApp. Todos los derechos reservados.
+      © {new Date().getFullYear()} FinanceGame. Todos los derechos reservados.
     </p>
   </footer>
 );

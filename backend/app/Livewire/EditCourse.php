@@ -2,67 +2,55 @@
 
 namespace App\Livewire;
 
-use App\Models\Course;
 use Livewire\Component;
+use App\Models\Course;
 
 class EditCourse extends Component
 {
-    public $showModal = false;
-
-    public $courseId;
-    public $name;
-    public $description;
-    public $difficulty;
-
-    protected $rules = [
-        'name' => 'required|string|max:255',
-        'description' => 'required|string',
-        'difficulty' => 'required|string',
-    ];
+    public int $courseId;
+    public string $name = '';
+    public string $description = '';
+    public ?string $difficulty = null; // 'facil' | 'medio' | 'dificil' | null
+    public bool $showModal = false;
 
     protected $listeners = ['editCourse' => 'loadCourse'];
 
-    public function loadCourse($id)
+    protected function rules(): array
     {
-    $this->resetErrorBag();
-    $this->resetValidation();
-
-    $course = Course::findOrFail($id);
-
-    $this->courseId = $course->id;
-    $this->name = $course->name;
-    $this->description = $course->description;
-    $this->difficulty = $course->difficulty;
-
-    $this->showModal = true;
+        return [
+            'name' => ['required','string','max:255'],
+            'description' => ['required','string'],
+            'difficulty' => ['required','in:facil,medio,dificil'],
+        ];
     }
 
+    public function loadCourse(int $id): void
+    {
+        $course = Course::findOrFail($id);
 
-    public function update()
+        $this->courseId    = $course->id;
+        $this->name        = $course->name;
+        $this->description = $course->description;
+        $this->difficulty  = $course->difficulty; // ← CLAVE
+        $this->showModal   = true;
+    }
+
+    public function update(): void
     {
         $this->validate();
 
-        Course::findOrFail($this->courseId)->update([
-            'name' => $this->name,
+        Course::whereKey($this->courseId)->update([
+            'name'        => $this->name,
             'description' => $this->description,
-            'difficulty' => $this->difficulty,
+            'difficulty'  => $this->difficulty,
         ]);
 
-        $this->reset(['courseId', 'name', 'description', 'difficulty', 'showModal']);
-
-        $this->dispatch('courseUpdated')->to(ShowCourse::class);
+        $this->dispatch('courseUpdated');
+        $this->reset(['showModal']);
     }
 
     public function render()
     {
         return view('livewire.edit-course');
     }
-
-    public function closeModal()
-{
-    $this->reset(['courseId', 'name', 'description', 'difficulty', 'showModal']);
-    $this->resetErrorBag();
-    $this->resetValidation();
-}
-
 }

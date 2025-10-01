@@ -1,62 +1,32 @@
-// src/components/Login.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { FaGoogle, FaFacebook } from 'react-icons/fa';
 import { FiEye, FiEyeOff, FiArrowLeft } from 'react-icons/fi';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-interface LocationState {
-  mode?: 'login' | 'register';
+interface FormData {
+  email: string;
+  password: string;
+  remember: boolean;
 }
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const state = location.state as LocationState;
-
-  // Si se viene con state.mode = 'register', arrancamos en modo registro; si no, modo login
-  const initialMode = state?.mode === 'register' ? 'register' : 'login';
-  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
-
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirm: '',
-    remember: false,
-  });
 
-  // Cada vez que cambie location.state.mode, actualizamos el modo
-  useEffect(() => {
-    if (state?.mode === 'register') {
-      setMode('register');
-    } else {
-      setMode('login');
-    }
-  }, [state?.mode]);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setForm((f) => ({
-      ...f,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (mode === 'login') {
-      // Aquí va la lógica de inicio de sesión...
-      navigate('/app');
-    } else {
-      // Aquí va la lógica de registro...
-      navigate('/app');
-    }
+  const onSubmit = (data: FormData) => {
+    console.log(data);
+    navigate('/app');
   };
 
   return (
     <div className="relative min-h-screen bg-[var(--Blue1)] flex items-center justify-center px-4">
-      {/* Flecha de regreso al landing */}
       <button
         onClick={() => navigate('/')}
         className="absolute top-4 left-4 text-white hover:text-gray-200 transition text-2xl"
@@ -66,128 +36,81 @@ const Login: React.FC = () => {
       </button>
 
       <div className="w-full max-w-md bg-[#121c30] rounded-2xl shadow-xl p-8 space-y-6">
-        {/* Logo */}
+        {/* Logo en vez del círculo con F */}
         <div className="flex justify-center">
-          <div className="w-12 h-12 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold text-lg">
-            F
-          </div>
+          <img
+            src="/Logo.png"
+            alt="FinanceGame"
+            className="h-12 w-12"
+          />
         </div>
 
-        {/* Heading */}
         <div className="text-center space-y-1">
-          <h2 className="text-2xl font-extrabold text-white">
-            {mode === 'login' ? '¡Bienvenido de vuelta!' : 'Crea tu cuenta'}
-          </h2>
-          <p className="text-gray-400">
-            {mode === 'login'
-              ? 'Ingresa tus credenciales para continuar'
-              : 'Únete a FinanzApp y comienza a aprender finanzas gratis'}
-          </p>
+          <h2 className="text-2xl font-extrabold text-white">¡Bienvenido de vuelta!</h2>
+          <p className="text-gray-400">Ingresa tus credenciales para continuar</p>
         </div>
 
-        {/* Formulario */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === 'register' && (
-            <div>
-              <label className="block text-sm text-gray-300 mb-1" htmlFor="name">
-                Nombre completo
-              </label>
-              <input
-                id="name"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Tu nombre completo"
-                className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                required
-              />
-            </div>
-          )}
-
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Email */}
           <div>
-            <label className="block text-sm text-gray-300 mb-1" htmlFor="email">
-              Correo electrónico
-            </label>
+            <label className="block text-sm text-gray-300 mb-1">Correo electrónico</label>
             <input
-              id="email"
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
+              {...register("email", {
+                required: "El email es obligatorio",
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Email inválido",
+                },
+              })}
               placeholder="tu@email.com"
-              className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              required
+              className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200"
             />
+            {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
           </div>
 
+          {/* Contraseña */}
           <div className="relative">
-            <label className="block text-sm text-gray-300 mb-1" htmlFor="password">
-              Contraseña
-            </label>
+            <label className="block text-sm text-gray-300 mb-1">Contraseña</label>
             <input
-              id="password"
-              name="password"
               type={showPassword ? 'text' : 'password'}
-              value={form.password}
-              onChange={handleChange}
-              placeholder={mode === 'register' ? 'Crea una contraseña' : 'Tu contraseña'}
-              className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 pr-10 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              required
+              {...register("password", { required: "La contraseña es obligatoria" })}
+              placeholder="Tu contraseña"
+              className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 pr-10 text-gray-200"
             />
             <button
               type="button"
-              onClick={() => setShowPassword((s) => !s)}
+              onClick={() => setShowPassword(s => !s)}
               className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-200"
             >
               {showPassword ? <FiEyeOff /> : <FiEye />}
             </button>
+            {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
           </div>
 
-          {mode === 'register' && (
-            <div>
-              <label className="block text-sm text-gray-300 mb-1" htmlFor="confirm">
-                Confirmar contraseña
-              </label>
-              <input
-                id="confirm"
-                name="confirm"
-                type="password"
-                value={form.confirm}
-                onChange={handleChange}
-                placeholder="Confirma tu contraseña"
-                className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                required
-              />
-            </div>
-          )}
-
+          {/* Recordarme + recuperar */}
           <div className="flex items-center justify-between text-sm">
             <label className="inline-flex items-center text-gray-300">
               <input
                 type="checkbox"
-                name="remember"
-                checked={form.remember}
-                onChange={handleChange}
+                {...register("remember")}
                 className="form-checkbox h-4 w-4 text-cyan-500 bg-[var(--Blue2)] border-gray-600 rounded"
               />
               <span className="ml-2">Recordarme</span>
             </label>
-            {mode === 'login' && (
-              <button
-                type="button"
-                onClick={() => navigate('/reset-password')}
-                className="text-cyan-400 hover:underline"
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => navigate('/reset-password')}
+              className="text-cyan-400 hover:underline"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
           </div>
 
           <button
             type="submit"
             className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 rounded-md transition"
           >
-            {mode === 'login' ? 'INICIAR SESIÓN' : 'CREAR CUENTA'}
+            INICIAR SESIÓN
           </button>
         </form>
 
@@ -198,7 +121,7 @@ const Login: React.FC = () => {
           <div className="flex-grow h-px bg-gray-700" />
         </div>
 
-        {/* Social buttons */}
+        {/* Social */}
         <div className="flex gap-4">
           <button className="flex-1 flex items-center justify-center bg-white bg-opacity-10 hover:bg-opacity-20 border border-gray-700 rounded-md py-2 space-x-2 transition">
             <FaGoogle className="text-red-400" />
@@ -210,7 +133,6 @@ const Login: React.FC = () => {
           </button>
         </div>
 
-        {/* Guest link */}
         <p className="text-center text-gray-400 text-sm mt-4">
           ¿Prefieres empezar sin cuenta?{' '}
           <button

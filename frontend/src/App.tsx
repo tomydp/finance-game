@@ -20,6 +20,7 @@ import Aprender         from './components/app/Aprender';
 import Desafios         from './components/app/Desafios';
 import Mas              from './components/app/Mas';
 import Sonidos          from './components/app/Sonidos';
+import Perfil           from './components/app/Perfil/Perfil'; // 👈 nuevo import
 
 function App() {
   return (
@@ -53,8 +54,9 @@ function App() {
           <Route path="aprender" element={<Aprender />} />
           <Route path="sonidos"  element={<Sonidos />} />
           <Route path="desafios" element={<Desafios />} />
+          <Route path="perfil"   element={<Perfil />} /> {/* 👈 nueva ruta */}
           <Route path="mas"      element={<Mas />} />
-          <Route path="*" element={<Navigate to="aprender" replace />} />
+          <Route path="*"        element={<Navigate to="aprender" replace />} />
         </Route>
 
         {/* ────────────── Catch-all: redirige a landing ────────────── */}
