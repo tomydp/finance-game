@@ -1,6 +1,6 @@
 // src/App.tsx
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from "react-hot-toast"; // 👈 IMPORTANTE
 
 // Landing page
 import Navbar           from './components/landing/Navbar';
@@ -25,6 +25,9 @@ import Perfil           from './components/app/Perfil/Perfil'; // 👈 nuevo imp
 function App() {
   return (
     <Router>
+      {/* 👇 Esto renderiza las notificaciones globales en toda la app */}
+      <Toaster position="top-center" reverseOrder={false} />
+
       <Routes>
         {/* ────────────── Ruta pública: Landing completo ────────────── */}
         <Route

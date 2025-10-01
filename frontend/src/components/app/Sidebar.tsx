@@ -33,8 +33,10 @@ const Sidebar: React.FC = () => {
     <aside className="w-48 bg-[#121c30] text-white flex flex-col items-start px-4 py-6">
       {/* Logo + nombre */}
       <div className="flex items-center space-x-2 mb-6">
-        <img src="/Logo.png" alt="FinanceGame" className="h-8 w-8" />
-        <span className="text-lg font-semibold text-cyan-400">FinanceGame</span>
+        <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold">
+          F
+        </div>
+        <span className="text-lg font-semibold text-cyan-400">Finance Game</span>
       </div>
 
       {/* Menú de navegación */}

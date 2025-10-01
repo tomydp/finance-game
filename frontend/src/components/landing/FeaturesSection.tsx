@@ -55,7 +55,7 @@ const FeaturesSection: React.FC = () => (
       <h2 className="text-center text-3xl md:text-4xl font-extrabold">
         ¿Por qué elegir{' '}
         <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-          FinanceGame
+          Finance Game
         </span>
         ?
       </h2>

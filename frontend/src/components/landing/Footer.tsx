@@ -14,7 +14,7 @@ const Footer: React.FC = () => (
             className="w-8 h-8 mr-2"
           />
           <span className="text-xl font-semibold text-cyan-400">
-            FinanceGame
+            Finance Game
           </span>
         </div>
         <p className="text-sm">
