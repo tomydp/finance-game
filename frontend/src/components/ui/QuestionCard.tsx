@@ -7,7 +7,7 @@ interface QuestionCardProps {
   curso: string;
   leccion: string;
   pregunta: string;
-  tipo: Tipo; // 👈 nuevo
+  tipo: Tipo;
   opciones: string[];
   seleccionada: string | null;
   setSeleccionada: (op: string) => void;
@@ -48,6 +48,14 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   );
 
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // 👉 Etiqueta legible en español para booleanos
+  const prettyLabel = (v: string) => {
+    const t = String(v).trim().toLowerCase();
+    if (t === "true") return "Verdadero";
+    if (t === "false") return "Falso";
+    return String(v);
+  };
 
   // Atajos de teclado
   useEffect(() => {
@@ -179,7 +187,8 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                   >
                     {checked && <span className="w-2 h-2 bg-white rounded-full" />}
                   </span>
-                  <span className="text-base md:text-lg">{op}</span>
+                  {/* 👇 mostrar etiqueta traducida */}
+                  <span className="text-base md:text-lg">{prettyLabel(op)}</span>
                 </label>
               );
             })}
@@ -204,44 +213,46 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
             </button>
           ) : (
             <>
-              {/* Alerta */}
+              {/* Alerta con ícono a la izquierda del título */}
               <div
-                className={`rounded-xl border p-5 shadow-inner
+                className={`rounded-2xl border px-6 py-8 text-center shadow-[0_10px_40px_rgba(0,0,0,0.25)]
                   ${
                     feedback.tipo === "correcto"
-                      ? "border-emerald-500/40 bg-emerald-500/10"
-                      : "border-rose-500/40 bg-rose-500/10"
+                      ? "border-emerald-500/60 bg-transparent"
+                      : "border-rose-500/60 bg-transparent"
                   }`}
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-center justify-center gap-3">
                   <div
-                    className={`flex h-7 w-7 items-center justify-center rounded-full
-                      ${feedback.tipo === "correcto" ? "bg-emerald-500/20" : "bg-rose-500/20"}`}
+                    className={`grid place-items-center h-12 w-12 rounded-full
+                      ${feedback.tipo === "correcto" ? "bg-emerald-500/15" : "bg-rose-500/15"}`}
                   >
                     {feedback.tipo === "correcto" ? (
-                      <CheckCircle className="h-5 w-5 text-emerald-400" />
+                      <CheckCircle className="h-7 w-7 text-emerald-400" />
                     ) : (
-                      <XCircle className="h-5 w-5 text-rose-400" />
+                      <XCircle className="h-7 w-7 text-rose-400" />
                     )}
                   </div>
-                  <div className="flex-1">
-                    <p
-                      className={`text-sm font-semibold ${
-                        feedback.tipo === "correcto" ? "text-emerald-400" : "text-rose-400"
-                      }`}
-                    >
-                      {feedback.tipo === "correcto" ? "¡Correcto!" : "Incorrecto"}
-                    </p>
-                    <p className="text-xs text-gray-300 mt-0.5">
-                      {feedback.tipo === "correcto"
-                        ? "Has seleccionado la respuesta correcta"
-                        : "Vuelve a intentarlo"}
-                    </p>
-                    <p className="mt-3 rounded-lg bg-black/20 px-3 py-2 text-sm text-gray-100">
-                      {feedback.mensaje}
-                    </p>
-                  </div>
+
+                  <h3
+                    className={`text-2xl md:text-3xl font-extrabold tracking-tight
+                      ${feedback.tipo === "correcto" ? "text-emerald-400" : "text-rose-400"}`}
+                  >
+                    {feedback.tipo === "correcto" ? "¡Correcto!" : "Incorrecto"}
+                  </h3>
                 </div>
+
+                <p className="mt-2 text-base md:text-lg text-white/90">
+                  {feedback.tipo === "correcto"
+                    ? "Has seleccionado la respuesta correcta"
+                    : "Vuelve a intentarlo"}
+                </p>
+
+                {feedback.mensaje && (
+                  <p className="mt-1 text-sm md:text-base text-white/80">
+                    {feedback.mensaje}
+                  </p>
+                )}
               </div>
 
               {/* CTA */}
@@ -256,7 +267,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
               >
                 <span>
                   {feedback.tipo === "correcto"
-                    ? "Continuar al siguiente ejercicio"
+                    ? "Continuar"
                     : "Intentar de nuevo"}
                 </span>
                 <svg

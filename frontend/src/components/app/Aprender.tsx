@@ -38,7 +38,7 @@ const Aprender: React.FC = () => {
     onContinue: () => void;
   } | null>(null);
 
-  // Estado para la pantalla "¡Lección Completada!"
+  // Pantalla "¡Lección Completada!"
   const [finLeccion, setFinLeccion] = useState<null | {
     totalExercises: number;
     multipleChoice: number;
@@ -130,13 +130,30 @@ const Aprender: React.FC = () => {
     );
   };
 
-  const normalize = (s: string) =>
+  // --- Helpers de normalización/etiquetas ---
+  const normalizeBase = (s: string) =>
     s
       .toLowerCase()
       .normalize("NFD")
       .replace(/\p{Diacritic}/gu, "")
       .replace(/\s+/g, " ")
       .trim();
+
+  // para comparar respuestas: mapea español a booleano string
+  const toComparable = (s: string) => {
+    const n = normalizeBase(String(s));
+    if (n === "verdadero") return "true";
+    if (n === "falso") return "false";
+    return n;
+  };
+
+  // para mostrar en feedback “Verdadero/Falso”
+  const toDisplay = (v: string | number | boolean) => {
+    const t = String(v).trim().toLowerCase();
+    if (t === "true" || t === "1") return "Verdadero";
+    if (t === "false" || t === "0") return "Falso";
+    return String(v);
+  };
 
   const getTipo = (ej: any): TipoEjercicio => {
     const t = (ej.type || ej.tipo || "").toString().toLowerCase();
@@ -149,13 +166,12 @@ const Aprender: React.FC = () => {
     if (!ej || !leccionActual || !cursoActual) return;
 
     const correct = ej.correct_answer ?? ej.correct ?? "";
-    const esCorrecto =
-      normalize(respuestaSeleccionada || "") === normalize(String(correct));
+    const esCorrecto = toComparable(respuestaSeleccionada || "") === toComparable(String(correct));
 
     if (esCorrecto) {
       setFeedback({
         tipo: "correcto",
-        mensaje: "¡Respuesta correcta! 🎉",
+        mensaje: "",
         onContinue: () => {
           setFeedback(null);
           setRespuestaSeleccionada(null);
@@ -163,10 +179,9 @@ const Aprender: React.FC = () => {
           if (indiceEjercicio + 1 < ejercicios.length) {
             setIndiceEjercicio((i) => i + 1);
           } else {
-            // Fin de la lección: marcar como completada y mostrar pantalla de feedback
+            // Fin de la lección
             marcarLeccionComoCompletada(leccionActual.id);
 
-            // Contabilizar tipos de ejercicios
             const counts = ejercicios.reduce(
               (acc: any, e: any) => {
                 const t = getTipo(e);
@@ -195,7 +210,7 @@ const Aprender: React.FC = () => {
     } else {
       setFeedback({
         tipo: "incorrecto",
-        mensaje: `La respuesta correcta es: ${correct}`,
+        mensaje: `La respuesta correcta es: ${toDisplay(correct)}`,
         onContinue: () => {
           setFeedback(null);
           setRespuestaSeleccionada(null);
@@ -221,7 +236,7 @@ const Aprender: React.FC = () => {
         }}
         onBackToCourse={() => {
           setFinLeccion(null);
-          setCursoActual(null); // volver al listado de cursos
+          setCursoActual(null);
           setLeccionActual(null);
           setEjercicios([]);
         }}
@@ -231,7 +246,6 @@ const Aprender: React.FC = () => {
           if (next && !esUltima) {
             cargarEjercicios(next);
           } else {
-            // terminó el curso
             setCursoActual(null);
             setLeccionActual(null);
             setEjercicios([]);
