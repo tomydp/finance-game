@@ -9,18 +9,21 @@ use Livewire\Component;
 
 class CreateExercise extends Component
 {
+    /** Paso 0: lista de tipos / Paso 1: modal del formulario */
+    public bool $showTypePicker = false;
     public bool $showModal = false;
 
     public ?int $courseId = null;
-    /** Puede ser '' para quedar en "Seleccionar…" */
+    /** '' representa “Seleccionar…” en el UI */
     public $lessonId = '';
 
-    public string $type = 'mcq';      // 'mcq' | 'true_false' | 'fill_blank'
+    /** @var 'mcq'|'true_false'|'fill_blank' */
+    public string $type = 'mcq';
     public string $question = '';
 
     // MCQ
     public array $options = ['', '', '', ''];
-    public ?int $correctIndex = null;
+    public ?int  $correctIndex = null;
 
     // True/False
     public ?bool $answerBool = null;
@@ -31,6 +34,84 @@ class CreateExercise extends Component
     // Catálogos
     public array $courses = [];
     public array $lessons = [];
+
+    /** Nonce para identidad de UI (por seguridad) */
+    public int $uiNonce = 0;
+
+    public function mount(): void
+    {
+        $this->courses = Course::orderBy('name')->get(['id','name'])->toArray();
+        $this->refreshLessons();
+    }
+
+    /* =====================  UI FLOW  ===================== */
+
+    public function openTypePicker(): void
+    {
+        $this->resetErrorBag();
+        $this->resetValidation();
+        $this->showModal = false;
+        $this->showTypePicker = true;
+    }
+
+    public function closeTypePicker(): void
+    {
+        $this->showTypePicker = false;
+    }
+
+    public function chooseType(string $type): void
+    {
+        if (!in_array($type, ['mcq','true_false','fill_blank'], true)) {
+            return;
+        }
+
+        // Reseteamos el form pero respetando el tipo elegido
+        $this->resetFormForType($type);
+
+        $this->showTypePicker = false;
+        $this->showModal = true;
+
+        // Cambiamos identidad visual del modal
+        $this->uiNonce++;
+    }
+
+    public function closeModal(): void
+    {
+        $this->resetErrorBag();
+        $this->resetValidation();
+        // no tocamos el tipo para que al reabrir puedas elegir otro desde la lista
+        $this->showModal = false;
+    }
+
+    /* =====================  HANDLERS  ===================== */
+
+    public function handleCourse(string $value): void
+    {
+        $this->courseId = $value !== '' ? (int) $value : null;
+        // Convención: al cambiar el padre, resetear el hijo
+        $this->lessonId = '';
+        $this->refreshLessons();
+    }
+
+    /** Fill-blank: agregar / quitar (sin permitir borrar el último) */
+    public function addFillAnswer(): void
+    {
+        $this->answersFill[] = '';
+        $this->uiNonce++;
+    }
+
+    public function removeFillAnswer(int $index): void
+    {
+        if (count($this->answersFill) <= 1) {
+            return; // no se puede borrar la única
+        }
+        if (isset($this->answersFill[$index])) {
+            array_splice($this->answersFill, $index, 1);
+            $this->uiNonce++;
+        }
+    }
+
+    /* =====================  VALIDACIÓN  ===================== */
 
     protected function rules(): array
     {
@@ -51,89 +132,45 @@ class CreateExercise extends Component
                 'answerBool'   => ['required','boolean'],
             ],
             'fill_blank' => $base + [
-                'answersFill'  => ['array','min:1'],
-                'answersFill.*'=> ['required','string','max:255'],
+                'answersFill'   => ['array','min:1'],
+                'answersFill.*' => ['required','string','max:255'],
             ],
         };
     }
 
-    public function mount(): void
-    {
-        $this->courses = Course::orderBy('name')->get(['id','name'])->toArray();
-        $this->refreshLessons();
-    }
-
-    /** Abre SIEMPRE vacío */
-    public function openModal(): void
-    {
-        $this->resetForm();
-        $this->showModal = true;
-    }
-
-    /** Limpia campos y repuebla selects */
-    private function resetForm(): void
-    {
-        $this->courseId     = null;
-        $this->lessonId     = '';
-        $this->type         = 'mcq';
-        $this->question     = '';
-        $this->options      = ['', '', '', ''];
-        $this->correctIndex = null;
-        $this->answerBool   = null;
-        $this->answersFill  = [''];
-        $this->refreshLessons();
-    }
-
-    /** Change handler explícito: deja "Seleccionar…" y repuebla */
-    public function handleCourse(string $value): void
-    {
-        $this->courseId = $value !== '' ? (int) $value : null;
-        $this->lessonId = '';
-        $this->refreshLessons();
-    }
-
-    private function refreshLessons(): void
-    {
-        $this->lessons = $this->courseId
-            ? Lesson::where('course_id', $this->courseId)->orderBy('order')->get(['id','title'])->toArray()
-            : [];
-    }
+    /* =====================  PERSISTENCIA  ===================== */
 
     public function save(): void
     {
         $this->validate();
-
+    
         [$options, $correct] = match ($this->type) {
-            'mcq' => [
-                array_map('trim', $this->options),
-                (string) ($this->options[$this->correctIndex] ?? ''),
-            ],
+            'mcq' => [array_map('trim', $this->options), (string) ($this->options[$this->correctIndex] ?? '')],
             'true_false' => [[], $this->answerBool ? 'true' : 'false'],
-            'fill_blank' => [
-                [],
-                json_encode(
-                    array_values(array_filter(array_map('trim', $this->answersFill), fn($s) => $s !== '')),
-                    JSON_UNESCAPED_UNICODE
-                ),
-            ],
+            'fill_blank' => [[], json_encode(
+                array_values(array_filter(array_map('trim', $this->answersFill), fn($s) => $s !== '')),
+                JSON_UNESCAPED_UNICODE
+            )],
         };
-
-        Exercise::create([
+    
+        \App\Models\Exercise::create([
             'lesson_id'      => (int) $this->lessonId,
             'type'           => $this->type,
             'question'       => $this->question,
             'options'        => $options,
             'correct_answer' => $correct,
         ]);
-
+    
+        // Notifica al listado si lo necesitas
         $this->dispatch('exerciseCreated');
-
-        // Cerrar y dejar todo limpio
-        $this->resetErrorBag();
-        $this->resetValidation();
-        $this->resetForm();
+    
+        // Cerrar todo después de guardar
         $this->showModal = false;
+        $this->showTypePicker = false;
     }
+    
+
+    /* =====================  RENDER  ===================== */
 
     public function render()
     {
@@ -143,11 +180,28 @@ class CreateExercise extends Component
         ]);
     }
 
-    public function closeModal(): void
+    /* =====================  HELPERS  ===================== */
+
+    private function resetFormForType(string $type): void
     {
-        $this->resetErrorBag();
-        $this->resetValidation();
-        $this->resetForm();   // ← limpia todo aunque no guarde
-        $this->showModal = false;
+        $this->type         = $type;
+        $this->courseId     = null;
+        $this->lessonId     = '';
+        $this->question     = '';
+
+        // Reset campos específicos
+        $this->options      = ['', '', '', ''];
+        $this->correctIndex = null;
+        $this->answerBool   = null;
+        $this->answersFill  = [''];
+
+        $this->refreshLessons();
+    }
+
+    private function refreshLessons(): void
+    {
+        $this->lessons = $this->courseId
+            ? Lesson::where('course_id', $this->courseId)->orderBy('order')->get(['id','title'])->toArray()
+            : [];
     }
 }

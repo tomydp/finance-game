@@ -1,5 +1,16 @@
 <div class="container mx-auto p-4" wire:key="courses-page-{{ $courses->currentPage() }}">
     <div class="rounded-lg bg-white p-6 shadow">
+
+        {{-- Buscar (agregado) --}}
+        <div class="mb-4">
+            <input
+                type="text"
+                wire:model.debounce.300ms="search"
+                placeholder="Buscar curso..."
+                class="rounded border px-3 py-2"
+            />
+        </div>
+
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-blue-500">

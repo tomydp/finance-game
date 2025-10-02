@@ -16,7 +16,7 @@ class EditExercise extends Component
     public ?int $courseId = null;
     public ?int $lessonId = null;
 
-    // tipo de edición (para no chocar con el create)
+    /** @var 'mcq'|'true_false'|'fill_blank' */
     public string $editType = 'mcq';
     public string $question = '';
 
@@ -26,9 +26,10 @@ class EditExercise extends Component
     public ?bool $answerBool = null;
     public array $answersFill = [''];
 
-    /** Listas para selects (versiones simples) */
     public array $courses = [];
     public array $lessons = [];
+
+    public int $uiNonce = 0;
 
     public function mount(int $exerciseId): void
     {
@@ -55,8 +56,8 @@ class EditExercise extends Component
                 'answerBool'   => ['required','boolean'],
             ],
             'fill_blank' => $base + [
-                'answersFill'  => ['array','min:1'],
-                'answersFill.*'=> ['required','string','max:255'],
+                'answersFill'   => ['array','min:1'],
+                'answersFill.*' => ['required','string','max:255'],
             ],
         };
     }
@@ -87,10 +88,10 @@ class EditExercise extends Component
             $this->answerBool   = null;
             $this->answersFill  = [''];
         } elseif ($this->editType === 'true_false') {
-            $this->answerBool  = strtolower((string)$e->correct_answer) === 'true';
-            $this->options     = ['', '', '', ''];
+            $this->answerBool   = strtolower((string)$e->correct_answer) === 'true';
+            $this->options      = ['', '', '', ''];
             $this->correctIndex = null;
-            $this->answersFill = [''];
+            $this->answersFill  = [''];
         } else {
             $decoded = json_decode((string)$e->correct_answer, true);
             $this->answersFill = is_array($decoded) && count($decoded) ? array_values($decoded) : [''];
@@ -105,6 +106,7 @@ class EditExercise extends Component
         $this->loadFromDb();
         $this->resetErrorBag();
         $this->resetValidation();
+        $this->uiNonce = 0;
         $this->isOpen = true;
     }
 
@@ -120,6 +122,58 @@ class EditExercise extends Component
         $this->courseId = $id ? (int)$id : null;
         $this->lessonId = null;
         $this->loadLessons();
+        // (opcional) $this->uiNonce++; $this->dispatch('$refresh');
+    }
+
+    public function updatedLessonId($value): void
+    {
+        $this->uiNonce++;
+        $this->dispatch('$refresh');
+    }
+
+    public function updatedEditType(string $value): void
+    {
+        $this->resetErrorBag();
+        $this->resetValidation();
+
+        if ($value === 'mcq') {
+            $this->options      = ['', '', '', ''];
+            $this->correctIndex = null;
+            $this->answerBool   = null;
+            $this->answersFill  = [''];
+        } elseif ($value === 'true_false') {
+            $this->answerBool   = null;
+            $this->options      = ['', '', '', ''];
+            $this->correctIndex = null;
+            $this->answersFill  = [''];
+        } else {
+            $this->answersFill  = [''];
+            $this->options      = ['', '', '', ''];
+            $this->correctIndex = null;
+            $this->answerBool   = null;
+        }
+
+        $this->uiNonce++;            // remount
+        $this->dispatch('$refresh'); // refresh explícito
+    }
+
+    // Fill-blank helpers
+    public function addFillAnswer(): void
+    {
+        $this->answersFill[] = '';
+        $this->uiNonce++;
+        $this->dispatch('$refresh');
+    }
+
+    public function removeFillAnswer(int $index): void
+    {
+        if (count($this->answersFill) <= 1) return;
+
+        if (isset($this->answersFill[$index])) {
+            array_splice($this->answersFill, $index, 1);
+            $this->uiNonce++;
+            $this->dispatch('$refresh');
+        }
     }
 
     public function update(): void
