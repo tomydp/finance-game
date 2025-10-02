@@ -1,16 +1,6 @@
 <div class="container mx-auto p-4" wire:key="exercises-page-{{ $exercises->currentPage() }}">
     <div class="rounded-lg bg-white p-6 shadow">
 
-        {{-- Buscar (igual que en Cursos) --}}
-        <div class="mb-4">
-            <input
-                type="text"
-                wire:model.debounce.300ms="search"
-                placeholder="Buscar ejercicio..."
-                class="rounded border px-3 py-2"
-            />
-        </div>
-
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-blue-500">
@@ -28,9 +18,7 @@
                         <tr wire:key="exercise-row-{{ $e->id }}">
                             <td class="px-6 py-7 whitespace-nowrap">{{ $e->id }}</td>
 
-                            <td class="px-6 py-7 whitespace-nowrap">
-                                {{ optional($e->lesson?->course)->name }} — {{ optional($e->lesson)->title }}
-                            </td>
+                                <x-tooltip-cell :text="optional($e->lesson?->course)->name . ' — ' . optional($e->lesson)->title" />
 
                             <td class="px-6 py-7 whitespace-nowrap">
                                 @switch($e->type)

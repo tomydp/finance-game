@@ -5,10 +5,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\ExerciseController;
-use App\Livewire\ShowExercise;
-use App\Livewire\CreateExercise;
-use App\Livewire\EditExercise;
-
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard')->middleware('auth');

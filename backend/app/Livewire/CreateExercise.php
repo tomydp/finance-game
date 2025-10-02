@@ -9,7 +9,6 @@ use Livewire\Component;
 
 class CreateExercise extends Component
 {
-    /** Paso 0: lista de tipos / Paso 1: modal del formulario */
     public bool $showTypePicker = false;
     public bool $showModal = false;
 
@@ -28,90 +27,15 @@ class CreateExercise extends Component
     // True/False
     public ?bool $answerBool = null;
 
-    // Fill blank
+    // Fill blank (una sola respuesta)
     public array $answersFill = [''];
 
     // Catálogos
     public array $courses = [];
     public array $lessons = [];
 
-    /** Nonce para identidad de UI (por seguridad) */
+    /** Nonce para reforzar remount de UI dinámico */
     public int $uiNonce = 0;
-
-    public function mount(): void
-    {
-        $this->courses = Course::orderBy('name')->get(['id','name'])->toArray();
-        $this->refreshLessons();
-    }
-
-    /* =====================  UI FLOW  ===================== */
-
-    public function openTypePicker(): void
-    {
-        $this->resetErrorBag();
-        $this->resetValidation();
-        $this->showModal = false;
-        $this->showTypePicker = true;
-    }
-
-    public function closeTypePicker(): void
-    {
-        $this->showTypePicker = false;
-    }
-
-    public function chooseType(string $type): void
-    {
-        if (!in_array($type, ['mcq','true_false','fill_blank'], true)) {
-            return;
-        }
-
-        // Reseteamos el form pero respetando el tipo elegido
-        $this->resetFormForType($type);
-
-        $this->showTypePicker = false;
-        $this->showModal = true;
-
-        // Cambiamos identidad visual del modal
-        $this->uiNonce++;
-    }
-
-    public function closeModal(): void
-    {
-        $this->resetErrorBag();
-        $this->resetValidation();
-        // no tocamos el tipo para que al reabrir puedas elegir otro desde la lista
-        $this->showModal = false;
-    }
-
-    /* =====================  HANDLERS  ===================== */
-
-    public function handleCourse(string $value): void
-    {
-        $this->courseId = $value !== '' ? (int) $value : null;
-        // Convención: al cambiar el padre, resetear el hijo
-        $this->lessonId = '';
-        $this->refreshLessons();
-    }
-
-    /** Fill-blank: agregar / quitar (sin permitir borrar el último) */
-    public function addFillAnswer(): void
-    {
-        $this->answersFill[] = '';
-        $this->uiNonce++;
-    }
-
-    public function removeFillAnswer(int $index): void
-    {
-        if (count($this->answersFill) <= 1) {
-            return; // no se puede borrar la única
-        }
-        if (isset($this->answersFill[$index])) {
-            array_splice($this->answersFill, $index, 1);
-            $this->uiNonce++;
-        }
-    }
-
-    /* =====================  VALIDACIÓN  ===================== */
 
     protected function rules(): array
     {
@@ -132,45 +56,133 @@ class CreateExercise extends Component
                 'answerBool'   => ['required','boolean'],
             ],
             'fill_blank' => $base + [
-                'answersFill'   => ['array','min:1'],
-                'answersFill.*' => ['required','string','max:255'],
+                'answersFill'   => ['array','size:1'],
+                'answersFill.0' => ['required','string','max:255'],
             ],
         };
     }
 
-    /* =====================  PERSISTENCIA  ===================== */
+    public function mount(): void
+    {
+        $this->courses = Course::orderBy('name')->get(['id','name'])->toArray();
+        $this->refreshLessons();
+    }
 
+    /* ---------- Picker de tipo ---------- */
+    public function openTypePicker(): void
+    {
+        $this->resetForm();
+        $this->showTypePicker = true;
+    }
+    public function closeTypePicker(): void
+    {
+        $this->showTypePicker = false;
+    }
+    public function chooseType(string $type): void
+    {
+        $this->type = $type;
+        $this->uiNonce++;
+        $this->showTypePicker = false;
+        $this->showModal = true;
+    }
+
+    /* ---------- Select dependiente ---------- */
+    public function handleCourse(string $value): void
+    {
+        $this->courseId = $value !== '' ? (int) $value : null;
+        $this->lessonId = '';
+        $this->refreshLessons();
+    }
+
+    /* ---------- Cambio de tipo ---------- */
+    public function updatedType(string $value): void
+    {
+        $this->uiNonce++;
+        $this->options      = ['', '', '', ''];
+        $this->correctIndex = null;
+        $this->answerBool   = null;
+        $this->answersFill  = [''];
+    }
+
+    public function makeBlank(?int $start = null, ?int $end = null, string $selected = ''): void
+    {
+        $token = '[[BLANK]]';
+        if (str_contains((string)$this->question, $token)) {
+            return; // solo un hueco
+        }
+    
+        $text = (string) $this->question;
+        $s    = max(0, (int)($start ?? 0));
+        $e    = max($s, (int)($end ?? $s));
+    
+        $this->question = mb_substr($text, 0, $s) . $token . mb_substr($text, $e);
+    
+        $selected = trim($selected);
+        if ($selected !== '') {
+            $this->answersFill = [$selected]; // una única respuesta
+        }
+    
+        // 🔁 fuerza remount/refresh del bloque del textarea
+        $this->uiNonce++;
+    }
+    
+    public function clearBlank(): void
+    {
+        $this->question = str_replace('[[BLANK]]', '', (string)$this->question);
+    
+        // 🔁 fuerza remount/refresh del bloque del textarea
+        $this->uiNonce++;
+    }
+    
+    /* ---------- Modal ---------- */
+    public function openModal(): void
+    {
+        $this->resetForm();
+        $this->showModal = true;
+    }
+    public function closeModal(): void
+    {
+        $this->resetErrorBag();
+        $this->resetValidation();
+        $this->showModal = false;
+    }
+
+    /* ---------- Persistencia ---------- */
     public function save(): void
     {
         $this->validate();
-    
+
+        // Para completar, el hueco es obligatorio
+        if ($this->type === 'fill_blank' && !str_contains((string)$this->question, '[[BLANK]]')) {
+            $this->addError('question', 'Usá “Insertar hueco” para marcar dónde se responde.');
+            return;
+        }
+
         [$options, $correct] = match ($this->type) {
-            'mcq' => [array_map('trim', $this->options), (string) ($this->options[$this->correctIndex] ?? '')],
+            'mcq' => [
+                array_map('trim', $this->options),
+                (string) ($this->options[$this->correctIndex] ?? ''),
+            ],
             'true_false' => [[], $this->answerBool ? 'true' : 'false'],
-            'fill_blank' => [[], json_encode(
-                array_values(array_filter(array_map('trim', $this->answersFill), fn($s) => $s !== '')),
-                JSON_UNESCAPED_UNICODE
-            )],
+            'fill_blank' => [
+                [],
+                json_encode([trim($this->answersFill[0] ?? '')], JSON_UNESCAPED_UNICODE),
+            ],
         };
-    
-        \App\Models\Exercise::create([
+
+        Exercise::create([
             'lesson_id'      => (int) $this->lessonId,
             'type'           => $this->type,
             'question'       => $this->question,
             'options'        => $options,
             'correct_answer' => $correct,
         ]);
-    
-        // Notifica al listado si lo necesitas
-        $this->dispatch('exerciseCreated');
-    
-        // Cerrar todo después de guardar
-        $this->showModal = false;
-        $this->showTypePicker = false;
-    }
-    
 
-    /* =====================  RENDER  ===================== */
+        $this->dispatch('exerciseCreated');
+        $this->closeModal();
+        $this->showTypePicker = false;
+        $this->resetForm();
+    }
 
     public function render()
     {
@@ -180,21 +192,18 @@ class CreateExercise extends Component
         ]);
     }
 
-    /* =====================  HELPERS  ===================== */
-
-    private function resetFormForType(string $type): void
+    /* ---------- helpers ---------- */
+    private function resetForm(): void
     {
-        $this->type         = $type;
         $this->courseId     = null;
         $this->lessonId     = '';
+        $this->type         = 'mcq';
         $this->question     = '';
-
-        // Reset campos específicos
         $this->options      = ['', '', '', ''];
         $this->correctIndex = null;
         $this->answerBool   = null;
-        $this->answersFill  = [''];
-
+        $this->answersFill  = [''];   // una sola respuesta
+        $this->uiNonce++;
         $this->refreshLessons();
     }
 

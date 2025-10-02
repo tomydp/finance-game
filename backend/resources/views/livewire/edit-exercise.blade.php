@@ -13,16 +13,19 @@
                 <div class="fixed inset-0 bg-black/50" wire:click="closeModal"></div>
 
                 <div class="relative z-10 w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl">
+                    {{-- Header --}}
                     <div class="flex items-center justify-between bg-blue-600 px-4 py-3 text-white">
                         <h2 class="text-lg font-medium">Editar Ejercicio #{{ $exerciseId }}</h2>
                         <button type="button" wire:click="closeModal" class="text-xl leading-none">×</button>
                     </div>
 
-                    <div class="p-6">
-                        <form wire:submit.prevent="update">
-                            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {{-- Body (alineado a la izquierda) --}}
+                    <div class="p-6 text-left">
+                        <form wire:submit.prevent="update" class="space-y-4">
+                            {{-- Fila 1: Curso/Lección --}}
+                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div>
-                                    <label class="text-sm">Curso</label>
+                                    <label class="block text-left text-sm font-medium text-gray-700">Curso</label>
                                     <select
                                         wire:model="courseId"
                                         wire:change="handleCourse($event.target.value)"
@@ -37,7 +40,7 @@
                                 </div>
 
                                 <div>
-                                    <label class="text-sm">Lección</label>
+                                    <label class="block text-left text-sm font-medium text-gray-700">Lección</label>
                                     <select
                                         wire:model="lessonId"
                                         wire:key="lesson-select-edit-{{ $courseId ?? 'x' }}"
@@ -51,39 +54,92 @@
                                     </select>
                                     @error('lessonId') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                 </div>
-
-                                <div>
-                                    <label for="editType" class="block text-sm font-medium text-gray-700">Tipo</label>
-                                    <select
-                                        id="editType"
-                                        wire:model.change="editType"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-600 focus:ring focus:ring-slate-600 sm:text-sm"
-                                    >
-                                        <option value="mcq">Opción múltiple</option>
-                                        <option value="true_false">Verdadero / Falso</option>
-                                        <option value="fill_blank">Completar</option>
-                                    </select>
-                                    @error('editType') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-                                </div>
-
-                                <div class="md:col-span-2">
-                                    <label class="text-sm">Enunciado</label>
-                                    <textarea
-                                        wire:model="question"
-                                        class="mt-1 w-full rounded border p-2 @error('question') border-red-500 ring-1 ring-red-500 @enderror"
-                                        rows="3"
-                                    ></textarea>
-                                    @error('question') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                                </div>
                             </div>
 
-                            {{-- 🔑 Bloque dinámico: wire:replace + key fuerte --}}
-                            <div class="mt-4"
+                            {{-- Tipo (pill solo lectura) --}}
+                            <div>
+                                <label class="block text-left text-sm font-medium text-gray-700">Tipo</label>
+                                <div class="mt-1 text-left">
+                                    <span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
+                                        @switch($editType)
+                                            @case('mcq') Opción múltiple @break
+                                            @case('true_false') Verdadero / Falso @break
+                                            @case('fill_blank') Completar @break
+                                        @endswitch
+                                    </span>
+                                </div>
+                                <input type="hidden" wire:model="editType">
+                            </div>
+
+                            <div class="md:col-span-2"
+                            x-data="{
+                               // q SIEMPRE igual a question (Livewire) con two-way bind
+                               q: @entangle('question'),
+                       
+                               preview() {
+                                   return (this.q || '')
+                                       .split('[[BLANK]]').join('_____')   // muestra el hueco
+                                       .replaceAll('\n','<br>');           // respeta saltos de línea
+                               },
+                       
+                               insertBlank() {
+                                   const el = $refs.q;
+                                   const s  = el.selectionStart ?? 0;
+                                   const e  = el.selectionEnd ?? s;
+                                   if ((this.q || '').includes('[[BLANK]]')) return; // solo 1 hueco
+                                   this.q = (this.q || '').slice(0, s) + '[[BLANK]]' + (this.q || '').slice(e);
+                                   this.$nextTick(() => { el.focus(); el.setSelectionRange(s + 9, s + 9); });
+                               },
+                       
+                               clearBlank() {
+                                   this.q = (this.q || '').replace('[[BLANK]]', '');
+                               }
+                            }"
+                       >
+                           <label class="block text-sm font-medium text-gray-700">Enunciado</label>
+                       
+                           <!-- Usa x-model (Alpine) + wire:model.defer (Livewire) sobre el mismo campo -->
+                           <textarea
+                               x-ref="q"
+                               x-model="q"
+                               wire:model.defer="question"
+                               rows="3"
+                               class="mt-1 w-full rounded border p-2 @error('question') border-red-500 ring-1 ring-red-500 @enderror"
+                           ></textarea>
+                           @error('question') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                       
+                           @if(($type ?? $editType) === 'fill_blank')
+                               <div class="mt-2 mx-auto w-full md:w-3/4 lg:w-2/3">
+                                   <div class="grid grid-cols-2 gap-3">
+                                       <button type="button"
+                                               class="inline-flex w-full items-center justify-center rounded border px-4 py-2 text-center hover:bg-gray-50"
+                                               @click="insertBlank()">
+                                           Insertar hueco en el cursor
+                                       </button>
+                                       <button type="button"
+                                               class="inline-flex w-full items-center justify-center rounded border px-4 py-2 text-center hover:bg-gray-50"
+                                               @click="clearBlank()">
+                                           Quitar hueco
+                                       </button>
+                                   </div>
+                               </div>
+                       
+                               <div class="mt-1 text-left text-xs text-gray-500">
+                                   <span class="font-medium">Vista previa:</span>
+                                   <span class="font-mono" x-html="preview()"></span>
+                               </div>
+                           @endif
+                       </div>
+                       
+
+
+                            {{-- Bloque dinámico --}}
+                            <div class="mt-2"
                                  wire:replace
                                  wire:key="edit-dyn-{{ $editType }}-{{ $lessonId === null ? 'x' : $lessonId }}-{{ $uiNonce }}">
                                 @if($editType === 'mcq')
-                                    <div class="space-y-2" wire:key="edit-case-mcq-{{ $lessonId ?? 'x' }}-{{ $uiNonce }}">
-                                        <p class="text-sm font-semibold">Opciones (marca la correcta)</p>
+                                    <div class="space-y-2">
+                                        <p class="text-sm font-semibold text-gray-700">Opciones (marca la correcta)</p>
                                         @foreach($options as $i => $op)
                                             <div class="flex items-center gap-2" wire:key="mcq-opt-edit-{{ $i }}">
                                                 <input type="radio" name="mcq_correct_edit" wire:model="correctIndex" value="{{ $i }}" class="h-4 w-4">
@@ -95,45 +151,45 @@
                                     </div>
 
                                 @elseif($editType === 'true_false')
-                                    <div wire:key="edit-case-tf-{{ $lessonId ?? 'x' }}-{{ $uiNonce }}">
-                                        <p class="text-sm font-semibold">Respuesta correcta</p>
+                                    <div class="space-y-2">
+                                        <p class="text-sm font-semibold text-gray-700">Respuesta correcta</p>
                                         <div class="flex gap-6">
                                             <label class="flex items-center gap-2">
                                                 <input type="radio" name="tf_answer_edit" wire:model="answerBool" value="1" class="h-4 w-4">
-                                                Verdadero
+                                                <span>Verdadero</span>
                                             </label>
                                             <label class="flex items-center gap-2">
                                                 <input type="radio" name="tf_answer_edit" wire:model="answerBool" value="0" class="h-4 w-4">
-                                                Falso
+                                                <span>Falso</span>
                                             </label>
                                         </div>
                                         @error('answerBool') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                     </div>
 
-                                @else
-                                    <div wire:key="edit-case-fill-{{ $lessonId ?? 'x' }}-{{ $uiNonce }}">
-                                        <p class="mb-2 text-sm font-semibold">Respuestas válidas</p>
-                                        @foreach($answersFill as $i => $ans)
-                                            <div class="mb-2 flex gap-2" wire:key="fill-ans-edit-{{ $i }}">
-                                                <input type="text" wire:model="answersFill.{{ $i }}" class="w-full rounded border p-2" placeholder="Respuesta {{ $i+1 }}">
-                                                <button type="button" class="rounded border px-2"
-                                                        wire:click="removeFillAnswer({{ $i }})"
-                                                        @disabled(count($answersFill) <= 1)">Quitar</button>
-                                            </div>
-                                        @endforeach
-                                        <button type="button" class="rounded border px-3 py-1"
-                                                wire:click="addFillAnswer">Agregar respuesta</button>
-                                        @error('answersFill.*') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                @else {{-- fill_blank: UNA sola respuesta --}}
+                                    <div class="space-y-2">
+                                        <label class="block text-left text-sm font-semibold text-gray-700">Respuesta válida</label>
+                                        <input type="text"
+                                               wire:model="answersFill.0"
+                                               class="w-full rounded border p-2 @error('answersFill.0') border-red-500 ring-1 ring-red-500 @enderror"
+                                               placeholder="Respuesta correcta">
+                                        @error('answersFill.0') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                     </div>
                                 @endif
                             </div>
 
+                            {{-- Footer --}}
                             <div class="mt-6 flex justify-end gap-2">
-                                <button type="submit" class="rounded bg-blue-600 px-4 py-2 text-white">Actualizar</button>
-                                <button type="button" wire:click="closeModal" class="rounded bg-gray-200 px-4 py-2">Cancelar</button>
+                                <button type="submit" class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+                                    Actualizar
+                                </button>
+                                <button type="button" wire:click="closeModal" class="rounded bg-gray-200 px-4 py-2 hover:bg-gray-300">
+                                    Cancelar
+                                </button>
                             </div>
                         </form>
                     </div>
+                    {{-- /Body --}}
                 </div>
             </div>
         </div>

@@ -16,9 +16,6 @@ class ShowLesson extends Component
 
     public string $basePath = '/lessons';
 
-    /** Buscador */
-    public string $search = '';
-
     public $listeners = ['lessonCreated' => '$refresh', 'lessonUpdated' => '$refresh'];
 
     public function mount(): void
@@ -26,23 +23,9 @@ class ShowLesson extends Component
         $this->basePath = url()->current();
     }
 
-    /** Al cambiar el término de búsqueda, volver a la página 1 */
-    public function updatingSearch(): void
-    {
-        $this->resetPage($this->pageName);
-    }
-
     public function render()
     {
         $q = Lesson::with('course');
-
-        if ($this->search !== '') {
-            $s = '%' . trim($this->search) . '%';
-            $q->where(function ($qq) use ($s) {
-                $qq->where('title', 'like', $s)
-                   ->orWhereHas('course', fn($c) => $c->where('name', 'like', $s));
-            });
-        }
 
         $lessons = $q->orderBy('id')
             ->paginate(5, ['*'], $this->pageName);

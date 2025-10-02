@@ -26,9 +26,11 @@ class EditExercise extends Component
     public ?bool $answerBool = null;
     public array $answersFill = [''];
 
+    /** catálogos */
     public array $courses = [];
     public array $lessons = [];
 
+    /** para forzar remount si hace falta */
     public int $uiNonce = 0;
 
     public function mount(int $exerciseId): void
@@ -75,7 +77,7 @@ class EditExercise extends Component
 
         $this->courseId = $e->lesson?->course_id;
         $this->lessonId = $e->lesson_id;
-        $this->editType = $e->type;
+        $this->editType = $e->type;      // bloqueado en UI
         $this->question = $e->question;
 
         $this->loadLessons();
@@ -92,7 +94,7 @@ class EditExercise extends Component
             $this->options      = ['', '', '', ''];
             $this->correctIndex = null;
             $this->answersFill  = [''];
-        } else {
+        } else { // fill_blank
             $decoded = json_decode((string)$e->correct_answer, true);
             $this->answersFill = is_array($decoded) && count($decoded) ? array_values($decoded) : [''];
             $this->options      = ['', '', '', ''];
@@ -122,63 +124,49 @@ class EditExercise extends Component
         $this->courseId = $id ? (int)$id : null;
         $this->lessonId = null;
         $this->loadLessons();
-        // (opcional) $this->uiNonce++; $this->dispatch('$refresh');
     }
 
-    public function updatedLessonId($value): void
-    {
-        $this->uiNonce++;
-        $this->dispatch('$refresh');
-    }
+    // ---------- helpers "Completar" (igual que Crear) ----------
 
-    public function updatedEditType(string $value): void
-    {
-        $this->resetErrorBag();
-        $this->resetValidation();
+   // Inserta [[BLANK]] en el cursor o sobre selección; si hay selección la usa como respuesta
+        public function makeBlank(?int $start = null, ?int $end = null, string $selected = ''): void
+        {
+            $token = '[[BLANK]]';
 
-        if ($value === 'mcq') {
-            $this->options      = ['', '', '', ''];
-            $this->correctIndex = null;
-            $this->answerBool   = null;
-            $this->answersFill  = [''];
-        } elseif ($value === 'true_false') {
-            $this->answerBool   = null;
-            $this->options      = ['', '', '', ''];
-            $this->correctIndex = null;
-            $this->answersFill  = [''];
-        } else {
-            $this->answersFill  = [''];
-            $this->options      = ['', '', '', ''];
-            $this->correctIndex = null;
-            $this->answerBool   = null;
+            // solo un hueco permitido
+            if (str_contains((string) $this->question, $token)) {
+                return;
+            }
+
+            $text = (string) $this->question;
+            $s    = max(0, (int) ($start ?? 0));
+            $e    = max($s, (int) ($end ?? $s));
+
+            $this->question = mb_substr($text, 0, $s) . $token . mb_substr($text, $e);
+
+            $selected = trim($selected);
+            if ($selected !== '') {
+                // Para “Completar” usamos una sola respuesta válida
+                $this->answersFill = [$selected];
+            }
         }
 
-        $this->uiNonce++;            // remount
-        $this->dispatch('$refresh'); // refresh explícito
-    }
-
-    // Fill-blank helpers
-    public function addFillAnswer(): void
-    {
-        $this->answersFill[] = '';
-        $this->uiNonce++;
-        $this->dispatch('$refresh');
-    }
-
-    public function removeFillAnswer(int $index): void
-    {
-        if (count($this->answersFill) <= 1) return;
-
-        if (isset($this->answersFill[$index])) {
-            array_splice($this->answersFill, $index, 1);
-            $this->uiNonce++;
-            $this->dispatch('$refresh');
+        // Quita el [[BLANK]] del enunciado
+        public function clearBlank(): void
+        {
+            $this->question = str_replace('[[BLANK]]', '', (string) $this->question);
         }
-    }
+
 
     public function update(): void
     {
         $this->validate();
+
+        // Para "Completar" exigimos que haya un hueco
+        if ($this->editType === 'fill_blank' && !str_contains((string)$this->question, '[[BLANK]]')) {
+            $this->addError('question', 'Usá “Insertar hueco” para marcar dónde se responde.');
+            return;
+        }
 
         [$options, $correct] = match ($this->editType) {
             'mcq' => [
@@ -189,7 +177,8 @@ class EditExercise extends Component
             'fill_blank' => [
                 null,
                 json_encode(
-                    array_values(array_filter(array_map('trim', $this->answersFill), fn($s) => $s !== '')),
+                    // guardamos solo el primero (mismo criterio que en crear)
+                    [trim((string)($this->answersFill[0] ?? ''))],
                     JSON_UNESCAPED_UNICODE
                 ),
             ],

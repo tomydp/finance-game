@@ -10,32 +10,31 @@ class ShowExercise extends Component
 {
     use WithPagination;
 
-    // refresca el listado cuando se crea/edita
+    protected string $paginationTheme = 'tailwind';
+    protected string $pageName = 'exercisePage';
+
+    /** Asegura que los links apunten a /exercises (no a /livewire/update) */
+    public string $basePath = '/exercises';
+
     protected $listeners = [
         'exerciseCreated' => '$refresh',
         'exerciseUpdated' => '$refresh',
     ];
 
-    /** Buscador por enunciado */
-    public string $search = '';
-
-    /** Al cambiar el término de búsqueda, volver a la página 1 */
-    public function updatingSearch(): void
+    public function mount(): void
     {
-        $this->resetPage('exercisePage');
+        // En el primer render (GET) esto será la URL real del listado
+        $this->basePath = url()->current();
     }
 
     public function render()
     {
-        $q = Exercise::with('lesson.course');
+        $exercises = Exercise::with('lesson.course')
+            ->orderBy('id')                            // ascendente como lo pediste
+            ->paginate(5, ['*'], $this->pageName);     // usa el pageName “exercisePage”
 
-        if ($this->search !== '') {
-            $s = '%' . trim($this->search) . '%';
-            $q->where('question', 'like', $s);
-        }
-
-        $exercises = $q->orderBy('id')
-            ->paginate(5, ['*'], 'exercisePage');
+        // Fuerza la ruta base del paginador
+        $exercises->withPath($this->basePath);
 
         return view('livewire.show-exercise', compact('exercises'));
     }
