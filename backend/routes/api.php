@@ -17,22 +17,14 @@ Route::get('lessons/{lesson}/exercises', [ExerciseApiController::class, 'index']
     ->whereNumber('lesson')
     ->name('api.lessons.exercises.index'); // GET /api/lessons/{lesson}/exercises
 
-Route::get('lessons/{lesson}/exercises/{exercise}', [ExerciseApiController::class, 'show'])
-    ->whereNumber('lesson')
-    ->whereNumber('exercise')
-    ->name('api.lessons.exercises.show'); // GET /api/lessons/{lesson}/exercises/{exercise}
+Route::apiResource('lessons.exercises', ExerciseApiController::class)
+     ->only(['index', 'show'])        // GET /api/lessons/{lesson}/exercises
+     ->names('api.lessons.exercises');
 
-// Protegidos (Sanctum + rate limit)
-Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
-    Route::post('exercises/{exercise}/submit', [ExerciseApiController::class, 'submit'])
-        ->whereNumber('exercise')
-        ->name('api.exercises.submit'); // POST /api/exercises/{id}/submit
-
-    Route::post('lessons/{lesson}/complete', [LessonApiController::class, 'complete'])
-        ->whereNumber('lesson')
-        ->name('api.lessons.complete'); // POST /api/lessons/{lesson}/complete
-
-    Route::get('courses/{course}/progress', [CourseApiController::class, 'progress'])
-        ->whereNumber('course')
-        ->name('api.courses.progress'); // GET /api/courses/{course}/progress
+Route::post('/lessons/{id}/complete', [\App\Http\Controllers\API\LessonApiController::class, 'completar']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post(
+        'exercises/{exercise}/submit', // POST /api/exercises/{id}/submit
+        [ExerciseApiController::class, 'submit']
+    )->name('api.exercises.submit');
 });
