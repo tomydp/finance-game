@@ -5,7 +5,6 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-blue-500">
                     <tr>
-                        <th class="px-6 py-7 text-left text-sm font-medium uppercase leading-normal tracking-wider text-white">ID</th>
                         <th class="px-6 py-7 text-left text-sm font-medium uppercase leading-normal tracking-wider text-white">Nombre</th>
                         <th class="px-6 py-7 text-left text-sm font-medium uppercase leading-normal tracking-wider text-white">Descripción</th>
                         <th class="px-6 py-7 text-left text-sm font-medium uppercase leading-normal tracking-wider text-white">Dificultad</th>
@@ -15,7 +14,6 @@
                 <tbody class="divide-y divide-gray-200 bg-white">
                     @foreach($courses as $course)
                         <tr wire:key="course-row-{{ $course->id }}">
-                            <td class="px-6 py-7 whitespace-nowrap">{{ $course->id }}</td>
                             <td class="px-6 py-7 whitespace-nowrap">{{ $course->name }}</td>
                             <x-tooltip-cell :text="$course->description" />
                             <td class="px-6 py-7 whitespace-nowrap">{{ $course->difficulty }}</td>

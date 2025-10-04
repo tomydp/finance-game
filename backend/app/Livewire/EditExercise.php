@@ -10,7 +10,6 @@ use App\Models\Exercise;
 class EditExercise extends Component
 {
     public int $exerciseId;
-
     public bool $isOpen = false;
 
     public ?int $courseId = null;
@@ -25,6 +24,9 @@ class EditExercise extends Component
     public ?int $correctIndex = null;
     public ?bool $answerBool = null;
     public array $answersFill = [''];
+
+    // NUEVO
+    public ?string $explanation_md = null;
 
     /** catálogos */
     public array $courses = [];
@@ -42,10 +44,11 @@ class EditExercise extends Component
     protected function rules(): array
     {
         $base = [
-            'courseId' => ['required','exists:courses,id'],
-            'lessonId' => ['required','exists:lessons,id'],
-            'editType' => ['required','in:mcq,true_false,fill_blank'],
-            'question' => ['required','string','max:2000'],
+            'courseId'       => ['required','exists:courses,id'],
+            'lessonId'       => ['required','exists:lessons,id'],
+            'editType'       => ['required','in:mcq,true_false,fill_blank'],
+            'question'       => ['required','string','max:2000'],
+            'explanation_md' => ['nullable','string','max:20000'],
         ];
 
         return match ($this->editType) {
@@ -79,6 +82,8 @@ class EditExercise extends Component
         $this->lessonId = $e->lesson_id;
         $this->editType = $e->type;      // bloqueado en UI
         $this->question = $e->question;
+
+        $this->explanation_md = $e->explanation_md; // ✅
 
         $this->loadLessons();
 
@@ -126,43 +131,32 @@ class EditExercise extends Component
         $this->loadLessons();
     }
 
-    // ---------- helpers "Completar" (igual que Crear) ----------
+    public function makeBlank(?int $start = null, ?int $end = null, string $selected = ''): void
+    {
+        $token = '[[BLANK]]';
+        if (str_contains((string) $this->question, $token)) return;
 
-   // Inserta [[BLANK]] en el cursor o sobre selección; si hay selección la usa como respuesta
-        public function makeBlank(?int $start = null, ?int $end = null, string $selected = ''): void
-        {
-            $token = '[[BLANK]]';
+        $text = (string) $this->question;
+        $s    = max(0, (int) ($start ?? 0));
+        $e    = max($s, (int) ($end ?? $s));
 
-            // solo un hueco permitido
-            if (str_contains((string) $this->question, $token)) {
-                return;
-            }
+        $this->question = mb_substr($text, 0, $s) . $token . mb_substr($text, $e);
 
-            $text = (string) $this->question;
-            $s    = max(0, (int) ($start ?? 0));
-            $e    = max($s, (int) ($end ?? $s));
-
-            $this->question = mb_substr($text, 0, $s) . $token . mb_substr($text, $e);
-
-            $selected = trim($selected);
-            if ($selected !== '') {
-                // Para “Completar” usamos una sola respuesta válida
-                $this->answersFill = [$selected];
-            }
+        $selected = trim($selected);
+        if ($selected !== '') {
+            $this->answersFill = [$selected];
         }
+    }
 
-        // Quita el [[BLANK]] del enunciado
-        public function clearBlank(): void
-        {
-            $this->question = str_replace('[[BLANK]]', '', (string) $this->question);
-        }
-
+    public function clearBlank(): void
+    {
+        $this->question = str_replace('[[BLANK]]', '', (string) $this->question);
+    }
 
     public function update(): void
     {
         $this->validate();
 
-        // Para "Completar" exigimos que haya un hueco
         if ($this->editType === 'fill_blank' && !str_contains((string)$this->question, '[[BLANK]]')) {
             $this->addError('question', 'Usá “Insertar hueco” para marcar dónde se responde.');
             return;
@@ -176,20 +170,17 @@ class EditExercise extends Component
             'true_false' => [null, $this->answerBool ? 'true' : 'false'],
             'fill_blank' => [
                 null,
-                json_encode(
-                    // guardamos solo el primero (mismo criterio que en crear)
-                    [trim((string)($this->answersFill[0] ?? ''))],
-                    JSON_UNESCAPED_UNICODE
-                ),
+                json_encode([trim((string)($this->answersFill[0] ?? ''))], JSON_UNESCAPED_UNICODE),
             ],
         };
 
         Exercise::whereKey($this->exerciseId)->update([
-            'lesson_id'      => $this->lessonId,
-            'type'           => $this->editType,
-            'question'       => $this->question,
-            'options'        => $options,
-            'correct_answer' => $correct,
+            'lesson_id'       => $this->lessonId,
+            'type'            => $this->editType,
+            'question'        => $this->question,
+            'options'         => $options,
+            'correct_answer'  => $correct,
+            'explanation_md'  => $this->explanation_md, // ✅
         ]);
 
         $this->dispatch('exerciseUpdated');

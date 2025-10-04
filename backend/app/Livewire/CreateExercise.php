@@ -30,6 +30,9 @@ class CreateExercise extends Component
     // Fill blank (una sola respuesta)
     public array $answersFill = [''];
 
+    // NUEVO
+    public ?string $explanation_md = null;
+
     // Catálogos
     public array $courses = [];
     public array $lessons = [];
@@ -40,10 +43,11 @@ class CreateExercise extends Component
     protected function rules(): array
     {
         $base = [
-            'courseId' => ['required','exists:courses,id'],
-            'lessonId' => ['required','exists:lessons,id'],
-            'type'     => ['required','in:mcq,true_false,fill_blank'],
-            'question' => ['required','string','max:2000'],
+            'courseId'       => ['required','exists:courses,id'],
+            'lessonId'       => ['required','exists:lessons,id'],
+            'type'           => ['required','in:mcq,true_false,fill_blank'],
+            'question'       => ['required','string','max:2000'],
+            'explanation_md' => ['nullable','string','max:20000'],
         ];
 
         return match ($this->type) {
@@ -68,7 +72,6 @@ class CreateExercise extends Component
         $this->refreshLessons();
     }
 
-    /* ---------- Picker de tipo ---------- */
     public function openTypePicker(): void
     {
         $this->resetForm();
@@ -86,7 +89,6 @@ class CreateExercise extends Component
         $this->showModal = true;
     }
 
-    /* ---------- Select dependiente ---------- */
     public function handleCourse(string $value): void
     {
         $this->courseId = $value !== '' ? (int) $value : null;
@@ -94,7 +96,6 @@ class CreateExercise extends Component
         $this->refreshLessons();
     }
 
-    /* ---------- Cambio de tipo ---------- */
     public function updatedType(string $value): void
     {
         $this->uiNonce++;
@@ -107,34 +108,28 @@ class CreateExercise extends Component
     public function makeBlank(?int $start = null, ?int $end = null, string $selected = ''): void
     {
         $token = '[[BLANK]]';
-        if (str_contains((string)$this->question, $token)) {
-            return; // solo un hueco
-        }
-    
+        if (str_contains((string)$this->question, $token)) return;
+
         $text = (string) $this->question;
         $s    = max(0, (int)($start ?? 0));
         $e    = max($s, (int)($end ?? $s));
-    
+
         $this->question = mb_substr($text, 0, $s) . $token . mb_substr($text, $e);
-    
+
         $selected = trim($selected);
         if ($selected !== '') {
-            $this->answersFill = [$selected]; // una única respuesta
+            $this->answersFill = [$selected];
         }
-    
-        // 🔁 fuerza remount/refresh del bloque del textarea
+
         $this->uiNonce++;
     }
-    
+
     public function clearBlank(): void
     {
         $this->question = str_replace('[[BLANK]]', '', (string)$this->question);
-    
-        // 🔁 fuerza remount/refresh del bloque del textarea
         $this->uiNonce++;
     }
-    
-    /* ---------- Modal ---------- */
+
     public function openModal(): void
     {
         $this->resetForm();
@@ -147,12 +142,10 @@ class CreateExercise extends Component
         $this->showModal = false;
     }
 
-    /* ---------- Persistencia ---------- */
     public function save(): void
     {
         $this->validate();
 
-        // Para completar, el hueco es obligatorio
         if ($this->type === 'fill_blank' && !str_contains((string)$this->question, '[[BLANK]]')) {
             $this->addError('question', 'Usá “Insertar hueco” para marcar dónde se responde.');
             return;
@@ -171,11 +164,12 @@ class CreateExercise extends Component
         };
 
         Exercise::create([
-            'lesson_id'      => (int) $this->lessonId,
-            'type'           => $this->type,
-            'question'       => $this->question,
-            'options'        => $options,
-            'correct_answer' => $correct,
+            'lesson_id'       => (int) $this->lessonId,
+            'type'            => $this->type,
+            'question'        => $this->question,
+            'options'         => $options,
+            'correct_answer'  => $correct,
+            'explanation_md'  => $this->explanation_md, // ✅
         ]);
 
         $this->dispatch('exerciseCreated');
@@ -192,7 +186,6 @@ class CreateExercise extends Component
         ]);
     }
 
-    /* ---------- helpers ---------- */
     private function resetForm(): void
     {
         $this->courseId     = null;
@@ -202,7 +195,8 @@ class CreateExercise extends Component
         $this->options      = ['', '', '', ''];
         $this->correctIndex = null;
         $this->answerBool   = null;
-        $this->answersFill  = [''];   // una sola respuesta
+        $this->answersFill  = [''];
+        $this->explanation_md = null; // ✅
         $this->uiNonce++;
         $this->refreshLessons();
     }

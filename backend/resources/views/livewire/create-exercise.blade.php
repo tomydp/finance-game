@@ -117,7 +117,6 @@
                                 @error('question') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
 
                                 @if($type === 'fill_blank')
-                                    {{-- Botonera centrada y simétrica --}}
                                     <div class="mt-2 mx-auto w-full md:w-3/4 lg:w-2/3">
                                         <div class="grid grid-cols-2 gap-3">
                                             <button
@@ -140,11 +139,9 @@
 
                                     <div class="mt-1 text-xs text-gray-500">
                                         <span class="font-medium">Vista previa:</span>
-                                        {{-- Usamos la variable de Alpine `q` (entangled) para que actualice en vivo. --}}
                                         <span class="font-mono break-words whitespace-pre-wrap"
                                               x-text="(q ?? '').split('[[BLANK]]').join('_____')"></span>
                                     </div>
-                                    
                                 @endif
                             </div>
 
@@ -191,6 +188,17 @@
                                         @error('answersFill.0') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                     </div>
                                 @endif
+                            </div>
+
+                            {{-- NUEVO: Explicación Markdown --}}
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">Explicación (Markdown, opcional)</label>
+                                <textarea
+                                    wire:model.defer="explanation_md"
+                                    rows="6"
+                                    class="mt-1 w-full rounded border p-2 @error('explanation_md') border-red-500 ring-1 ring-red-500 @enderror"
+                                    placeholder="Explicá por qué la respuesta correcta es X, con ejemplo numérico…"></textarea>
+                                @error('explanation_md') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                             </div>
 
                             {{-- Footer --}}
