@@ -1,28 +1,83 @@
 <div>
-    @if($showModal)
-    <div class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div class="bg-white p-6 rounded shadow w-full max-w-md">
-        <h2 class="text-xl mb-4">Editar Curso</h2>
-    
-        <div class="space-y-3">
-          <input type="text" wire:model="name" class="w-full border p-2" placeholder="Nombre" />
-          <textarea wire:model="description" class="w-full border p-2" placeholder="Descripción"></textarea>
-    
-          <select wire:model="difficulty" class="w-full border p-2">
-            <option value="" disabled @selected($difficulty===null)>Seleccionar dificultad</option>
-            <option value="facil">Fácil</option>
-            <option value="medio">Medio</option>
-            <option value="dificil">Difícil</option>
-          </select>
-          @error('difficulty') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+    <button
+        type="button"
+        wire:click="openModal"
+        class="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+    >
+        Editar
+    </button>
+  
+    @if($isOpen)
+        <div class="fixed inset-0 z-[9999]">
+            <div class="flex min-h-screen items-center justify-center">
+                <!-- Fondo: clic fuera cierra -->
+                <div class="fixed inset-0 bg-black/50" wire:click="closeModal"></div>
+  
+                <!-- Modal -->
+                <div class="relative z-10 w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl">
+                    <!-- Header azul -->
+                    <div class="flex items-center justify-between bg-blue-600 px-5 py-3 text-white">
+                        <h2 class="text-lg font-semibold">Editar Curso #{{ $courseId }}</h2>
+                        <button type="button" wire:click="closeModal" class="text-xl leading-none">×</button>
+                    </div>
+  
+                    <div class="p-6">
+                        <form wire:submit.prevent="update" class="space-y-5">
+                            <!-- Nombre -->
+                            <div class="grid grid-cols-12 items-start gap-3">
+                                <label class="col-span-12 mt-2 text-sm sm:col-span-3">Nombre</label>
+                                <div class="col-span-12 sm:col-span-9">
+                                    <input
+                                        type="text"
+                                        wire:model="name"
+                                        class="w-full rounded border p-2 @error('name') border-red-500 ring-1 ring-red-500 @enderror"
+                                        placeholder="Nombre"
+                                    />
+                                    @error('name') <p class="mt-1 block text-left text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+  
+                            <!-- Descripción -->
+                            <div class="grid grid-cols-12 items-start gap-3">
+                                <label class="col-span-12 mt-2 text-sm sm:col-span-3">Descripción</label>
+                                <div class="col-span-12 sm:col-span-9">
+                                    <textarea
+                                        wire:model="description"
+                                        rows="4"
+                                        class="w-full rounded border p-2 @error('description') border-red-500 ring-1 ring-red-500 @enderror"
+                                        placeholder="Descripción"
+                                    ></textarea>
+                                    @error('description') <p class="mt-1 block text-left text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+  
+                            <!-- Dificultad -->
+                            <div class="grid grid-cols-12 items-start gap-3">
+                                <label class="col-span-12 mt-2 text-sm sm:col-span-3">Dificultad</label>
+                                <div class="col-span-12 sm:col-span-9">
+                                    <select
+                                        wire:model="difficulty"
+                                        class="w-full rounded border p-2 @error('difficulty') border-red-500 ring-1 ring-red-500 @enderror"
+                                    >
+                                        <option value="" disabled @selected($difficulty===null)>Seleccionar dificultad</option>
+                                        <option value="facil">Fácil</option>
+                                        <option value="medio">Medio</option>
+                                        <option value="dificil">Difícil</option>
+                                    </select>
+                                    @error('difficulty') <p class="mt-1 block text-left text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+  
+                            <div class="flex justify-end gap-2 pt-2">
+                                <button type="submit" class="rounded bg-blue-600 px-4 py-2 text-white">Actualizar</button>
+                                <button type="button" wire:click="closeModal" class="rounded bg-gray-200 px-4 py-2">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- /Modal -->
+            </div>
         </div>
-    
-        <div class="mt-5 flex justify-end gap-2">
-          <button wire:click="update" class="px-4 py-2 bg-blue-600 text-white rounded">Editar</button>
-          <button wire:click="$set('showModal', false)" class="px-4 py-2 bg-gray-200 rounded">Cancelar</button>
-        </div>
-      </div>
-    </div>
     @endif
-    
-</div>
+  </div>
+  
