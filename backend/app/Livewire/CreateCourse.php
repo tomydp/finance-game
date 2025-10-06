@@ -2,8 +2,9 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
 use App\Models\Course;
+use Illuminate\Validation\Rule;
+use Livewire\Component;
 
 class CreateCourse extends Component
 {
@@ -12,6 +13,9 @@ class CreateCourse extends Component
     public string $name = '';
     public string $description = '';
     public ?string $difficulty = null; // 'facil' | 'medio' | 'dificil' | null
+    public string $status = Course::STATUS_ACTIVO;
+
+    public array $statusOptions = Course::STATUSES;
 
     protected function rules(): array
     {
@@ -19,6 +23,7 @@ class CreateCourse extends Component
             'name'        => ['required','string','max:255'],
             'description' => ['required','string'],
             'difficulty'  => ['required','in:facil,medio,dificil'],
+            'status'      => ['required', Rule::in(Course::STATUSES)],
         ];
     }
 
@@ -43,6 +48,7 @@ class CreateCourse extends Component
         $this->name = '';
         $this->description = '';
         $this->difficulty = null;
+        $this->status = Course::STATUS_ACTIVO;
     }
 
     public function save(): void
@@ -53,6 +59,7 @@ class CreateCourse extends Component
             'name'        => $this->name,
             'description' => $this->description,
             'difficulty'  => $this->difficulty,
+            'status'      => $this->status,
         ]);
 
         // Notifica y cierra limpio

@@ -39,6 +39,19 @@
                                 @error('course_id') <span class="mt-1 block text-left text-xs text-red-600">{{ $message }}</span> @enderror
                             </div>
 
+                            <div>
+                                <label class="text-sm">Estado</label>
+                                <select
+                                    wire:model="status"
+                                    class="mt-1 w-full rounded border p-2 @error('status') border-red-500 ring-1 ring-red-500 @enderror"
+                                >
+                                    @foreach($statusOptions as $option)
+                                        <option value="{{ $option }}">{{ ucfirst($option) }}</option>
+                                    @endforeach
+                                </select>
+                                @error('status') <span class="mt-1 block text-left text-xs text-red-600">{{ $message }}</span> @enderror
+                            </div>
+
                             <div class="flex justify-end gap-2 pt-2">
                                 <button type="submit" class="rounded bg-green-600 px-4 py-2 text-white">Guardar</button>
                                 <button type="button" wire:click="closeModal" class="rounded px-4 py-2 text-red-500">Cancelar</button>

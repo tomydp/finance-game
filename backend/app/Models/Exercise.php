@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Log;
 
 class Exercise extends Model
 {
+    public const STATUS_ACTIVO   = 'activo';
+    public const STATUS_INACTIVO = 'inactivo';
+    public const STATUSES        = [self::STATUS_ACTIVO, self::STATUS_INACTIVO];
+
     /**
      * Tipos válidos:
      * - 'mcq'        (opción múltiple con 1 respuesta correcta, guardada como string)
@@ -21,15 +26,26 @@ class Exercise extends Model
         'options',         // json para MCQ
         'correct_answer',  // string | json-string (según type)
         'explanation_md',  // ✅ nuevo campo
+        'status',
     ];
 
     protected $casts = [
         'options' => 'array',
+        'status'  => 'string',
+    ];
+
+    protected $attributes = [
+        'status' => self::STATUS_ACTIVO,
     ];
 
     public function lesson(): BelongsTo
     {
         return $this->belongsTo(Lesson::class);
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_ACTIVO);
     }
 
     /**

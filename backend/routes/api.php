@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\AnalyticsRankingController;
 use App\Http\Controllers\API\CourseApiController;
 use App\Http\Controllers\API\ExerciseApiController;
 use App\Http\Controllers\API\LessonApiController;
@@ -16,6 +17,9 @@ Route::get('courses/{course}/lessons', [LessonApiController::class, 'index'])
 Route::get('lessons/{lesson}/exercises', [ExerciseApiController::class, 'index'])
     ->whereNumber('lesson')
     ->name('api.lessons.exercises.index'); // GET /api/lessons/{lesson}/exercises
+
+Route::get('analytics/rankings', [AnalyticsRankingController::class, 'index'])
+    ->name('api.analytics.rankings.index');
 
 Route::apiResource('lessons.exercises', ExerciseApiController::class)
      ->only(['index', 'show'])        // GET /api/lessons/{lesson}/exercises

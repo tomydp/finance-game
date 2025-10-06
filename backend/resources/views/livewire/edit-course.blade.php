@@ -67,7 +67,22 @@
                                     @error('difficulty') <p class="mt-1 block text-left text-xs text-red-600">{{ $message }}</p> @enderror
                                 </div>
                             </div>
-  
+
+                            <div class="grid grid-cols-12 items-start gap-3">
+                                <label class="col-span-12 mt-2 text-sm sm:col-span-3">Estado</label>
+                                <div class="col-span-12 sm:col-span-9">
+                                    <select
+                                        wire:model="status"
+                                        class="w-full rounded border p-2 @error('status') border-red-500 ring-1 ring-red-500 @enderror"
+                                    >
+                                        @foreach($statusOptions as $option)
+                                            <option value="{{ $option }}">{{ ucfirst($option) }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('status') <p class="mt-1 block text-left text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+
                             <div class="flex justify-end gap-2 pt-2">
                                 <button type="submit" class="rounded bg-blue-600 px-4 py-2 text-white">Actualizar</button>
                                 <button type="button" wire:click="closeModal" class="rounded bg-gray-200 px-4 py-2">Cancelar</button>

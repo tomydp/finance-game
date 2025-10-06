@@ -8,6 +8,7 @@
                         <th class="px-6 py-7 text-left text-sm font-medium uppercase leading-normal tracking-wider text-white">Tipo</th>
                         <th class="px-6 py-7 text-left text-sm font-medium uppercase leading-normal tracking-wider text-white">Enunciado</th>
                         <th class="px-6 py-7 text-left text-sm font-medium uppercase leading-normal tracking-wider text-white">Explicación</th> {{-- ✅ --}}
+                        <th class="px-6 py-7 text-left text-sm font-medium uppercase leading-normal tracking-wider text-white">Estado</th>
                         <th class="px-6 py-7 text-left text-sm font-medium uppercase leading-normal tracking-wider text-white">Acciones</th>
                     </tr>
                 </thead>
@@ -36,6 +37,13 @@
                                         — 
                                     </span>
                                 @endif
+                            </td>
+
+                            <td class="px-6 py-7 whitespace-nowrap">
+                                @php($active = $e->status === 'activo')
+                                <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold {{ $active ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600' }}">
+                                    {{ ucfirst($e->status) }}
+                                </span>
                             </td>
 
                             <td class="px-6 py-7 whitespace-nowrap text-center">

@@ -2,10 +2,11 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
 use App\Models\Course;
-use App\Models\Lesson;
 use App\Models\Exercise;
+use App\Models\Lesson;
+use Illuminate\Validation\Rule;
+use Livewire\Component;
 
 class EditExercise extends Component
 {
@@ -28,6 +29,9 @@ class EditExercise extends Component
     // NUEVO
     public ?string $explanation_md = null;
 
+    public string $status = Exercise::STATUS_ACTIVO;
+    public array $statusOptions = Exercise::STATUSES;
+
     /** catálogos */
     public array $courses = [];
     public array $lessons = [];
@@ -38,7 +42,7 @@ class EditExercise extends Component
     public function mount(int $exerciseId): void
     {
         $this->exerciseId = $exerciseId;
-        $this->courses = Course::orderBy('name')->get(['id','name'])->toArray();
+        $this->courses = Course::orderBy('name')->get(['id','name','status'])->toArray();
     }
 
     protected function rules(): array
@@ -49,6 +53,7 @@ class EditExercise extends Component
             'editType'       => ['required','in:mcq,true_false,fill_blank'],
             'question'       => ['required','string','max:2000'],
             'explanation_md' => ['nullable','string','max:20000'],
+            'status'         => ['required', Rule::in(Exercise::STATUSES)],
         ];
 
         return match ($this->editType) {
@@ -70,7 +75,7 @@ class EditExercise extends Component
     protected function loadLessons(): void
     {
         $this->lessons = $this->courseId
-            ? Lesson::where('course_id', $this->courseId)->orderBy('order')->get(['id','title'])->toArray()
+            ? Lesson::where('course_id', $this->courseId)->orderBy('order')->get(['id','title','status'])->toArray()
             : [];
     }
 
@@ -84,6 +89,7 @@ class EditExercise extends Component
         $this->question = $e->question;
 
         $this->explanation_md = $e->explanation_md; // ✅
+        $this->status         = $e->status;
 
         $this->loadLessons();
 
@@ -181,6 +187,7 @@ class EditExercise extends Component
             'options'         => $options,
             'correct_answer'  => $correct,
             'explanation_md'  => $this->explanation_md, // ✅
+            'status'          => $this->status,
         ]);
 
         $this->dispatch('exerciseUpdated');

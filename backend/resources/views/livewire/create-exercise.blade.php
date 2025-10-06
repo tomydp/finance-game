@@ -87,6 +87,19 @@
                                 </div>
                             </div>
 
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Estado</label>
+                                <select
+                                    wire:model="status"
+                                    class="mt-1 w-full rounded border p-2 @error('status') border-red-500 ring-1 ring-red-500 @enderror"
+                                >
+                                    @foreach($statusOptions as $option)
+                                        <option value="{{ $option }}">{{ ucfirst($option) }}</option>
+                                    @endforeach
+                                </select>
+                                @error('status') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                            </div>
+
                             {{-- Enunciado + Insertar hueco (solo Completar) --}}
                             <div
                                 class="md:col-span-2"
