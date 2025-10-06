@@ -1,4 +1,4 @@
-<div class="space-y-10">
+<div class="space-y-10 text-slate-900 dark:text-slate-100">
     {{-- KPIs --}}
     <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-6">
       @php($k = $kpis)
@@ -10,7 +10,7 @@
         ['Ejercicios hoy', $k['ejercicios_hoy']],
         ['Precisión 7d', $k['accuracy_7d'].'%'],
       ] as $card)
-        <div class="rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-slate-50 p-5 shadow-sm shadow-slate-200/80 dark:border-slate-800/70 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+        <div class="rounded-3xl border border-slate-200/70 bg-white/90 p-5 shadow-lg shadow-slate-200/60 backdrop-blur transition-colors dark:border-slate-800/60 dark:bg-slate-900/70 dark:shadow-black/30">
           <div class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ $card[0] }}</div>
           <div class="mt-3 text-3xl font-semibold text-slate-900 dark:text-white">{{ $card[1] }}</div>
         </div>
@@ -18,42 +18,43 @@
     </div>
   
     {{-- Top curso --}}
-    <div class="rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-slate-50 p-6 shadow-md shadow-slate-200/80 dark:border-slate-800/70 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+    <div class="rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-lg shadow-slate-200/60 backdrop-blur transition-colors dark:border-slate-800/60 dark:bg-slate-900/70 dark:shadow-black/30">
       <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Top curso (7d)</div>
       <div class="mt-2 text-xl font-semibold text-slate-900 dark:text-white">{{ $kpis['top_curso_7d'] }}</div>
     </div>
-  
+    
     {{-- Charts --}}
     <div class="space-y-6">
-      <div class="rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-slate-50 p-6 shadow-md shadow-slate-200/80 dark:border-slate-800/70 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+      <div class="rounded-3xl border border-slate-200/70 bg-white/95 p-6 shadow-xl shadow-slate-200/60 ring-1 ring-white/40 backdrop-blur dark:border-slate-800/60 dark:bg-slate-900/80 dark:shadow-black/30 dark:ring-white/5">
         <h3 class="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-100">Altas por día (30d)</h3>
         <div class="h-64">
           <canvas id="signups30" class="h-full w-full"></canvas>
         </div>
       </div>
+      
   
-      <div class="rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-slate-50 p-6 shadow-md shadow-slate-200/80 dark:border-slate-800/70 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+      <div class="rounded-3xl border border-slate-200/70 bg-white/95 p-6 shadow-xl shadow-slate-200/60 ring-1 ring-white/40 backdrop-blur dark:border-slate-800/60 dark:bg-slate-900/80 dark:shadow-black/30 dark:ring-white/5">
         <h3 class="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-100">Usuarios activos por día (30d)</h3>
         <div class="h-64">
           <canvas id="dau30" class="h-full w-full"></canvas>
         </div>
       </div>
   
-      <div class="rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-slate-50 p-6 shadow-md shadow-slate-200/80 dark:border-slate-800/70 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+      <div class="rounded-3xl border border-slate-200/70 bg-white/95 p-6 shadow-xl shadow-slate-200/60 ring-1 ring-white/40 backdrop-blur dark:border-slate-800/60 dark:bg-slate-900/80 dark:shadow-black/30 dark:ring-white/5">
         <h3 class="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-100">Ejercicios por día (30d) + Precisión</h3>
         <div class="h-64">
           <canvas id="results30" class="h-full w-full"></canvas>
         </div>
       </div>
   
-      <div class="rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-slate-50 p-6 shadow-md shadow-slate-200/80 dark:border-slate-800/70 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+      <div class="rounded-3xl border border-slate-200/70 bg-white/95 p-6 shadow-xl shadow-slate-200/60 ring-1 ring-white/40 backdrop-blur dark:border-slate-800/60 dark:bg-slate-900/80 dark:shadow-black/30 dark:ring-white/5">
         <h3 class="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-100">Top cursos por actividad (7d)</h3>
         <div class="h-72">
           <canvas id="course7" class="h-full w-full"></canvas>
         </div>
       </div>
   
-      <div class="rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-slate-50 p-6 shadow-md shadow-slate-200/80 dark:border-slate-800/70 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+      <div class="rounded-3xl border border-slate-200/70 bg-white/95 p-6 shadow-xl shadow-slate-200/60 ring-1 ring-white/40 backdrop-blur dark:border-slate-800/60 dark:bg-slate-900/80 dark:shadow-black/30 dark:ring-white/5">
         <h3 class="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-100">Tipos de ejercicio (7d)</h3>
         <div class="h-64">
           <canvas id="types7" class="h-full w-full"></canvas>
@@ -71,7 +72,7 @@
     const res = @json($results30);
     const course = @json($course7);
     const types = @json($types7);
-
+  
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const palette = prefersDark ? {
       text: '#f8fafc',
@@ -90,7 +91,7 @@
       warning: '#f59e0b',
       muted: '#64748b'
     };
-
+  
     const hexToRgb = (hex) => {
       const clean = hex.replace('#', '');
       const bigint = parseInt(clean, 16);
@@ -100,19 +101,26 @@
         bigint & 255,
       ];
     };
-
+  
     const withAlpha = (hex, alpha) => {
       const [r, g, b] = hexToRgb(hex);
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
-
+  
     Chart.defaults.color = palette.text;
     Chart.defaults.borderColor = palette.grid;
     Chart.defaults.font.family = 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont';
-
+  
     const day = arr => arr.map(i => i.d);
     const val = (arr, k) => arr.map(i => Number(i[k] || 0));
-
+  
+    // Formateo reutilizable para fechas (solo día + mes)
+    const formatDateLabel = function(value) {
+      const date = new Date(this.getLabelForValue(value));
+      return date.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
+    };
+  
+    // --- Altas por día (30d) ---
     new Chart(document.getElementById('signups30'), {
       type: 'line',
       data: {
@@ -128,9 +136,26 @@
           pointBackgroundColor: palette.primary,
         }]
       },
-      options: { responsive: true, maintainAspectRatio: false }
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            ticks: {
+              autoSkip: true,
+              maxTicksLimit: 7,
+              callback: formatDateLabel,
+              maxRotation: 45,
+              minRotation: 45,
+            },
+            grid: { display: false },
+          },
+          y: { beginAtZero: true },
+        }
+      }
     });
-
+  
+    // --- Usuarios activos por día (30d) ---
     new Chart(document.getElementById('dau30'), {
       type: 'line',
       data: {
@@ -146,13 +171,30 @@
           pointBackgroundColor: palette.secondary,
         }]
       },
-      options: { responsive: true, maintainAspectRatio: false }
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            ticks: {
+              autoSkip: true,
+              maxTicksLimit: 7,
+              callback: formatDateLabel,
+              maxRotation: 45,
+              minRotation: 45,
+            },
+            grid: { display: false },
+          },
+          y: { beginAtZero: true },
+        }
+      }
     });
-
+  
+    // --- Ejercicios por día (30d) + Precisión ---
     const rLabels = day(res);
     const rTotal = val(res,'total');
     const rAcc   = val(res,'accuracy');
-
+  
     new Chart(document.getElementById('results30'), {
       data: {
         labels: rLabels,
@@ -183,12 +225,23 @@
         responsive: true,
         maintainAspectRatio: false,
         scales: {
+          x: {
+            ticks: {
+              autoSkip: true,
+              maxTicksLimit: 7,
+              callback: formatDateLabel,
+              maxRotation: 45,
+              minRotation: 45,
+            },
+            grid: { display: false },
+          },
           y:  { beginAtZero: true },
           y1: { position:'right', min:0, max:100, grid: { drawOnChartArea: false } }
         }
       }
     });
-
+  
+    // --- Top cursos (7d) ---
     new Chart(document.getElementById('course7'), {
       type: 'bar',
       data: {
@@ -212,9 +265,10 @@
       },
       options: { responsive: true, maintainAspectRatio: false }
     });
-
+  
+    // --- Tipos de ejercicio (7d) ---
     const typeColors = [palette.primary, palette.secondary, palette.success, palette.warning, '#f97316', '#ec4899'];
-
+  
     new Chart(document.getElementById('types7'), {
       type: 'doughnut',
       data: {
