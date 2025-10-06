@@ -41,40 +41,6 @@ class ExerciseSeeder extends Seeder
                 'correct_answer' => 'true',
                 'explanation_md' => 'Los hábitos financieros saludables sostenidos en el tiempo generan mejores resultados.',
             ],
-            // 3) Fill blank contextual
-            [
-                'type' => 'fill_blank',
-                'question' => "Un concepto clave en '{$title}' es la ____.",
-                'options' => null,
-                'correct_answer' => json_encode(['planificación', 'organización']),
-                'explanation_md' => "La **planificación** es esencial para anticipar decisiones y manejar mejor tus recursos.",
-            ],
-            // 4) MCQ: primer paso
-            [
-                'type' => 'mcq',
-                'question' => "Para comenzar con '{$title}', ¿qué harías primero?",
-                'options' => [
-                    'Definir metas y recopilar datos',
-                    'Omitir el análisis',
-                    'Gastar todo el presupuesto',
-                    'Confiar en la suerte',
-                ],
-                'correct_answer' => 'Definir metas y recopilar datos',
-                'explanation_md' => 'El primer paso siempre es **definir tus objetivos** y entender tu situación actual.',
-            ],
-            // 5) MCQ: evaluación/métrica
-            [
-                'type' => 'mcq',
-                'question' => '¿Qué métrica ayuda a evaluar progreso en una actividad financiera?',
-                'options' => [
-                    'Porcentaje de cumplimiento',
-                    'Color favorito',
-                    'Número aleatorio',
-                    'Día de la semana',
-                ],
-                'correct_answer' => 'Porcentaje de cumplimiento',
-                'explanation_md' => 'Medir el **porcentaje de cumplimiento** permite evaluar el progreso hacia tus metas.',
-            ],
         ];
 
         foreach ($exercises as $e) {

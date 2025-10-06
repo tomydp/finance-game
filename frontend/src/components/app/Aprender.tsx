@@ -30,6 +30,7 @@ const Aprender: React.FC = () => {
   const [leccionActual, setLeccionActual] = useState<Leccion | null>(null);
   const [ejercicios, setEjercicios] = useState<any[]>([]);
   const [indiceEjercicio, setIndiceEjercicio] = useState(0);
+  const [mostrarModalPremium, setMostrarModalPremium] = useState(false);
 
   const [respuestaSeleccionada, setRespuestaSeleccionada] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{
@@ -130,7 +131,7 @@ const Aprender: React.FC = () => {
     );
   };
 
-  // --- Helpers de normalización/etiquetas ---
+  // --- Helpers ---
   const normalizeBase = (s: string) =>
     s
       .toLowerCase()
@@ -139,20 +140,11 @@ const Aprender: React.FC = () => {
       .replace(/\s+/g, " ")
       .trim();
 
-  // para comparar respuestas: mapea español a booleano string
   const toComparable = (s: string) => {
     const n = normalizeBase(String(s));
     if (n === "verdadero") return "true";
     if (n === "falso") return "false";
     return n;
-  };
-
-  // para mostrar en feedback “Verdadero/Falso”
-  const toDisplay = (v: string | number | boolean) => {
-    const t = String(v).trim().toLowerCase();
-    if (t === "true" || t === "1") return "Verdadero";
-    if (t === "false" || t === "0") return "Falso";
-    return String(v);
   };
 
   const getTipo = (ej: any): TipoEjercicio => {
@@ -161,6 +153,7 @@ const Aprender: React.FC = () => {
     return ej.options ? "multiple_choice" : "fill_blank";
   };
 
+  // ✅ Nueva versión final de handleRespuesta
   const handleRespuesta = () => {
     const ej = ejercicios[indiceEjercicio];
     if (!ej || !leccionActual || !cursoActual) return;
@@ -171,7 +164,7 @@ const Aprender: React.FC = () => {
     if (esCorrecto) {
       setFeedback({
         tipo: "correcto",
-        mensaje: "",
+        mensaje: "", // No mostramos explicación cuando es correcta
         onContinue: () => {
           setFeedback(null);
           setRespuestaSeleccionada(null);
@@ -179,7 +172,6 @@ const Aprender: React.FC = () => {
           if (indiceEjercicio + 1 < ejercicios.length) {
             setIndiceEjercicio((i) => i + 1);
           } else {
-            // Fin de la lección
             marcarLeccionComoCompletada(leccionActual.id);
 
             const counts = ejercicios.reduce(
@@ -208,9 +200,14 @@ const Aprender: React.FC = () => {
         },
       });
     } else {
+      const mensaje =
+        ej.explanation_md && ej.explanation_md.trim() !== ""
+          ? ej.explanation_md
+          : "";
+
       setFeedback({
         tipo: "incorrecto",
-        mensaje: `La respuesta correcta es: ${toDisplay(correct)}`,
+        mensaje, // solo explicación o vacío
         onContinue: () => {
           setFeedback(null);
           setRespuestaSeleccionada(null);
@@ -223,35 +220,74 @@ const Aprender: React.FC = () => {
   if (finLeccion && cursoActual) {
     const esUltima = finLeccion.lastLessonIndex + 1 >= lecciones.length;
 
+    const handleNext = () => {
+      const esPrimerCurso = cursoActual.id === 1;
+      const esPrimeraLeccion = finLeccion.lastLessonIndex === 0;
+
+      if (esPrimerCurso && esPrimeraLeccion) {
+        setMostrarModalPremium(true);
+        return;
+      }
+
+      setFinLeccion(null);
+      const next = lecciones[finLeccion.lastLessonIndex + 1];
+      if (next && !esUltima) {
+        cargarEjercicios(next);
+      } else {
+        setCursoActual(null);
+        setLeccionActual(null);
+        setEjercicios([]);
+      }
+    };
+
     return (
-      <LessonCompleted
-        courseTitle={finLeccion.courseTitle}
-        lessonTitle={finLeccion.lessonTitle}
-        totalLessons={finLeccion.totalLessons}
-        completedLessons={finLeccion.completedLessons}
-        stats={{
-          totalExercises: finLeccion.totalExercises,
-          multipleChoice: finLeccion.multipleChoice,
-          fillIn: finLeccion.fillIn,
-        }}
-        onBackToCourse={() => {
-          setFinLeccion(null);
-          setCursoActual(null);
-          setLeccionActual(null);
-          setEjercicios([]);
-        }}
-        onNext={() => {
-          setFinLeccion(null);
-          const next = lecciones[finLeccion.lastLessonIndex + 1];
-          if (next && !esUltima) {
-            cargarEjercicios(next);
-          } else {
+      <>
+        <LessonCompleted
+          courseTitle={finLeccion.courseTitle}
+          lessonTitle={finLeccion.lessonTitle}
+          totalLessons={finLeccion.totalLessons}
+          completedLessons={finLeccion.completedLessons}
+          stats={{
+            totalExercises: finLeccion.totalExercises,
+            multipleChoice: finLeccion.multipleChoice,
+            fillIn: finLeccion.fillIn,
+          }}
+          onBackToCourse={() => {
+            setFinLeccion(null);
             setCursoActual(null);
             setLeccionActual(null);
             setEjercicios([]);
-          }
-        }}
-      />
+          }}
+          onNext={handleNext}
+        />
+
+        {/* --- MODAL PREMIUM --- */}
+        {mostrarModalPremium && (
+          <div className="fixed inset-0 flex items-center justify-center backdrop-blur-md bg-black/20 z-50">
+            <div className="bg-[#101828]/95 text-white p-8 rounded-2xl shadow-2xl w-[90%] max-w-md text-center space-y-5 border border-cyan-600 backdrop-blur-sm">
+              <h2 className="text-2xl font-bold text-cyan-400">Contenido Premium</h2>
+              <p className="text-gray-300">
+                Para continuar con las próximas lecciones necesitás tener una membresía{" "}
+                <span className="text-cyan-400 font-semibold">Premium</span>.
+              </p>
+              <div className="flex justify-center gap-4 mt-6">
+                <button
+                  onClick={() => setMostrarModalPremium(false)}
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition"
+                >
+                  Volver
+                </button>
+                <button
+                  onClick={() => (window.location.href = "http://localhost:5173/app/tienda")}
+                  className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg font-semibold transition"
+                >
+                  Ir a la tienda
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 
