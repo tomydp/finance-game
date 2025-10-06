@@ -12,17 +12,28 @@ class ShowLesson extends Component
     use WithPagination;
 
     protected string $paginationTheme = 'tailwind';
+    protected string $pageName = 'lessonsPage';
+
+    public string $basePath = '/lessons';
+
     public $listeners = ['lessonCreated' => '$refresh', 'lessonUpdated' => '$refresh'];
 
-    public function editLesson($id)
+    public function mount(): void
     {
-        $this->dispatch('editLesson', id: $id)->to(\App\Livewire\EditLesson::class);
+        $this->basePath = url()->current();
     }
 
     public function render()
     {
+        $q = Lesson::with('course');
+
+        $lessons = $q->orderBy('id')
+            ->paginate(5, ['*'], $this->pageName);
+
+        $lessons->withPath($this->basePath);
+
         return view('livewire.show-lesson', [
-            'lessons' => Lesson::with('course')->orderBy('id')->paginate(5),
+            'lessons' => $lessons,
             'courses' => Course::all(),
         ]);
     }

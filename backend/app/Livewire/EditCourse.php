@@ -8,31 +8,50 @@ use App\Models\Course;
 class EditCourse extends Component
 {
     public int $courseId;
+
+    public bool $isOpen = false;
+
     public string $name = '';
     public string $description = '';
-    public ?string $difficulty = null; // 'facil' | 'medio' | 'dificil' | null
-    public bool $showModal = false;
+    public ?string $difficulty = null;
 
-    protected $listeners = ['editCourse' => 'loadCourse'];
+    public function mount(int $courseId): void
+    {
+        $this->courseId = $courseId;
+    }
 
     protected function rules(): array
     {
         return [
-            'name' => ['required','string','max:255'],
+            'name'        => ['required','string','max:255'],
             'description' => ['required','string'],
-            'difficulty' => ['required','in:facil,medio,dificil'],
+            'difficulty'  => ['required','in:facil,medio,dificil'],
         ];
     }
 
-    public function loadCourse(int $id): void
+    protected function loadFromDb(): void
     {
-        $course = Course::findOrFail($id);
+        $course = Course::findOrFail($this->courseId);
 
-        $this->courseId    = $course->id;
         $this->name        = $course->name;
         $this->description = $course->description;
-        $this->difficulty  = $course->difficulty; // ← CLAVE
-        $this->showModal   = true;
+        $this->difficulty  = $course->difficulty;
+    }
+
+    public function openModal(): void
+    {
+        $this->loadFromDb();
+        $this->resetErrorBag();
+        $this->resetValidation();
+        $this->isOpen = true;
+    }
+
+    public function closeModal(): void
+    {
+        // Limpia validación y cierra. En la próxima apertura se recarga desde DB.
+        $this->resetErrorBag();
+        $this->resetValidation();
+        $this->isOpen = false;
     }
 
     public function update(): void
@@ -46,7 +65,7 @@ class EditCourse extends Component
         ]);
 
         $this->dispatch('courseUpdated');
-        $this->reset(['showModal']);
+        $this->closeModal();
     }
 
     public function render()

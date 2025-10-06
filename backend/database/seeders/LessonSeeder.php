@@ -9,42 +9,40 @@ class LessonSeeder extends Seeder
 {
     public function run(): void
     {
-        // IDs de cursos base (si existen)
-        $cidFund = DB::table('courses')->where('name', 'Fundamentos Financieros')->value('id');
-        $cidInv  = DB::table('courses')->where('name', 'Introducción a Inversiones')->value('id');
+        // 3 lecciones por cada curso (títulos relacionados al tema)
+        $lessonMap = [
+            'Fundamentos Financieros'       => ['Armar presupuesto', 'Control de gastos', 'Objetivos SMART'],
+            'Introducción a Inversiones'    => ['Riesgo vs retorno', 'Instrumentos básicos', 'Diversificación simple'],
+            'Crédito y Deuda Responsable'   => ['Interés simple y compuesto', 'Tarjetas y vencimientos', 'Plan de desendeudamiento'],
+            'Ahorro e Imprevistos'          => ['Fondo de emergencia', 'Liquidez y seguridad', 'Hábitos de ahorro'],
+            'Presupuesto Personal Avanzado' => ['Regla 50/30/20', 'Recategorización de gastos', 'Seguimiento mensual'],
+            'Impuestos Personales Básicos'  => ['Directos e indirectos', 'Comprobantes y registros', 'Planificación básica'],
+            'Seguros Personales'            => ['Vida y salud', 'Hogar y bienes', 'Evaluar coberturas'],
+            'Jubilación y Largo Plazo'      => ['Capitalización y aportes', 'Horizonte temporal', 'Inflación y retiro'],
+            'Economía del Día a Día'        => ['Inflación y precios', 'Tipo de cambio', 'Poder de compra'],
+            'Microemprendimientos'          => ['Costos fijos/variables', 'Precio y margen', 'Flujo de caja'],
+        ];
 
-        // Todas las variantes numeradas de "Crédito y Deuda Responsable ..."
-        $creditoCourses = DB::table('courses')
-            ->where('name', 'LIKE', 'Crédito y Deuda Responsable%')
-            ->get(['id', 'name']);
+        $courseIds = DB::table('courses')->pluck('id', 'name'); // name => id
 
-        $rows = [];
-
-        // Fundamentos (solo si existe)
-        if ($cidFund) {
-            $rows[] = ['course_id' => $cidFund, 'title' => 'Armar presupuesto',        'order' => 1];
-            $rows[] = ['course_id' => $cidFund, 'title' => 'Ahorro e imprevistos',     'order' => 2];
-            $rows[] = ['course_id' => $cidFund, 'title' => 'Objetivos SMART',          'order' => 3];
-        }
-
-        // Inversiones (solo si existe)
-        if ($cidInv) {
-            $rows[] = ['course_id' => $cidInv, 'title' => 'Riesgo vs Retorno',                 'order' => 1];
-            $rows[] = ['course_id' => $cidInv, 'title' => 'Instrumentos: PF, Bonos, Acciones', 'order' => 2];
-            $rows[] = ['course_id' => $cidInv, 'title' => 'Diversificación básica',            'order' => 3];
-        }
-
-        // Para cada "Crédito y Deuda Responsable N" ⇒ mismas 2 lecciones
-        foreach ($creditoCourses as $c) {
-            $rows[] = ['course_id' => $c->id, 'title' => 'Cómo funciona el interés',    'order' => 1];
-            $rows[] = ['course_id' => $c->id, 'title' => 'Tarjetas y buenas prácticas', 'order' => 2];
-        }
-
-        foreach ($rows as $l) {
-            DB::table('lessons')->updateOrInsert(
-                ['course_id' => $l['course_id'], 'title' => $l['title']],
-                $l + ['created_at' => now(), 'updated_at' => now()]
-            );
+        foreach ($lessonMap as $courseName => $titles) {
+            $courseId = $courseIds[$courseName] ?? null;
+            if (!$courseId) {
+                continue;
+            }
+            $order = 1;
+            foreach ($titles as $t) {
+                DB::table('lessons')->updateOrInsert(
+                    ['course_id' => $courseId, 'title' => $t],
+                    [
+                        'course_id'  => $courseId,
+                        'title'      => $t,
+                        'order'      => $order++,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+            }
         }
     }
 }

@@ -1,41 +1,35 @@
-<div class="container mx-auto p-4">
-    <div class="bg-white rounded-lg shadow p-6">
+<div class="container mx-auto p-4" wire:key="courses-page-{{ $courses->currentPage() }}">
+    <div class="rounded-lg bg-white p-6 shadow">
+
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-blue-500">
                     <tr>
-                        <th class="px-6 py-7 text-left text-sm font-medium text-white uppercase tracking-wider leading-normal">ID</th>
-                        <th class="px-6 py-7 text-left text-sm font-medium text-white uppercase tracking-wider leading-normal">Nombre</th>
-                        <th class="px-6 py-7 text-left text-sm font-medium text-white uppercase tracking-wider leading-normal">Descripcion</th>
-                        <th class="px-6 py-7 text-left text-sm font-medium text-white uppercase tracking-wider leading-normal">Dificultad</th>
-                        <th class="px-6 py-7 text-left text-sm font-medium text-white uppercase tracking-wider leading-normal">Acciones</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium uppercase leading-normal tracking-wider text-white">Nombre</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium uppercase leading-normal tracking-wider text-white">Descripción</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium uppercase leading-normal tracking-wider text-white">Dificultad</th>
+                        <th class="px-6 py-7 text-left text-sm font-medium uppercase leading-normal tracking-wider text-white">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="divide-y divide-gray-200 bg-white">
                     @foreach($courses as $course)
-                        <tr>
-                            <td class="px-6 py-7 whitespace-nowrap">{{ $course->id }}</td>
+                        <tr wire:key="course-row-{{ $course->id }}">
                             <td class="px-6 py-7 whitespace-nowrap">{{ $course->name }}</td>
                             <x-tooltip-cell :text="$course->description" />
-
                             <td class="px-6 py-7 whitespace-nowrap">{{ $course->difficulty }}</td>
-                            <td class="px-6 py-7 whitespace-nowrap">
-                                <button wire:click="editCourse({{ $course->id }})"
-                                        class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition">
-                                    Editar
-                                </button>
+                            <td class="px-6 py-7 whitespace-nowrap text-center">
+                                {{-- Hijo por fila (abre modal y funciona en cualquier página) --}}
+                                <livewire:edit-course :course-id="$course->id" wire:key="edit-course-{{ $course->id }}" />
                             </td>
                         </tr>
                     @endforeach
                 </tbody>
-            </table>    
+            </table>
         </div>
-        
+
+        {{-- Paginación con tu estilo "pill" --}}
         <div class="mt-4">
-            {{ $courses->onEachSide(1)->links() }}
-          </div>
+            {{ $courses->onEachSide(1)->links('vendor.pagination.tailwind') }}
+        </div>
     </div>
-
-
-    <livewire:edit-course />
 </div>

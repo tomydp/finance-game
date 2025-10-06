@@ -11,17 +11,35 @@ class ShowCourse extends Component
     use WithPagination;
 
     protected string $paginationTheme = 'tailwind';
-    public $listeners = ['courseCreated' => '$refresh', 'courseUpdated' => '$refresh'];
+    protected string $pageName = 'coursesPage';
 
-    public function editCourse($id)
+    /** Path base correcto para la paginación (no /livewire/update) */
+    public string $basePath = '/courses';
+
+
+    public $listeners = [
+        'courseCreated' => '$refresh',
+        'courseUpdated' => '$refresh',
+    ];
+
+    public function mount(): void
     {
-        $this->dispatch('editCourse', id: $id)->to(\App\Livewire\EditCourse::class);
+        // En el primer render (GET) esto será /courses (u otra ruta donde montes el listado)
+        $this->basePath = url()->current();
     }
 
     public function render()
     {
+        $q = Course::query();
+
+        $courses = $q->orderBy('id')
+            ->paginate(5, ['*'], $this->pageName);
+
+        // Fuerza que los links apunten siempre al path real de la página, no a /livewire/update
+        $courses->withPath($this->basePath);
+
         return view('livewire.show-course', [
-            'courses' => Course::orderBy('id')->paginate(5),
+            'courses' => $courses,
         ]);
     }
 }
