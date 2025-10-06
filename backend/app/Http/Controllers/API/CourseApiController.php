@@ -4,11 +4,12 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CourseCollection;
-use Illuminate\Http\Request;
 use App\Models\Course;
-use Illuminate\Validation\Rule;
+use App\Models\Lesson;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 
 class CourseApiController extends Controller
 {
@@ -32,6 +33,7 @@ class CourseApiController extends Controller
         'search'     => 'sometimes|string|max:100',
         'sort'       => ['sometimes', 'string', Rule::in($sortable)],
         'dir'        => ['sometimes', 'string', Rule::in(['asc','desc'])],
+        'status'     => ['sometimes', 'string', Rule::in([Course::STATUS_ACTIVO, Course::STATUS_INACTIVO, 'todos'])],
     ]);
 
     $perPage    = (int) ($validated['per_page'] ?? 10);
@@ -40,9 +42,10 @@ class CourseApiController extends Controller
     // por defecto usamos el orden "custom" que pediste
     $sort       = $validated['sort'] ?? 'custom';
     $dir        = $validated['dir'] ?? 'asc';
+    $status     = $validated['status'] ?? Course::STATUS_ACTIVO;
 
     $q = Course::query()
-        ->withCount('lessons')
+        ->withCount(['lessons as lessons_active_count' => fn ($qq) => $qq->where('status', Lesson::STATUS_ACTIVO)])
         ->when($difficulty, fn($qq) => $qq->where('difficulty', $difficulty))
         ->when($search, function ($qq) use ($search) {
             $term = "%".mb_strtolower($search)."%";
@@ -50,7 +53,8 @@ class CourseApiController extends Controller
                 $w->whereRaw('LOWER(name) LIKE ?', [$term])
                   ->orWhereRaw('LOWER(description) LIKE ?', [$term]);
             });
-        });
+        })
+        ->when($status !== 'todos', fn ($qq) => $qq->where('status', $status));
 
     if ($sort === 'custom') {
         // === ORDEN EXACTO QUE PEDISTE ===
@@ -85,6 +89,7 @@ class CourseApiController extends Controller
             'filters' => [
                 'difficulty' => $difficulty,
                 'search'     => $search,
+                'status'     => $status,
             ],
             'sort' => ['by' => $sort, 'dir' => $dir],
         ],

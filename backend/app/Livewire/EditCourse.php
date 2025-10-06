@@ -2,8 +2,9 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
 use App\Models\Course;
+use Illuminate\Validation\Rule;
+use Livewire\Component;
 
 class EditCourse extends Component
 {
@@ -14,6 +15,9 @@ class EditCourse extends Component
     public string $name = '';
     public string $description = '';
     public ?string $difficulty = null;
+    public string $status = Course::STATUS_ACTIVO;
+
+    public array $statusOptions = Course::STATUSES;
 
     public function mount(int $courseId): void
     {
@@ -26,6 +30,7 @@ class EditCourse extends Component
             'name'        => ['required','string','max:255'],
             'description' => ['required','string'],
             'difficulty'  => ['required','in:facil,medio,dificil'],
+            'status'      => ['required', Rule::in(Course::STATUSES)],
         ];
     }
 
@@ -36,6 +41,7 @@ class EditCourse extends Component
         $this->name        = $course->name;
         $this->description = $course->description;
         $this->difficulty  = $course->difficulty;
+        $this->status      = $course->status;
     }
 
     public function openModal(): void
@@ -62,6 +68,7 @@ class EditCourse extends Component
             'name'        => $this->name,
             'description' => $this->description,
             'difficulty'  => $this->difficulty,
+            'status'      => $this->status,
         ]);
 
         $this->dispatch('courseUpdated');

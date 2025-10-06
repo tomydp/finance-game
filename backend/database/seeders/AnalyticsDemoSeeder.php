@@ -58,6 +58,7 @@ class AnalyticsDemoSeeder extends Seeder
                 [
                     'description' => $course['description'],
                     'difficulty'  => $course['difficulty'],
+                    'status'      => 'activo',
                     'created_at'  => $now,
                     'updated_at'  => $now,
                 ]
@@ -85,6 +86,7 @@ class AnalyticsDemoSeeder extends Seeder
                     [
                         'description' => "Contenido base {$title}",
                         'order'       => $index + 1,
+                        'status'      => 'activo',
                         'created_at'  => $now,
                         'updated_at'  => $now,
                     ]
@@ -162,6 +164,7 @@ class AnalyticsDemoSeeder extends Seeder
                     'options'        => $template['options'] ? json_encode($template['options'], JSON_UNESCAPED_UNICODE) : null,
                     'correct_answer' => $template['correct'],
                     'explanation_md' => null,
+                    'status'         => 'activo',
                     'created_at'     => $timestamp,
                     'updated_at'     => $timestamp,
                 ]

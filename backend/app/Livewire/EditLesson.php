@@ -2,9 +2,10 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use App\Models\Lesson;
 use App\Models\Course;
+use App\Models\Lesson;
+use Illuminate\Validation\Rule;
+use Livewire\Component;
 
 class EditLesson extends Component
 {
@@ -13,11 +14,16 @@ class EditLesson extends Component
     public int $lessonId;
     public string $title = '';
     public ?int $course_id = null;
+    public string $status = Lesson::STATUS_ACTIVO;
 
-    protected $rules = [
-        'title'     => ['required','string','max:255'],
-        'course_id' => ['required','exists:courses,id'],
-    ];
+    protected function rules(): array
+    {
+        return [
+            'title'     => ['required','string','max:255'],
+            'course_id' => ['required','exists:courses,id'],
+            'status'    => ['required', Rule::in(Lesson::STATUSES)],
+        ];
+    }
 
     public function mount(int $lessonId): void
     {
@@ -32,6 +38,7 @@ class EditLesson extends Component
         $lesson = Lesson::findOrFail($this->lessonId);
         $this->title     = $lesson->title;
         $this->course_id = $lesson->course_id;
+        $this->status    = $lesson->status;
 
         $this->isOpen = true;
     }
@@ -50,6 +57,7 @@ class EditLesson extends Component
         Lesson::whereKey($this->lessonId)->update([
             'title'     => $this->title,
             'course_id' => $this->course_id,
+            'status'    => $this->status,
         ]);
 
         $this->dispatch('lessonUpdated'); // ShowLesson ya escucha y hace $refresh
@@ -59,7 +67,8 @@ class EditLesson extends Component
     public function render()
     {
         return view('livewire.edit-lesson', [
-            'courses' => Course::orderBy('name')->get(['id','name']),
+            'courses' => Course::orderBy('name')->get(['id','name','status']),
+            'statusOptions' => Lesson::STATUSES,
         ]);
     }
 }

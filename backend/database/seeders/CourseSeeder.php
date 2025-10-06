@@ -25,7 +25,11 @@ class CourseSeeder extends Seeder
         foreach ($courses as $c) {
             DB::table('courses')->updateOrInsert(
                 ['name' => $c['name']],
-                $c + ['created_at' => now(), 'updated_at' => now()]
+                $c + [
+                    'status'     => 'activo',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
             );
         }
     }

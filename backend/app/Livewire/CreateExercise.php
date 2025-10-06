@@ -3,8 +3,9 @@
 namespace App\Livewire;
 
 use App\Models\Course;
-use App\Models\Lesson;
 use App\Models\Exercise;
+use App\Models\Lesson;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class CreateExercise extends Component
@@ -33,6 +34,9 @@ class CreateExercise extends Component
     // NUEVO
     public ?string $explanation_md = null;
 
+    public string $status = Exercise::STATUS_ACTIVO;
+    public array $statusOptions = Exercise::STATUSES;
+
     // Catálogos
     public array $courses = [];
     public array $lessons = [];
@@ -48,6 +52,7 @@ class CreateExercise extends Component
             'type'           => ['required','in:mcq,true_false,fill_blank'],
             'question'       => ['required','string','max:2000'],
             'explanation_md' => ['nullable','string','max:20000'],
+            'status'         => ['required', Rule::in(Exercise::STATUSES)],
         ];
 
         return match ($this->type) {
@@ -68,7 +73,7 @@ class CreateExercise extends Component
 
     public function mount(): void
     {
-        $this->courses = Course::orderBy('name')->get(['id','name'])->toArray();
+        $this->courses = Course::active()->orderBy('name')->get(['id','name'])->toArray();
         $this->refreshLessons();
     }
 
@@ -170,6 +175,7 @@ class CreateExercise extends Component
             'options'         => $options,
             'correct_answer'  => $correct,
             'explanation_md'  => $this->explanation_md, // ✅
+            'status'          => $this->status,
         ]);
 
         $this->dispatch('exerciseCreated');
@@ -183,6 +189,7 @@ class CreateExercise extends Component
         return view('livewire.create-exercise', [
             'courses' => $this->courses,
             'lessons' => $this->lessons,
+            'statusOptions' => $this->statusOptions,
         ]);
     }
 
@@ -197,6 +204,7 @@ class CreateExercise extends Component
         $this->answerBool   = null;
         $this->answersFill  = [''];
         $this->explanation_md = null; // ✅
+        $this->status       = Exercise::STATUS_ACTIVO;
         $this->uiNonce++;
         $this->refreshLessons();
     }
@@ -204,7 +212,11 @@ class CreateExercise extends Component
     private function refreshLessons(): void
     {
         $this->lessons = $this->courseId
-            ? Lesson::where('course_id', $this->courseId)->orderBy('order')->get(['id','title'])->toArray()
+            ? Lesson::where('course_id', $this->courseId)
+                ->active()
+                ->orderBy('order')
+                ->get(['id','title'])
+                ->toArray()
             : [];
     }
 }

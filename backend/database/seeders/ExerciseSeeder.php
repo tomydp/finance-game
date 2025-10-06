@@ -90,6 +90,7 @@ class ExerciseSeeder extends Seeder
                     'options'        => isset($e['options']) && $e['options'] !== null ? json_encode($e['options']) : null,
                     'correct_answer' => $e['correct_answer'],
                     'explanation_md' => $e['explanation_md'],
+                    'status'         => 'activo',
                     'created_at'     => now(),
                     'updated_at'     => now(),
                 ]

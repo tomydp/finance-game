@@ -39,7 +39,7 @@
                                     >
                                         <option value="">Seleccionar…</option>
                                         @foreach($courses as $c)
-                                            <option value="{{ $c['id'] }}">{{ $c['name'] }}</option>
+                                            <option value="{{ $c['id'] }}">{{ $c['name'] }}@if(($c['status'] ?? null) === 'inactivo') (Inactivo) @endif</option>
                                         @endforeach
                                     </select>
                                     @error('courseId') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
@@ -55,11 +55,24 @@
                                     >
                                         <option value="" @selected($lessonId==='' || $lessonId===null)">Seleccionar…</option>
                                         @foreach($lessons as $l)
-                                            <option value="{{ $l['id'] }}">{{ $l['title'] }}</option>
+                                            <option value="{{ $l['id'] }}">{{ $l['title'] }}@if(($l['status'] ?? null) === 'inactivo') (Inactivo) @endif</option>
                                         @endforeach
                                     </select>
                                     @error('lessonId') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                                 </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Estado</label>
+                                <select
+                                    wire:model="status"
+                                    class="mt-1 w-full rounded border p-2 @error('status') border-red-500 ring-1 ring-red-500 @enderror"
+                                >
+                                    @foreach($statusOptions as $option)
+                                        <option value="{{ $option }}">{{ ucfirst($option) }}</option>
+                                    @endforeach
+                                </select>
+                                @error('status') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                             </div>
 
                             {{-- Tipo (solo lectura) --}}

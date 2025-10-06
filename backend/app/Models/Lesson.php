@@ -2,12 +2,25 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class Lesson extends Model
 {
-    protected $fillable = ['course_id', 'title', 'description', 'order'];
+    public const STATUS_ACTIVO   = 'activo';
+    public const STATUS_INACTIVO = 'inactivo';
+    public const STATUSES        = [self::STATUS_ACTIVO, self::STATUS_INACTIVO];
+
+    protected $fillable = ['course_id', 'title', 'description', 'order', 'status'];
+
+    protected $casts = [
+        'status' => 'string',
+    ];
+
+    protected $attributes = [
+        'status' => self::STATUS_ACTIVO,
+    ];
 
     public function course()
     {
@@ -17,6 +30,13 @@ class Lesson extends Model
     public function exercises()
     {
         return $this->hasMany(Exercise::class)->orderBy('id');
+    }
+
+    public function activeExercises()
+    {
+        return $this->hasMany(Exercise::class)
+            ->where('status', Exercise::STATUS_ACTIVO)
+            ->orderBy('id');
     }
 
     // 🔧 relación a resultados vía ejercicios
@@ -74,5 +94,10 @@ class Lesson extends Model
 
         // Si tuvieras tabla de “estados” (unlock), acá la registrarías.
         return $next;
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_ACTIVO);
     }
 }

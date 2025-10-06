@@ -38,6 +38,7 @@ class LessonSeeder extends Seeder
                         'course_id'  => $courseId,
                         'title'      => $t,
                         'order'      => $order++,
+                        'status'     => 'activo',
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]

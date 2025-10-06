@@ -48,10 +48,27 @@
                                     >
                                         <option value="">Seleccionar curso</option>
                                         @foreach($courses as $c)
-                                            <option value="{{ $c->id }}">{{ $c->name }}</option>
+                                            <option value="{{ $c->id }}">{{ $c->name }}@if(optional($c)->status === 'inactivo') (Inactivo) @endif</option>
                                         @endforeach
                                     </select>
                                     @error('course_id')
+                                        <span class="mt-1 block text-left text-xs text-red-600 whitespace-normal">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-12 items-start gap-3">
+                                <label class="col-span-12 mt-2 text-sm sm:col-span-3">Estado</label>
+                                <div class="col-span-12 sm:col-span-9">
+                                    <select
+                                        wire:model="status"
+                                        class="w-full rounded border p-2 @error('status') border-red-500 ring-1 ring-red-500 @enderror"
+                                    >
+                                        @foreach($statusOptions as $option)
+                                            <option value="{{ $option }}">{{ ucfirst($option) }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('status')
                                         <span class="mt-1 block text-left text-xs text-red-600 whitespace-normal">{{ $message }}</span>
                                     @enderror
                                 </div>
