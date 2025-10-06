@@ -1,6 +1,6 @@
 // src/App.tsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from "react-hot-toast"; // 👈 IMPORTANTE
+import { Toaster } from "react-hot-toast";
 
 // Landing page
 import Navbar           from './components/landing/Navbar';
@@ -16,17 +16,17 @@ import Register         from './components/auth/Register';
 
 // Layout con Sidebar + rutas internas
 import Layout           from './components/app/Layout';
-import Aprender         from './components/app/Aprender';
+// ⚠️ reemplaza el import anterior de Aprender por este:
+import AprenderPage     from './components/app/Aprender/pages/Aprender';
 import Desafios         from './components/app/Desafios';
 import Mas              from './components/app/Mas';
 import Sonidos          from './components/app/Sonidos';
 import Perfil           from './components/app/Perfil';
-import Store            from './components/app/Store'; // 👈 nueva importación
+import Store            from './components/app/Store';
 
 function App() {
   return (
     <Router>
-      {/* 👇 Esto renderiza las notificaciones globales en toda la app */}
       <Toaster position="top-center" reverseOrder={false} />
 
       <Routes>
@@ -52,10 +52,10 @@ function App() {
         {/* ────────────── Rutas protegidas bajo /app ────────────── */}
         <Route path="/app/*" element={<Layout />}>
           <Route index element={<Navigate to="aprender" replace />} />
-          <Route path="aprender" element={<Aprender />} />
+          <Route path="aprender" element={<AprenderPage />} />
           <Route path="sonidos"  element={<Sonidos />} />
           <Route path="desafios" element={<Desafios />} />
-          <Route path="tienda"   element={<Store />} />    {/* 👈 nueva ruta */}
+          <Route path="tienda"   element={<Store />} />
           <Route path="perfil"   element={<Perfil />} />
           <Route path="mas"      element={<Mas />} />
           <Route path="*"        element={<Navigate to="aprender" replace />} />
