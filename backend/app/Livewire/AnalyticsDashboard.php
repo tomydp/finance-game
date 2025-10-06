@@ -2,9 +2,11 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
 use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Livewire\Component;
 
 class AnalyticsDashboard extends Component
 {
@@ -74,39 +76,77 @@ class AnalyticsDashboard extends Component
 
     protected function loadSeries(): void
     {
-        $this->signups30 = User::selectRaw('DATE(created_at) as d, COUNT(*) as c')
-            ->where('created_at', '>=', now()->subDays(30))
-            ->groupBy('d')->orderBy('d')->get()->toArray();
+        $end   = now()->endOfDay();
+        $start = $end->copy()->subDays(29)->startOfDay();
+        $days  = $this->dayRange($start, $end);
 
-        $this->dau30 = DB::table('sessions')
+        $signupsRaw = User::selectRaw('DATE(created_at) as d, COUNT(*) as c')
+            ->whereBetween('created_at', [$start, $end])
+            ->groupBy('d')
+            ->orderBy('d')
+            ->pluck('c', 'd');
+
+        $this->signups30 = $days->map(fn (string $date) => [
+            'd' => $date,
+            'c' => (int) ($signupsRaw[$date] ?? 0),
+        ])->toArray();
+
+        $dauRaw = DB::table('sessions')
             ->selectRaw('DATE(FROM_UNIXTIME(last_activity)) as d, COUNT(DISTINCT user_id) as dau')
-            ->where('last_activity', '>=', now()->subDays(30)->timestamp)
-            ->groupBy('d')->orderBy('d')->get()->toArray();
+            ->whereBetween('last_activity', [$start->timestamp, $end->timestamp])
+            ->groupBy('d')
+            ->orderBy('d')
+            ->pluck('dau', 'd');
 
-        $this->results30 = DB::table('results')
+        $this->dau30 = $days->map(fn (string $date) => [
+            'd'   => $date,
+            'dau' => (int) ($dauRaw[$date] ?? 0),
+        ])->toArray();
+
+        $resultsRaw = DB::table('results')
             ->selectRaw('DATE(answered_at) as d, COUNT(*) as total, AVG(is_correct)*100 as accuracy')
-            ->where('answered_at', '>=', now()->subDays(30))
-            ->groupBy('d')->orderBy('d')->get()->toArray();
+            ->whereBetween('answered_at', [$start, $end])
+            ->groupBy('d')
+            ->orderBy('d')
+            ->get()
+            ->keyBy('d');
+
+        $this->results30 = $days->map(function (string $date) use ($resultsRaw) {
+            $row = $resultsRaw[$date] ?? null;
+
+            return [
+                'd'        => $date,
+                'total'    => $row?->total ? (int) $row->total : 0,
+                'accuracy' => $row?->accuracy ? round((float) $row->accuracy, 2) : 0,
+            ];
+        })->toArray();
+
+        $sevenDaysAgo = $end->copy()->subDays(6)->startOfDay();
 
         $this->course7 = DB::table('results as r')
             ->join('exercises as e', 'e.id', '=', 'r.exercise_id')
             ->join('lessons as l', 'l.id', '=', 'e.lesson_id')
             ->join('courses as c', 'c.id', '=', 'l.course_id')
-            ->where('r.answered_at', '>=', now()->subDays(7))
+            ->where('r.answered_at', '>=', $sevenDaysAgo)
             ->selectRaw('c.name as course,
                         COUNT(*) as total,
                         SUM(r.is_correct=1) as correctos,
                         SUM(r.is_correct=0) as incorrectos')
-            ->groupBy('course')->orderByDesc('total')->limit(10)->get()->toArray();
+            ->groupBy('course')
+            ->orderByDesc('total')
+            ->limit(10)
+            ->get()
+            ->toArray();
 
         $this->types7 = DB::table('results as r')
             ->join('exercises as e', 'e.id', '=', 'r.exercise_id')
-            ->where('r.answered_at', '>=', now()->subDays(7))
+            ->where('r.answered_at', '>=', $sevenDaysAgo)
             ->selectRaw('e.type as type, COUNT(*) as total')
             ->groupBy('e.type')
             ->get()
             ->map(function ($row) {
                 $type = (string) $row->type;
+
                 return [
                     'type'  => $type,
                     'label' => self::TYPE_LABELS[$type] ?? ucfirst(str_replace('_', ' ', $type)),
@@ -115,6 +155,19 @@ class AnalyticsDashboard extends Component
             })
             ->values()
             ->toArray();
+    }
+
+    private function dayRange(Carbon $start, Carbon $end): Collection
+    {
+        $days = collect();
+        $cursor = $start->copy();
+
+        while ($cursor->lte($end)) {
+            $days->push($cursor->toDateString());
+            $cursor->addDay();
+        }
+
+        return $days;
     }
 
     public function render()

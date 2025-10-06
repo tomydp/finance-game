@@ -173,7 +173,6 @@ class AnalyticsDemoSeeder extends Seeder
     {
         $now          = now();
         $passwordHash = Hash::make('password');
-        $users        = collect();
 
         for ($i = 1; $i <= self::DEMO_USER_COUNT; $i++) {
             $email = sprintf(self::DEMO_EMAIL_PATTERN, $i);
@@ -181,37 +180,36 @@ class AnalyticsDemoSeeder extends Seeder
                 ->subDays(rand(0, self::DAYS_WINDOW - 1))
                 ->setTime(rand(8, 22), rand(0, 59), rand(0, 59));
 
-            /** @var \App\Models\User $user */
-            $user = User::updateOrCreate(
+            DB::table('users')->updateOrInsert(
                 ['email' => $email],
                 [
                     'name'              => "Demo User {$i}",
                     'password'          => $passwordHash,
-                    'is_admin'          => false,
-                    'created_at'        => $createdAt,
-                    'updated_at'        => $now,
+                    'is_admin'          => 0,
                     'remember_token'    => Str::random(10),
                     'email_verified_at' => $createdAt,
+                    'created_at'        => $createdAt,
+                    'updated_at'        => $now,
                 ]
             );
-
-            $users->push($user);
         }
 
-        $admin = User::updateOrCreate(
+        DB::table('users')->updateOrInsert(
             ['email' => self::ADMIN_EMAIL],
             [
                 'name'              => 'Analytics Admin',
                 'password'          => $passwordHash,
-                'is_admin'          => true,
-                'created_at'        => $now->copy()->subDays(15),
-                'updated_at'        => $now,
+                'is_admin'          => 1,
                 'remember_token'    => Str::random(10),
                 'email_verified_at' => $now->copy()->subDays(15),
+                'created_at'        => $now->copy()->subDays(15),
+                'updated_at'        => $now,
             ]
         );
 
-        return $users->push($admin);
+        return User::where('email', 'like', 'analytics-demo+%@analytics-demo.test')
+            ->orWhere('email', self::ADMIN_EMAIL)
+            ->get();
     }
 
     private function fetchExercisesByCourse(): Collection
