@@ -42,7 +42,13 @@
            class="block px-4 py-2">
            {{ __('Ejercicios') }}
             </x-nav-link>
-        </nav>
+
+            <x-nav-link 
+            :href="route('analytics.index')" 
+            :active="request()->routeIs('analytics.*')" 
+            class="block px-4 py-2">
+            {{ __('Estadísticas') }}
+            </x-nav-link>
     </aside>
 
     {{-- Contenido principal --}}
@@ -89,3 +95,5 @@
         </main>
     </div>
 </div>
+
+@stack('scripts')

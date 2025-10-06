@@ -75,7 +75,6 @@ class ExerciseApiController extends Controller
         // ✅ Feedback solo cuando falla
         $feedback = $isCorrect ? null : [
             'explanation_md' => $exercise->explanation_md,
-            'solution'       => $exercise->publicSolution(),
         ];
 
         return response()->json([
@@ -83,6 +82,7 @@ class ExerciseApiController extends Controller
             'progress'  => $progress,
             'completed' => $total > 0 ? $completed === $total : false,
             'feedback'  => $feedback,
+            'explanation_md' => $exercise->explanation_md,
         ]);
     }
 

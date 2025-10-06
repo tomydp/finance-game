@@ -15,6 +15,8 @@ class ExerciseResource extends JsonResource
             'type'            => $this->type,
             'question'        => $this->question,
             'options'         => $this->options,
+            'correct_answer'  => $this->correct_answer,
+            'explanation_md'  => $this->explanation_md,
             'has_explanation' => filled($this->explanation_md),
         ];
     }

@@ -6,6 +6,7 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\ExerciseController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Livewire\AnalyticsDashboard;
 
 Route::redirect('/', '/dashboard')->middleware('auth');
 
@@ -34,6 +35,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     // Exercises (Livewire)
     Route::get('/exercises', [ExerciseController::class, 'index'])->name('exercises.index');
+
+    // Analytics (Livewire)
+    Route::get('/analytics', fn () => view('analytics.index'))->name('analytics.index');
 });
 
 require __DIR__ . '/auth.php';
