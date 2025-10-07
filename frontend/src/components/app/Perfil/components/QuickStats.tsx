@@ -1,34 +1,39 @@
-import { FaStar, FaBook, FaFire } from "react-icons/fa";
-import CountUp from "react-countup";
+import React from "react";
+import { FaBook, FaFire } from "react-icons/fa";
 
-const QuickStats = ({
-  xp,
-  lessonsCompleted,
-  streak,
-}: {
-  xp: number;
+interface QuickStatsProps {
   lessonsCompleted: number;
   streak: number;
-}) => {
-  const stats = [
-    { label: "XP Total", value: xp, icon: <FaStar className="text-yellow-400 text-2xl" /> },
-    { label: "Lecciones completadas", value: lessonsCompleted, icon: <FaBook className="text-blue-400 text-2xl" /> },
-    { label: "Días de racha", value: streak, icon: <FaFire className="text-orange-500 text-2xl" /> },
+}
+
+const QuickStats: React.FC<QuickStatsProps> = ({ lessonsCompleted, streak }) => {
+  const cards = [
+    {
+      label: "Lecciones completadas",
+      value: lessonsCompleted,
+      icon: <FaBook className="text-blue-400 text-2xl" />, // ícono más grande
+    },
+    {
+      label: "Días de racha",
+      value: streak,
+      icon: <FaFire className="text-orange-400 text-2xl" />,
+    },
   ];
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-      {stats.map((stat, i) => (
-        <div
-          key={i}
-          className="bg-[var(--Blue2)] p-4 rounded-lg flex flex-col items-center justify-center shadow hover:shadow-lg transition"
-        >
-          {stat.icon}
-          <h3 className="text-2xl font-bold mt-2">
-            <CountUp end={stat.value} duration={1.5} />
-          </h3>
-          <p className="text-gray-400 text-sm text-center">{stat.label}</p>
-        </div>
-      ))}
+    <div className="flex justify-center w-full mt-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-lg w-full">
+        {cards.map((card, idx) => (
+          <div
+            key={idx}
+            className="flex flex-col items-center justify-center text-center bg-[var(--Blue2)] rounded-xl p-6 shadow hover:shadow-xl transition"
+          >
+            <div className="mb-3">{card.icon}</div>
+            <p className="text-gray-400 text-sm md:text-base">{card.label}</p>
+            <p className="text-3xl font-bold text-white mt-1">{card.value}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
