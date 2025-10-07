@@ -42,6 +42,12 @@ class Exercise extends Model
     {
         return $this->belongsTo(Lesson::class);
     }
+    public function results()
+    {
+        return $this->hasMany(\App\Models\Result::class);
+    }
+    
+
 
     public function scopeActive(Builder $query): Builder
     {

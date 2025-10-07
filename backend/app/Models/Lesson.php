@@ -57,15 +57,25 @@ class Lesson extends Model
     {
         return $this->exercises()->count();
     }
+// Cuenta cuántos EJERCICIOS de la lección tienen al menos un acierto del usuario
+public function completedExercises(int $userId): int
+{
+    return $this->exercises()
+        ->whereHas('results', function ($q) use ($userId) {
+            $q->where('user_id', $userId)
+              ->where('is_correct', true);
+        })
+        ->count();
+}
 
-    public function completedExercises(int $userId): int
-    {
-        return $this->results()
-            ->where('user_id', $userId)
-            ->where('is_correct', 1)
-            ->count();
-    }
-    
+public function isCompletedByUser(int $userId): bool
+{
+    return !$this->exercises()->whereDoesntHave('results', function ($q) use ($userId) {
+        $q->where('user_id', $userId)->where('is_correct', true);
+    })->exists();
+}
+
+
     
 
     public function users()

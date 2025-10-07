@@ -20,4 +20,15 @@ class Result extends Model
         'is_correct'  => 'boolean',
         'answered_at' => 'datetime',
     ];
+
+    public function exercise()
+    {
+    return $this->belongsTo(\App\Models\Exercise::class);
+    }
+
+    public function user()
+    {
+    return $this->belongsTo(\App\Models\User::class);
+    }
+
 }

@@ -5,6 +5,7 @@ use App\Http\Controllers\API\CourseApiController;
 use App\Http\Controllers\API\ExerciseApiController;
 use App\Http\Controllers\API\LessonApiController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\UserStatsController;
 
 // Públicos (solo lectura)
 Route::get('courses', [CourseApiController::class, 'index'])
@@ -24,6 +25,9 @@ Route::get('analytics/rankings', [AnalyticsRankingController::class, 'index'])
 Route::apiResource('lessons.exercises', ExerciseApiController::class)
      ->only(['index', 'show'])        // GET /api/lessons/{lesson}/exercises
      ->names('api.lessons.exercises');
+
+
+Route::middleware('auth:sanctum')->get('/user/stats', [UserStatsController::class, 'show']);
 
 Route::post('/lessons/{id}/complete', [\App\Http\Controllers\API\LessonApiController::class, 'completar']);
 Route::middleware('auth:sanctum')->group(function () {
