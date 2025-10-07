@@ -1,8 +1,7 @@
 // src/App.tsx
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from "react-hot-toast";
 
-// Landing page
 import Navbar           from './components/landing/Navbar';
 import HeroSection      from './components/landing/HeroSection';
 import FeaturesSection  from './components/landing/FeaturesSection';
@@ -10,26 +9,31 @@ import StepsSection     from './components/landing/StepsSection';
 import CTASection       from './components/landing/CTASection';
 import Footer           from './components/landing/Footer';
 
-// Login / Registro
 import Login            from './components/auth/Login';
 import Register         from './components/auth/Register';
 
-// Layout con Sidebar + rutas internas
 import Layout           from './components/app/Layout';
-import Aprender         from './components/app/Aprender';
+import AprenderPage     from './components/app/Aprender/pages/Aprender';
+
 import Desafios         from './components/app/Desafios';
 import Mas              from './components/app/Mas';
 import Sonidos          from './components/app/Sonidos';
-import Perfil           from './components/app/Perfil/Perfil';
 
 // 👇 Importá el AuthGuard
 import AuthGuard        from './guards/AuthGuard';
+import Perfil           from './components/app/Perfil/pages/Perfil';
+
+// ✅ Nuevo: Ranking
+import RankingPage      from './components/app/Ranking/pages/Ranking';
+
+import Store            from './components/app/Store';
 
 function App() {
   return (
     <Router>
+      <Toaster position="top-center" reverseOrder={false} />
+
       <Routes>
-        {/* ────────────── Ruta pública: Landing completo ────────────── */}
         <Route
           path="/"
           element={
@@ -44,7 +48,6 @@ function App() {
           }
         />
 
-        {/* ────────────── Rutas públicas: login y registro ────────────── */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
@@ -58,15 +61,17 @@ function App() {
           }
         >
           <Route index element={<Navigate to="aprender" replace />} />
-          <Route path="aprender" element={<Aprender />} />
+          <Route path="aprender" element={<AprenderPage />} />
           <Route path="sonidos"  element={<Sonidos />} />
+          {/* ✅ Nueva ruta */}
+          <Route path="ranking"  element={<RankingPage />} />
           <Route path="desafios" element={<Desafios />} />
+          <Route path="tienda"   element={<Store />} />
           <Route path="perfil"   element={<Perfil />} />
           <Route path="mas"      element={<Mas />} />
           <Route path="*"        element={<Navigate to="aprender" replace />} />
         </Route>
 
-        {/* ────────────── Catch-all: redirige a landing ────────────── */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

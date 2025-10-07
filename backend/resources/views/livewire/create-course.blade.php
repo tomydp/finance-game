@@ -1,37 +1,86 @@
 <div>
-    <button wire:click="$set('showModal', true)" class="bg-blue-500 text-white px-4 py-2 rounded">Agregar Curso</button>
+    <button wire:click="openModal" type="button" class="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600">
+        Agregar Curso
+    </button>
 
     @if($showModal)
-    <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
-            <h2 class="text-xl mb-4">Nuevo Curso</h2>
-            <form wire:submit.prevent='save'> 
-                
-            <input wire:model="name" type="text" placeholder="Nombre" class="w-full my-2 border p-2" />
-            @error('name') 
-            <span class="text-red-500 text-sm">{{ $message }}</span> 
-            @enderror
-            <textarea wire:model="description" placeholder="Descripción" class="w-full mb-2 border p-2"></textarea>
-            @error('description') 
-            <span class="text-red-500 text-xs">{{ $message }}</span> 
-            @enderror
-                <select wire:model="difficulty" class="w-full mb-4 border p-2">
-                    <option value="">Seleccionar dificultad</option>
-                    @foreach($difficulties as $value)
-                        <option value="{{ $value }}">{{ $value }}</option>
-                    @endforeach
-                </select>
-                @error('difficulty') 
-                <span class="text-red-500 text-xs">{{ $message }}</span> 
-                @enderror
-                
-                <div class="flex justify-end gap-2 mt-4">
-                    <button wire:click="save" class="bg-green-600 text-white px-4 py-2 rounded">Guardar</button>
-                    <button type="button" wire:click="closeModal" class="text-red-500">Cancelar</button>             
-               </div>
+        <div class="fixed inset-0 z-50">
+            <div class="flex min-h-screen items-center justify-center">
+                <div class="fixed inset-0 bg-black/50" wire:click="closeModal"></div>
 
-            </form>
+                <div class="relative z-10 w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl">
+                    <div class="flex items-center justify-between border-b px-5 py-3">
+                        <h2 class="text-lg font-semibold">Nuevo Curso</h2>
+                        <button type="button" wire:click="closeModal" class="text-xl leading-none">×</button>
+                    </div>
+
+                    <div class="p-6">
+                        <form wire:submit.prevent="save" class="space-y-5">
+                            <div class="grid grid-cols-12 items-start gap-3">
+                                <label class="col-span-12 mt-2 text-sm sm:col-span-3">Nombre</label>
+                                <div class="col-span-12 sm:col-span-9">
+                                    <input
+                                        type="text"
+                                        wire:model="name"
+                                        class="w-full rounded border p-2 @error('name') border-red-500 ring-1 ring-red-500 @enderror"
+                                        placeholder="Nombre"
+                                    />
+                                    @error('name') <p class="mt-1 block text-left text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-12 items-start gap-3">
+                                <label class="col-span-12 mt-2 text-sm sm:col-span-3">Descripción</label>
+                                <div class="col-span-12 sm:col-span-9">
+                                    <textarea
+                                        wire:model="description"
+                                        rows="4"
+                                        class="w-full rounded border p-2 @error('description') border-red-500 ring-1 ring-red-500 @enderror"
+                                        placeholder="Descripción"
+                                    ></textarea>
+                                    @error('description') <p class="mt-1 block text-left text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-12 items-start gap-3">
+                                <label class="col-span-12 mt-2 text-sm sm:col-span-3">Dificultad</label>
+                                <div class="col-span-12 sm:col-span-9">
+                                    <select
+                                        wire:model="difficulty"
+                                        class="w-full rounded border p-2 @error('difficulty') border-red-500 ring-1 ring-red-500 @enderror"
+                                    >
+                                        <option value="" @selected($difficulty===null)>Seleccionar dificultad</option>
+                                        <option value="facil">Fácil</option>
+                                        <option value="medio">Medio</option>
+                                        <option value="dificil">Difícil</option>
+                                    </select>
+                                    @error('difficulty') <p class="mt-1 block text-left text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-12 items-start gap-3">
+                                <label class="col-span-12 mt-2 text-sm sm:col-span-3">Estado</label>
+                                <div class="col-span-12 sm:col-span-9">
+                                    <select
+                                        wire:model="status"
+                                        class="w-full rounded border p-2 @error('status') border-red-500 ring-1 ring-red-500 @enderror"
+                                    >
+                                        @foreach($statusOptions as $option)
+                                            <option value="{{ $option }}">{{ ucfirst($option) }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('status') <p class="mt-1 block text-left text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end gap-2 pt-2">
+                                <button type="submit" class="rounded bg-green-600 px-4 py-2 text-white">Guardar</button>
+                                <button type="button" wire:click="closeModal" class="rounded bg-gray-200 px-4 py-2">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
     @endif
 </div>

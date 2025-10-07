@@ -23,9 +23,10 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { to: '/app/aprender', label: 'Aprender',  icon: FaHome,           enabled: true  },
   { to: '/app/sonidos',  label: 'Sonidos',   icon: FaMusic,          enabled: true  },
-  { to: '/app/ligas',    label: 'Ligas',     icon: FaTrophy,         enabled: false },
+  // ✅ Renombrado + habilitado + nueva ruta
+  { to: '/app/ranking',  label: 'Ranking',   icon: FaTrophy,         enabled: true  },
   { to: '/app/desafios', label: 'Desafíos',  icon: FaBolt,           enabled: true  },
-  { to: '/app/tienda',   label: 'Tienda',    icon: FaShoppingCart,   enabled: false },
+  { to: '/app/tienda',   label: 'Tienda',    icon: FaShoppingCart,   enabled: true  },
   { to: '/app/perfil',   label: 'Perfil',    icon: FaUser,           enabled: true  },
   { to: '/app/mas',      label: 'Más',       icon: FaEllipsisH,      enabled: true  },
 ];
@@ -52,18 +53,16 @@ const Sidebar: React.FC = () => {
 
   return (
     <aside className="w-48 bg-[#121c30] text-white flex flex-col items-start px-4 py-6">
-      {/* Logo + nombre */}
-      <div className="flex items-center space-x-2 mb-6 w-full">
+      <div className="flex items-center space-x-2 mb-6">
         <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white font-bold">
           {user?.name ? user.name[0]?.toUpperCase() : 'F'}
         </div>
         <div className="flex flex-col">
-          <span className="text-lg font-semibold text-cyan-400">FinanzApp</span>
+          <span className="text-lg font-semibold text-cyan-400">Finance Game</span>
           {user?.name && <span className="text-xs text-gray-400 truncate max-w-[9rem]">{user.name}</span>}
         </div>
       </div>
 
-      {/* Menú de navegación */}
       <nav className="flex-1 w-full space-y-2">
         {menuItems.map(({ to, label, icon: Icon, enabled }) =>
           enabled ? (

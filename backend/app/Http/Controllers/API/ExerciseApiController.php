@@ -14,23 +14,28 @@ use Illuminate\Support\Facades\Log;
 class ExerciseApiController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * GET /api/lessons/{lesson}/exercises
+     * Lista de ejercicios de una lección (orden ascendente por id).
      */
     public function index(Lesson $lesson)
     {
         $exercises = $lesson->exercises()->orderBy('id')->get();
         return new ExerciseCollection($exercises);
     }
-    
+
+    /**
+     * POST /api/exercises/{exercise}/submit
+     * Body: { answer: string|bool }
+     */
     public function submit(Request $request, Exercise $exercise)
     {
         $validated = $request->validate([
             'answer' => 'required',
         ]);
-    
+
         $user      = $request->user();
         $isCorrect = $exercise->checkAnswer($validated['answer']);
-    
+
         // Log antes del upsert
         Log::debug('Exercise submit evaluated', [
             'user_id'     => optional($user)->id,
@@ -39,51 +44,50 @@ class ExerciseApiController extends Controller
             'is_correct'  => $isCorrect,
             'answer_type' => gettype($validated['answer']),
         ]);
-    
-        // upsert (forzamos 1/0 para evitar castear mal)
+
+        // Upsert (forzamos 1/0)
         Result::updateOrCreate(
             ['user_id' => $user->id, 'exercise_id' => $exercise->id],
             ['is_correct' => $isCorrect ? 1 : 0, 'answered_at' => now()]
         );
-    
-        // progreso
+
+        // Progreso
         $lesson    = $exercise->lesson;
         $total     = $lesson->totalExercises();
         $completed = $lesson->completedExercises($user->id);
         $progress  = $total > 0 ? (int) round(($completed / $total) * 100) : 0;
-    
+
         // Log después del upsert
         Log::debug('Exercise submit persisted', [
-            'user_id'        => $user->id,
-            'exercise_id'    => $exercise->id,
-            'result_saved'   => $isCorrect ? 1 : 0,
-            'completed_cnt'  => $completed,
-            'total_cnt'      => $total,
-            'progress_pct'   => $progress,
-            'request_id'     => $request->header('X-Request-Id'), // si lo enviás desde el FE
+            'user_id'       => $user->id,
+            'exercise_id'   => $exercise->id,
+            'result_saved'  => $isCorrect ? 1 : 0,
+            'completed_cnt' => $completed,
+            'total_cnt'     => $total,
+            'progress_pct'  => $progress,
+            'request_id'    => $request->header('X-Request-Id'),
         ]);
-    
-        if ($completed === $total && $total > 0) {
+
+        if ($total > 0 && $completed === $total) {
             $lesson->unlockNextFor($user->id);
         }
-    
+
+        // ✅ Feedback solo cuando falla
+        $feedback = $isCorrect ? null : [
+            'explanation_md' => $exercise->explanation_md,
+        ];
+
         return response()->json([
             'correct'   => $isCorrect,
             'progress'  => $progress,
             'completed' => $total > 0 ? $completed === $total : false,
+            'feedback'  => $feedback,
+            'explanation_md' => $exercise->explanation_md,
         ]);
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-    
-    /**
-     * Display the specified resource.
+     * GET /api/lessons/{lesson}/exercises/{exercise}
      */
     public function show(Lesson $lesson, Exercise $exercise)
     {
@@ -91,19 +95,8 @@ class ExerciseApiController extends Controller
         return new ExerciseResource($exercise);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
+    // Opcionales
+    public function store(Request $request) { /* ... */ }
+    public function update(Request $request, string $id) { /* ... */ }
+    public function destroy(string $id) { /* ... */ }
 }

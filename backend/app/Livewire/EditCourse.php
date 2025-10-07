@@ -2,37 +2,62 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
 use App\Models\Course;
+use Illuminate\Validation\Rule;
+use Livewire\Component;
 
 class EditCourse extends Component
 {
     public int $courseId;
+
+    public bool $isOpen = false;
+
     public string $name = '';
     public string $description = '';
-    public ?string $difficulty = null; // 'facil' | 'medio' | 'dificil' | null
-    public bool $showModal = false;
+    public ?string $difficulty = null;
+    public string $status = Course::STATUS_ACTIVO;
 
-    protected $listeners = ['editCourse' => 'loadCourse'];
+    public array $statusOptions = Course::STATUSES;
+
+    public function mount(int $courseId): void
+    {
+        $this->courseId = $courseId;
+    }
 
     protected function rules(): array
     {
         return [
-            'name' => ['required','string','max:255'],
+            'name'        => ['required','string','max:255'],
             'description' => ['required','string'],
-            'difficulty' => ['required','in:facil,medio,dificil'],
+            'difficulty'  => ['required','in:facil,medio,dificil'],
+            'status'      => ['required', Rule::in(Course::STATUSES)],
         ];
     }
 
-    public function loadCourse(int $id): void
+    protected function loadFromDb(): void
     {
-        $course = Course::findOrFail($id);
+        $course = Course::findOrFail($this->courseId);
 
-        $this->courseId    = $course->id;
         $this->name        = $course->name;
         $this->description = $course->description;
-        $this->difficulty  = $course->difficulty; // ← CLAVE
-        $this->showModal   = true;
+        $this->difficulty  = $course->difficulty;
+        $this->status      = $course->status;
+    }
+
+    public function openModal(): void
+    {
+        $this->loadFromDb();
+        $this->resetErrorBag();
+        $this->resetValidation();
+        $this->isOpen = true;
+    }
+
+    public function closeModal(): void
+    {
+        // Limpia validación y cierra. En la próxima apertura se recarga desde DB.
+        $this->resetErrorBag();
+        $this->resetValidation();
+        $this->isOpen = false;
     }
 
     public function update(): void
@@ -43,10 +68,11 @@ class EditCourse extends Component
             'name'        => $this->name,
             'description' => $this->description,
             'difficulty'  => $this->difficulty,
+            'status'      => $this->status,
         ]);
 
         $this->dispatch('courseUpdated');
-        $this->reset(['showModal']);
+        $this->closeModal();
     }
 
     public function render()

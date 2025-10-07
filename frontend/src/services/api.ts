@@ -33,6 +33,12 @@ export async function getCourses() {
   }
 }
 
+export const getLessonsByCourseId = async (courseId: number) => {
+  const res = await fetch(`http://localhost/api/courses/${courseId}/lessons`);
+  const data = await res.json();
+  return data.data; // Asegúrate de que esta sea la estructura correcta
+};
+
 export async function getLessons(courseId: number) {
   try {
     const { data } = await api.get<Lesson[]>(`/courses/${courseId}/lessons`);

@@ -2,67 +2,63 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use App\Models\Lesson;
 use App\Models\Course;
+use App\Models\Lesson;
+use Illuminate\Validation\Rule;
+use Livewire\Component;
 
 class CreateLesson extends Component
 {
-    public $title, $description, $course_id;
-    public $showModal = false;
+    public ?string $title = null;
+    public ?int $course_id = null;
+    public string $status = Lesson::STATUS_ACTIVO;
 
-    protected $rules = [
-        'title' => 'required|string|max:255',
-        'description' => 'nullable|string',
-        'course_id' => 'required|exists:courses,id',
-    ];
+    public bool $showModal = false;
 
-    public function save()
-    {
-        $this->validate();
-    
-        Lesson::create([
-            'title' => $this->title,
-            'description' => $this->description,
-            'course_id' => $this->course_id,
-        ]);
-    
-        $this->dispatch('lessonCreated');
-    
-        $this->reset(['title', 'description', 'course_id', 'showModal']);
-        $this->resetErrorBag();
-        $this->resetValidation();
-    }
-    
-
-    public function messages()
+    protected function rules(): array
     {
         return [
-            'course_id.required' => 'Por favor, seleccioná un curso.',
-            'course_id.exists' => 'El curso seleccionado no es válido.',
+            'title'     => ['required','string','max:255'],
+            'course_id' => ['required','exists:courses,id'],
+            'status'    => ['required', Rule::in(Lesson::STATUSES)],
         ];
     }
 
-    public function openModal()
-{
-    $this->reset(['title', 'description', 'course_id']);
-    $this->resetErrorBag();
-    $this->resetValidation();
-    $this->showModal = true;
-}
-
-
-    public function closeModal()
+    public function openModal(): void
     {
-        $this->reset(['title', 'description', 'course_id', 'showModal']);
+        $this->reset(['title','course_id']);
         $this->resetErrorBag();
         $this->resetValidation();
+        $this->status = Lesson::STATUS_ACTIVO;
+        $this->showModal = true;
+    }
+
+    public function closeModal(): void
+    {
+        $this->reset(['title','course_id','status','showModal']);
+        $this->resetErrorBag();
+        $this->resetValidation();
+    }
+
+    public function save(): void
+    {
+        $this->validate();
+
+        Lesson::create([
+            'title'     => $this->title,
+            'course_id' => $this->course_id,
+            'status'    => $this->status,
+        ]);
+
+        $this->dispatch('lessonCreated');
+        $this->closeModal();
     }
 
     public function render()
     {
         return view('livewire.create-lesson', [
-            'courses' => Course::all(),
+            'courses' => Course::active()->orderBy('name')->get(),
+            'statusOptions' => Lesson::STATUSES,
         ]);
     }
 }

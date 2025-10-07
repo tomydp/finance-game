@@ -1,36 +1,20 @@
-import React from "react";
 import { FaStar, FaBook, FaFire } from "react-icons/fa";
 import CountUp from "react-countup";
 
-interface QuickStatsProps {
-  xp: number;
-  lessonsCompleted: number;
-  streak: number;
-}
-
-const QuickStats: React.FC<QuickStatsProps> = ({
+const QuickStats = ({
   xp,
   lessonsCompleted,
   streak,
+}: {
+  xp: number;
+  lessonsCompleted: number;
+  streak: number;
 }) => {
   const stats = [
-    {
-      label: "XP Total",
-      value: xp,
-      icon: <FaStar className="text-yellow-400 text-2xl" />,
-    },
-    {
-      label: "Lecciones completadas",
-      value: lessonsCompleted,
-      icon: <FaBook className="text-blue-400 text-2xl" />,
-    },
-    {
-      label: "Días de racha",
-      value: streak,
-      icon: <FaFire className="text-orange-500 text-2xl" />,
-    },
+    { label: "XP Total", value: xp, icon: <FaStar className="text-yellow-400 text-2xl" /> },
+    { label: "Lecciones completadas", value: lessonsCompleted, icon: <FaBook className="text-blue-400 text-2xl" /> },
+    { label: "Días de racha", value: streak, icon: <FaFire className="text-orange-500 text-2xl" /> },
   ];
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       {stats.map((stat, i) => (

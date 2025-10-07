@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\AnalyticsRankingController;
 use App\Http\Controllers\API\CourseApiController;
 use App\Http\Controllers\API\ExerciseApiController;
 use App\Http\Controllers\API\LessonApiController;
 use App\Http\Controllers\API\VerifyEmailController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\UserStatsController;
 
 Route::post('register', [AuthController::class, 'register'])->name('api.register');
 Route::post('login',    [AuthController::class, 'login'])->name('api.login');
@@ -45,6 +47,23 @@ Route::get('courses', [CourseApiController::class, 'index'])->name('api.courses.
 Route::get('courses/{course}/lessons', [LessonApiController::class, 'index'])
     ->whereNumber('course')->name('api.courses.lessons.index');
 Route::get('lessons/{lesson}/exercises', [ExerciseApiController::class, 'index'])
-    ->whereNumber('lesson')->name('api.lessons.exercises.index');
-Route::get('lessons/{lesson}/exercises/{exercise}', [ExerciseApiController::class, 'show'])
-    ->whereNumber('lesson')->whereNumber('exercise')->name('api.lessons.exercises.show');
+    ->whereNumber('lesson')
+    ->name('api.lessons.exercises.index'); // GET /api/lessons/{lesson}/exercises
+
+Route::get('analytics/rankings', [AnalyticsRankingController::class, 'index'])
+    ->name('api.analytics.rankings.index');
+
+Route::apiResource('lessons.exercises', ExerciseApiController::class)
+     ->only(['index', 'show'])        // GET /api/lessons/{lesson}/exercises
+     ->names('api.lessons.exercises');
+
+
+Route::middleware('auth:sanctum')->get('/user/stats', [UserStatsController::class, 'show']);
+
+Route::post('/lessons/{id}/complete', [\App\Http\Controllers\API\LessonApiController::class, 'completar']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post(
+        'exercises/{exercise}/submit', // POST /api/exercises/{id}/submit
+        [ExerciseApiController::class, 'submit']
+    )->name('api.exercises.submit');
+});

@@ -280,5 +280,90 @@ return [
         'winner'                   => 'ganador',
         'work'                     => 'trabajo',
         'year'                     => 'año',
+        'courseId'                 => 'curso',
+        'lessonId'                 => 'lección',
+        'type'                     => 'tipo',
+        'editType'                 => 'tipo',
+        'question'                 => 'enunciado',
+        'options'                  => 'opciones',
+        'options.*'                => 'opción',
+        'correctIndex'             => 'opción correcta',
+        'answerBool'               => 'respuesta',
+        'answersFill'              => 'respuestas',
+        'answersFill.*'            => 'respuesta',
+        'title'                    => 'título',
+        'course_id'                => 'curso',
+        'name'                     => 'nombre',
+        'difficulty'               => 'dificultad',
+
     ],
+    'custom' => [
+    // Exercises
+    'courseId' => [
+        'required' => 'El campo curso es obligatorio.',
+        'exists'   => 'El curso seleccionado no es válido.',
+    ],
+    'lessonId' => [
+        'required' => 'El campo lección es obligatorio.',
+        'exists'   => 'La lección seleccionada no es válida.',
+    ],
+    'type' => [
+        'required' => 'El campo tipo es obligatorio.',
+        'in'       => 'El tipo seleccionado no es válido.',
+    ],
+    'editType' => [
+        'required' => 'El campo tipo es obligatorio.',
+        'in'       => 'El tipo seleccionado no es válido.',
+    ],
+    'question' => [
+        'required' => 'El campo enunciado es obligatorio.',
+    ],
+    'options' => [
+        'size' => 'Debes ingresar exactamente 4 opciones.',
+    ],
+    'options.*' => [
+        'required' => 'Completá todas las opciones.',
+        'max'      => 'Cada opción no debe superar :max caracteres.',
+    ],
+    'correctIndex' => [
+        'required' => 'Seleccioná la opción correcta.',
+        'integer'  => 'La opción correcta no es válida.',
+        'between'  => 'La opción correcta no es válida.',
+    ],
+    'answerBool' => [
+        'required' => 'Seleccioná Verdadero o Falso.',
+        'boolean'  => 'La respuesta no es válida.',
+    ],
+    'answersFill' => [
+        'min' => 'Ingresá al menos una respuesta.',
+    ],
+    'answersFill.*' => [
+        'required' => 'Completá todas las respuestas.',
+        'max'      => 'Cada respuesta no debe superar :max caracteres.',
+    ],
+
+    // Lessons
+    'title' => [
+        'required' => 'El campo título es obligatorio.',
+        'max'      => 'El título no debe superar :max caracteres.',
+    ],
+    'course_id' => [
+        'required' => 'El campo curso es obligatorio.',
+        'exists'   => 'El curso seleccionado no es válido.',
+    ],
+
+    // Courses
+    'name' => [
+        'required' => 'El campo nombre es obligatorio.',
+        'max'      => 'El nombre no debe superar :max caracteres.',
+    ],
+    'description' => [
+        'required' => 'El campo descripción es obligatorio.',
+    ],
+    'difficulty' => [
+        'required' => 'El campo dificultad es obligatorio.',
+        'in'       => 'La dificultad seleccionada no es válida.',
+    ],
+],
+
 ];

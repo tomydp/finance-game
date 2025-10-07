@@ -1,36 +1,45 @@
-import React, { useState, useEffect } from "react";
-import Avatar from "./Avatar";
-import { avatars } from "./avatars";
-import ActivityCalendar from "./ActivityCalendar";
-import QuickStats from "./QuickStats";
-import { format, subDays } from "date-fns";
-import { userData } from "../../../data/userData";
-import FriendsList from "./FriendsList";
+import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import ConfiguracionTab from "./ConfigurationTab";
+import { format, subDays } from "date-fns";
 
-type Tab = "estadisticas" | "amigos" | "configuracion";
+// hooks & types
+import { usePerfilState } from "../hooks/usePerfilState";
+import type { Tab, UserSettings } from "../hooks/types";
 
+// components
+import Avatar from "../components/Avatar";
+import QuickStats from "../components/QuickStats";
+import ActivityCalendar from "../components/ActivityCalendar";
+import FriendsList from "../components/FriendsList";
+import ConfiguracionTab from "../components/ConfiguracionTab";
+
+// ==== Datos simulados de usuario ====
+const userData = { xp: 230, xpNext: 500, lessonsCompleted: 12, streak: 5 };
+
+// ==== Avatares disponibles ====
+const avatars = [
+  "/avatars/avatar1.png",
+  "/avatars/avatar2.png",
+  "/avatars/avatar3.png",
+  "/avatars/avatar4.png",
+  "/avatars/avatar5.png",
+];
+
+const defaultSettings: UserSettings = {
+  name: "Usuario Demo",
+  level: 5,
+  avatar: avatars[0],
+  memberSince: "mayo 2023",
+  showStreak: true,
+  showAchievements: true,
+};
+
+// ==== Perfil Principal ====
 const Perfil: React.FC = () => {
   const [tab, setTab] = useState<Tab>("estadisticas");
 
-  const [user, setUser] = useState({
-    name: "Usuario Demo",
-    level: 5,
-    avatar: avatars[0],
-    memberSince: "mayo 2023",
-    showStreak: true,
-    showAchievements: true,
-  });
-
-  useEffect(() => {
-    const saved = localStorage.getItem("settings");
-    if (saved) setUser((prev) => ({ ...prev, ...JSON.parse(saved) }));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("settings", JSON.stringify(user));
-  }, [user]);
+  // estado persistente del usuario
+  const { user, setUser } = usePerfilState(defaultSettings);
 
   const today = new Date();
   const activityDates = Array.from({ length: userData.streak }, (_, i) =>
@@ -50,25 +59,17 @@ const Perfil: React.FC = () => {
         <div className="bg-[var(--Blue2)] rounded-xl p-6 shadow-md flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold">{user.name}</h2>
-            <p className="text-gray-400 text-sm">
-              Miembro desde {user.memberSince}
-            </p>
+            <p className="text-gray-400 text-sm">Miembro desde {user.memberSince}</p>
             <div className="flex items-center gap-2 mt-2">
-              <span className="bg-cyan-500 px-3 py-1 rounded-full text-sm">
-                Nivel {user.level}
-              </span>
+              <span className="bg-cyan-500 px-3 py-1 rounded-full text-sm">Nivel {user.level}</span>
               {user.showStreak && (
                 <span className="bg-purple-500 px-3 py-1 rounded-full text-sm">
                   Racha: {userData.streak} días
                 </span>
               )}
-              <span className="bg-gray-700 px-3 py-1 rounded-full text-sm">
-                {userData.xp} XP
-              </span>
+              <span className="bg-gray-700 px-3 py-1 rounded-full text-sm">{userData.xp} XP</span>
             </div>
           </div>
-
-          {/* Avatar centrado */}
           <div className="flex flex-col items-center gap-2">
             <Avatar src={user.avatar} level={user.level} />
           </div>
@@ -100,7 +101,6 @@ const Perfil: React.FC = () => {
                 lessonsCompleted={userData.lessonsCompleted}
                 streak={userData.streak}
               />
-              {/* Calendario mensual dentro de estadísticas */}
               <ActivityCalendar activityDates={activityDates} />
             </>
           )}
@@ -109,7 +109,7 @@ const Perfil: React.FC = () => {
 
           {tab === "configuracion" && (
             <>
-              {/* Bloque original de nombre/avatar/privacidad */}
+              {/* Configuración básica */}
               <div className="space-y-8">
                 {/* Nombre */}
                 <div>
@@ -120,16 +120,12 @@ const Perfil: React.FC = () => {
                     <input
                       type="text"
                       value={user.name}
-                      onChange={(e) =>
-                        setUser({ ...user, name: e.target.value })
-                      }
+                      onChange={(e) => setUser({ ...user, name: e.target.value })}
                       className="flex-1 p-3 rounded-lg bg-[var(--Blue2)] border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 transition"
                       placeholder="Escribe tu nombre"
                     />
                     <button
-                      onClick={() =>
-                        toast.success(`Nombre cambiado a: ${user.name}`)
-                      }
+                      onClick={() => toast.success(`Nombre cambiado a: ${user.name}`)}
                       className="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-600 font-semibold transition"
                     >
                       Guardar
@@ -204,9 +200,7 @@ const Perfil: React.FC = () => {
                       >
                         <div
                           className={`bg-white w-4 h-4 rounded-full shadow-md transform transition ${
-                            user.showAchievements
-                              ? "translate-x-6"
-                              : "translate-x-0"
+                            user.showAchievements ? "translate-x-6" : "translate-x-0"
                           }`}
                         />
                       </button>
@@ -243,7 +237,6 @@ const Perfil: React.FC = () => {
 
       {/* Sidebar gamer */}
       <aside className="w-80 bg-[var(--Blue2)] p-6 hidden lg:block space-y-6">
-        {/* Nivel */}
         <div className="bg-[var(--Blue1)] p-4 rounded-lg shadow flex items-center gap-3">
           <span className="text-cyan-400 text-xl">⭐</span>
           <div>
@@ -252,7 +245,6 @@ const Perfil: React.FC = () => {
           </div>
         </div>
 
-        {/* XP */}
         <div className="bg-[var(--Blue1)] p-4 rounded-lg shadow">
           <p className="text-gray-400 text-xs">Experiencia</p>
           <p className="font-bold mb-2">
@@ -266,9 +258,6 @@ const Perfil: React.FC = () => {
           </div>
         </div>
 
-        
-
-        {/* Botón Cerrar sesión */}
         <div className="mt-6">
           <button
             onClick={() => (window.location.href = "/login")}

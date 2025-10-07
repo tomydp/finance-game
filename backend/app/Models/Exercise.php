@@ -2,76 +2,190 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Log;
 
 class Exercise extends Model
 {
+    public const STATUS_ACTIVO   = 'activo';
+    public const STATUS_INACTIVO = 'inactivo';
+    public const STATUSES        = [self::STATUS_ACTIVO, self::STATUS_INACTIVO];
+
+    /**
+     * Tipos válidos:
+     * - 'mcq'        (opción múltiple con 1 respuesta correcta, guardada como string)
+     * - 'true_false' ('true' | 'false' como string; en FE podés enviar boolean)
+     * - 'fill_blank' (correct_answer como JSON string: ["respuesta1", "respuesta2", ...])
+     */
     protected $fillable = [
         'lesson_id',
-        'type',           // 'mcq', 'true_false', 'fill_blank'
+        'type',
         'question',
-        'options',        // json
-        'correct_answer', // string o json-string para MCQ múltiple
+        'options',         // json para MCQ
+        'correct_answer',  // string | json-string (según type)
+        'explanation_md',  // ✅ nuevo campo
+        'status',
     ];
 
     protected $casts = [
         'options' => 'array',
+        'status'  => 'string',
     ];
 
-    public function lesson()
+    protected $attributes = [
+        'status' => self::STATUS_ACTIVO,
+    ];
+
+    public function lesson(): BelongsTo
     {
         return $this->belongsTo(Lesson::class);
     }
+    public function results()
+    {
+        return $this->hasMany(\App\Models\Result::class);
+    }
+    
 
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_ACTIVO);
+    }
+
+    /**
+     * Normaliza la(s) respuesta(s) correcta(s) a un array de strings.
+     */
+    public function correctAnswerArray(): array
+    {
+        $raw = $this->correct_answer;
+
+        if ($this->type === 'fill_blank') {
+            // Esperamos JSON string con array de respuestas válidas
+            if (is_string($raw)) {
+                $decoded = json_decode($raw, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    return array_map(static fn($v) => trim((string) $v), $decoded);
+                }
+            }
+            // fallback: si por error guardaron texto plano
+            return [$this->normalizeString((string) $raw)];
+        }
+
+        // 'mcq' (string simple con la opción correcta) o 'true_false' ('true'|'false')
+        if (is_string($raw)) {
+            return [trim($raw)];
+        }
+
+        // fallback defensivo (no debería ocurrir)
+        if (is_array($raw)) {
+            return array_map(static fn($v) => trim((string) $v), $raw);
+        }
+
+        return [];
+    }
+
+    /**
+     * Devuelve una versión presentable de la solución (primer elemento).
+     * Para true/false lo convierte a 'Verdadero' | 'Falso'.
+     */
+    public function publicSolution(): string
+    {
+        $ans = $this->correctAnswerArray();
+
+        if ($this->type === 'true_false') {
+            return strtolower($ans[0] ?? '') === 'true' ? 'Verdadero' : 'Falso';
+        }
+
+        return (string) ($ans[0] ?? '');
+    }
+
+    /**
+     * Chequea la respuesta del usuario con normalización.
+     * Acepta:
+     *  - true/false: bool o string ('true'|'false'|'verdadero'|'falso')
+     *  - mcq: string que iguale la opción correcta
+     *  - fill_blank: string que iguale cualquiera de las respuestas válidas
+     */
     public function checkAnswer($answer): bool
     {
-        // Evitamos loguear respuestas reales en prod
-        $shouldLog = app()->environment(['local', 'testing']) || config('app.debug');
-    
-        // Intentamos decodificar la respuesta correcta (para MCQ múltiple)
-        $decoded = json_decode($this->correct_answer, true);
-        $isJson  = json_last_error() === JSON_ERROR_NONE;
-    
-        if ($isJson) {
-            $given   = is_array($answer) ? array_values($answer) : [$answer];
-            $correct = is_array($decoded) ? array_values($decoded) : [$decoded];
-    
-            // normalizamos a string-lower y ordenamos
-            $norm = fn($arr) => collect($arr)->map(fn($v) => mb_strtolower(trim((string)$v)))->sort()->values()->all();
-            $givenN   = $norm($given);
-            $correctN = $norm($correct);
-    
-            $result = $givenN === $correctN;
-    
+        $shouldLog = app()->environment(['local', 'testing']) || (bool) config('app.debug');
+
+        // --- TRUE/FALSE ---
+        if ($this->type === 'true_false') {
+            $target   = $this->normalizeString($this->publicSolution()); // 'verdadero' | 'falso'
+            $incoming = is_bool($answer)
+                ? ($answer ? 'verdadero' : 'falso')
+                : $this->normalizeString((string) $answer);
+
+            $result = ($incoming === $target);
+
             if ($shouldLog) {
-                Log::debug('Exercise::checkAnswer (MCQ)', [
+                Log::debug('Exercise::checkAnswer [true_false]', [
                     'exercise_id' => $this->id,
-                    'type'        => $this->type,
-                    'given'       => $givenN,
-                    'correct'     => $correctN,
+                    'given'       => $incoming,
+                    'correct'     => $target,
                     'result'      => $result,
                 ]);
             }
-    
+
             return $result;
         }
-    
-        // Texto plano / true_false
-        $lhs = mb_strtolower(trim((string) $answer));
-        $rhs = mb_strtolower(trim((string) $this->correct_answer));
-        $result = $lhs === $rhs;
-    
+
+        // --- MCQ (opción única correcta como string) ---
+        if ($this->type === 'mcq') {
+            $expected = $this->normalizeString($this->publicSolution());
+            $incoming = $this->normalizeString((string) $answer);
+            $result   = ($incoming === $expected);
+
+            if ($shouldLog) {
+                Log::debug('Exercise::checkAnswer [mcq]', [
+                    'exercise_id' => $this->id,
+                    'given'       => $incoming,
+                    'correct'     => $expected,
+                    'result'      => $result,
+                ]);
+            }
+
+            return $result;
+        }
+
+        // --- FILL_BLANK (varias respuestas válidas) ---
+        if ($this->type === 'fill_blank') {
+            $valids   = array_map([$this, 'normalizeString'], $this->correctAnswerArray());
+            $incoming = $this->normalizeString((string) $answer);
+            $result   = in_array($incoming, $valids, true);
+
+            if ($shouldLog) {
+                Log::debug('Exercise::checkAnswer [fill_blank]', [
+                    'exercise_id' => $this->id,
+                    'given'       => $incoming,
+                    'valids'      => $valids,
+                    'result'      => $result,
+                ]);
+            }
+
+            return $result;
+        }
+
+        // Fallback (tipo desconocido)
         if ($shouldLog) {
-            Log::debug('Exercise::checkAnswer (plain)', [
+            Log::warning('Exercise::checkAnswer [unknown type]', [
                 'exercise_id' => $this->id,
                 'type'        => $this->type,
-                'given'       => $lhs,
-                'correct'     => $rhs,
-                'result'      => $result,
             ]);
         }
-    
-        return $result;
+
+        return false;
+    }
+
+    /**
+     * Normaliza textos para comparar (minúsculas + colapsa espacios).
+     */
+    private function normalizeString(string $s): string
+    {
+        $s = preg_replace('/\s+/', ' ', trim($s));
+        return mb_strtolower($s);
     }
 }
