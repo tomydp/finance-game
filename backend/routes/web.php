@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\VerifyEmailController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CourseController;
@@ -8,11 +9,18 @@ use App\Http\Controllers\ExerciseController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\AnalyticsDashboard;
 
-Route::redirect('/', '/dashboard')->middleware('auth');
+Route::get('/', function () {
+    // En SPA lo más común:
+    return redirect()->away(config('app.frontend_url', 'http://localhost:5173'));
+});
 
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified', 'role:admin'])->name('dashboard');
+
+Route::get('/verify-email/{id}/{hash}', [VerifyEmailController::class, 'verify'])
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('verification.verify.web');
 
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     // Perfil

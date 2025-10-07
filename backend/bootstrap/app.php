@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureEmailIsVerifiedJson;
 use App\Http\Middleware\EnsureIsAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'admin' => EnsureIsAdmin::class,
+            'email_verified_json' => EnsureEmailIsVerifiedJson::class,
         ]);
 
         $middleware->appendToGroup('api', \Illuminate\Http\Middleware\HandleCors::class);

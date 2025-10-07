@@ -18,6 +18,9 @@ import AprenderPage     from './components/app/Aprender/pages/Aprender';
 import Desafios         from './components/app/Desafios';
 import Mas              from './components/app/Mas';
 import Sonidos          from './components/app/Sonidos';
+
+// 👇 Importá el AuthGuard
+import AuthGuard        from './guards/AuthGuard';
 import Perfil           from './components/app/Perfil/pages/Perfil';
 
 // ✅ Nuevo: Ranking
@@ -48,7 +51,15 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        <Route path="/app/*" element={<Layout />}>
+        {/* ────────────── Rutas protegidas bajo /app ────────────── */}
+        <Route
+          path="/app/*"
+          element={
+            <AuthGuard>
+              <Layout />
+            </AuthGuard>
+          }
+        >
           <Route index element={<Navigate to="aprender" replace />} />
           <Route path="aprender" element={<AprenderPage />} />
           <Route path="sonidos"  element={<Sonidos />} />
