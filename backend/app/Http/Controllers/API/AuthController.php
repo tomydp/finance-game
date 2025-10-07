@@ -84,6 +84,22 @@ class AuthController extends Controller
         ]);
     }
 
+    public function show(Request $request)
+    {
+        /** @var \App\Models\User|null $user */
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(['message' => 'Not authenticated'], 401);
+        }
+
+        return response()->json([
+            'name'     => $user->name,
+            'email'    => $user->email,
+            'verified' => $user->hasVerifiedEmail(),
+        ]);
+    }
+
     public function logout(Request $request)
     {
         /** @var \App\Models\User $user */

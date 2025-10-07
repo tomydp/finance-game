@@ -6,6 +6,7 @@ import { format, subDays } from "date-fns";
 // hooks & types
 import { usePerfilState } from "../hooks/usePerfilState";
 import type { Tab, UserSettings } from "../hooks/types";
+import { getProfile } from "../../../../services/authService";
 import { useUserStats } from "../hooks/useUserStats";
 
 // components
@@ -36,6 +37,23 @@ const Perfil: React.FC = () => {
   const [tab, setTab] = useState<Tab>("estadisticas");
   const { user, setUser } = usePerfilState(defaultSettings);
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const { data } = await getProfile();
+        console.log("[Perfil] Datos del backend:", data);
+      } catch (error) {
+        console.log("[Perfil] Error al obtener perfil:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const today = new Date();
+  const activityDates = Array.from({ length: userData.streak }, (_, i) =>
+    format(subDays(today, i), "yyyy-MM-dd")
+  );
   // Demo activado: si no hay auth, muestra demo (incluye active_days de ejemplo)
   const { loading, error, data, needsAuth, isDemo, refetch } = useUserStats(undefined, { demo: true });
 
