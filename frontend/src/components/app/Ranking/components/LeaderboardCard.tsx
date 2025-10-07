@@ -1,6 +1,6 @@
 import React from "react";
 import { FaMedal, FaCrown, FaRegStar, FaTrophy } from "react-icons/fa";
-import type { RankingEntry } from "../hooks/useRanking";
+import type { RankingEntry } from "../hooks/useRankingApi";
 
 const nf = new Intl.NumberFormat("es-AR");
 

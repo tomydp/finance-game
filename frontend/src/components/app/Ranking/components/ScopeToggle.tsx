@@ -1,5 +1,5 @@
 import React from "react";
-import type { Scope } from "../hooks/useRanking";
+import type { Scope } from "../hooks/useRankingApi";
 
 interface Props {
   scope: Scope;
