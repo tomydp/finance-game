@@ -20,20 +20,24 @@ Route::post('email/verification-notification', [VerifyEmailController::class, 'r
     ->middleware('throttle:6,1')
     ->name('verification.send');
 
-Route::middleware(['auth:sanctum', 'email_verified_json'])->group(function () {
-    Route::put('profile',  [AuthController::class, 'profile'])->name('api.profile');
-    Route::post('logout',  [AuthController::class, 'logout'])->name('api.logout');
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('profile',  [AuthController::class, 'show'])->name('api.profile.show');
 
-    // Protegidos (Sanctum + rate limit)
-    Route::middleware('throttle:60,1')->group(function () {
-        Route::post('exercises/{exercise}/submit', [ExerciseApiController::class, 'submit'])
-            ->whereNumber('exercise')->name('api.exercises.submit');
+    Route::middleware('email_verified_json')->group(function () {
+        Route::put('profile',  [AuthController::class, 'profile'])->name('api.profile');
+        Route::post('logout',  [AuthController::class, 'logout'])->name('api.logout');
 
-        Route::post('lessons/{lesson}/complete', [LessonApiController::class, 'complete'])
-            ->whereNumber('lesson')->name('api.lessons.complete');
+        // Protegidos (Sanctum + rate limit)
+        Route::middleware('throttle:60,1')->group(function () {
+            Route::post('exercises/{exercise}/submit', [ExerciseApiController::class, 'submit'])
+                ->whereNumber('exercise')->name('api.exercises.submit');
 
-        Route::get('courses/{course}/progress', [CourseApiController::class, 'progress'])
-            ->whereNumber('course')->name('api.courses.progress');
+            Route::post('lessons/{lesson}/complete', [LessonApiController::class, 'complete'])
+                ->whereNumber('lesson')->name('api.lessons.complete');
+
+            Route::get('courses/{course}/progress', [CourseApiController::class, 'progress'])
+                ->whereNumber('course')->name('api.courses.progress');
+        });
     });
 });
 

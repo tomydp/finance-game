@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { format, subDays } from "date-fns";
 
 // hooks & types
 import { usePerfilState } from "../hooks/usePerfilState";
 import type { Tab, UserSettings } from "../hooks/types";
+import { getProfile } from "../../../../services/authService";
 
 // components
 import Avatar from "../components/Avatar";
@@ -40,6 +41,19 @@ const Perfil: React.FC = () => {
 
   // estado persistente del usuario
   const { user, setUser } = usePerfilState(defaultSettings);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const { data } = await getProfile();
+        console.log("[Perfil] Datos del backend:", data);
+      } catch (error) {
+        console.log("[Perfil] Error al obtener perfil:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const today = new Date();
   const activityDates = Array.from({ length: userData.streak }, (_, i) =>
