@@ -1,37 +1,122 @@
+// src/components/auth/Register.tsx
 import React, { useState } from 'react';
 import { FaGoogle, FaFacebook } from 'react-icons/fa';
 import { FiEye, FiEyeOff, FiArrowLeft } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
-import { register } from '../../services/authService';
+import { register as registerApi } from '../../services/authService';
+
+type FieldErrors = {
+  name?: string;
+  email?: string;
+  password?: string;
+  password_confirmation?: string;
+};
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
+
+  // form
   const [name, setName] = useState('');
   const [email, setEmail] = useState(''); 
   const [password, setPassword] = useState('');
   const [password_confirmation, setPasswordConfirmation] = useState('');
-  const [errors, setErrors] = useState([]);
 
-  const submit = (e: React.FormEvent) => {
+  // ui
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // errores
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [serverErrors, setServerErrors] = useState<string[]>([]);
+
+  // ---- helpers de validación ----
+  const isValidEmail = (val: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+
+  const isStrongPassword = (val: string) => {
+    const lengthOK = val.length >= 8;
+    const upperOK  = /[A-ZÁÉÍÓÚÑ]/.test(val);
+    const lowerOK  = /[a-záéíóúñ]/.test(val);
+    const numOK    = /\d/.test(val);
+    return lengthOK && upperOK && lowerOK && numOK;
+  };
+
+  const validate = (): FieldErrors => {
+    const errors: FieldErrors = {};
+    const _name = name.trim();
+
+    if (!_name) {
+      errors.name = 'El nombre es obligatorio.';
+    } else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(_name)) {
+      errors.name = 'Usa solo letras y espacios.';
+    } else if (_name.length > 255) {
+      errors.name = 'Máximo 255 caracteres.';
+    }
+
+    if (!email.trim()) {
+      errors.email = 'El email es obligatorio.';
+    } else if (!isValidEmail(email)) {
+      errors.email = 'Formato de email inválido.';
+    }
+
+    if (!password) {
+      errors.password = 'La contraseña es obligatoria.';
+    } else if (!isStrongPassword(password)) {
+      errors.password =
+        'Debe tener al menos 8 caracteres, mayúscula, minúscula y número.';
+    }
+
+    if (!password_confirmation) {
+      errors.password_confirmation = 'Repetí tu contraseña.';
+    } else if (password !== password_confirmation) {
+      errors.password_confirmation = 'Las contraseñas no coinciden.';
+    }
+
+    return errors;
+  };
+
+  // ---- submit ----
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors([]);
-    register({name:name, email:email, password:password, password_confirmation:password_confirmation}).then((res) => {
-      if(res.data.errors) {
-        setErrors(res.data.errors);
+    setServerErrors([]);
+    const errs = validate();
+    setFieldErrors(errs);
+
+    if (Object.keys(errs).length > 0) return;
+
+    try {
+      setSubmitting(true);
+      await registerApi({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        password_confirmation,
+      });
+
+      navigate('/login', { 
+        replace: true,
+        state: {registered: true, email}
+      });
+    } catch (err: any) {
+      // back puede devolver 422 con { errors: string[] }
+      const status = err?.response?.status;
+      if (status === 422 && Array.isArray(err?.response?.data?.errors)) {
+        setServerErrors(err.response.data.errors);
       } else {
-        localStorage.setItem("user", JSON.stringify(res.data));
-        localStorage.setItem("isAuthenticated", true);
-        navigate('/');
+        setServerErrors(['Ocurrió un error inesperado. Intentá nuevamente.']);
       }
-    });
-  }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="relative min-h-screen bg-[var(--Blue1)] flex items-center justify-center px-4">
       <button
         className="absolute top-4 left-4 text-white hover:text-gray-200 transition text-2xl"
         aria-label="Volver al landing"
+        onClick={() => navigate('/')}
       >
         <FiArrowLeft />
       </button>
@@ -46,16 +131,18 @@ const Register: React.FC = () => {
         <div className="text-center space-y-1">
           <h2 className="text-2xl font-extrabold text-white">Crear cuenta</h2>
           <p className="text-gray-400">Empieza a dominar tus finanzas</p>
-          {errors.length > 0 && (
-            <div className="text-red-500">
-              {errors.map((error: string, index: number) => (
-                <p key={index}>{error}</p>
+
+          {/* Errores del backend (422) */}
+          {serverErrors.length > 0 && (
+            <div className="text-red-500 text-sm space-y-1 mt-2">
+              {serverErrors.map((error, i) => (
+                <p key={i}>{error}</p>
               ))}
             </div>
           )}
         </div>
 
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={submit} className="space-y-4" noValidate>
           {/* Nombre */}
           <div>
             <label className="block text-sm text-gray-300 mb-1">Nombre completo</label>
@@ -65,8 +152,15 @@ const Register: React.FC = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Tu nombre"
-              className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200"
+              className={`w-full bg-[var(--Blue2)] border rounded-md px-4 py-2 text-gray-200 ${
+                fieldErrors.name ? 'border-red-500' : 'border-gray-700'
+              }`}
+              aria-invalid={!!fieldErrors.name}
+              aria-describedby={fieldErrors.name ? 'err-name' : undefined}
             />
+            {fieldErrors.name && (
+              <p id="err-name" className="text-red-500 text-xs mt-1">{fieldErrors.name}</p>
+            )}
           </div>
 
           {/* Email */}
@@ -78,55 +172,89 @@ const Register: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@email.com"
-              className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 text-gray-200"
+              className={`w-full bg-[var(--Blue2)] border rounded-md px-4 py-2 text-gray-200 ${
+                fieldErrors.email ? 'border-red-500' : 'border-gray-700'
+              }`}
+              aria-invalid={!!fieldErrors.email}
+              aria-describedby={fieldErrors.email ? 'err-email' : undefined}
             />
+            {fieldErrors.email && (
+              <p id="err-email" className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
+            )}
           </div>
 
           {/* Contraseña */}
           <div className="relative">
             <label className="block text-sm text-gray-300 mb-1">Contraseña</label>
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Tu contraseña"
-              className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 pr-10 text-gray-200"
+              className={`w-full bg-[var(--Blue2)] border rounded-md px-4 py-2 pr-10 text-gray-200 ${
+                fieldErrors.password ? 'border-red-500' : 'border-gray-700'
+              }`}
+              aria-invalid={!!fieldErrors.password}
+              aria-describedby={fieldErrors.password ? 'err-pass' : undefined}
             />
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
               className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-200"
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             >
               {showPassword ? <FiEyeOff /> : <FiEye />}
             </button>
+            {fieldErrors.password && (
+              <p id="err-pass" className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>
+            )}
+            {/* pista opcional de seguridad */}
+            {!fieldErrors.password && password.length > 0 && !isStrongPassword(password) && (
+              <p className="text-xs text-gray-400 mt-1">
+                Requiere: 8+ caracteres, mayúscula, minúscula y número.
+              </p>
+            )}
           </div>
 
           {/* Confirmación de contraseña */}
           <div className="relative">
             <label className="block text-sm text-gray-300 mb-1">Confirmar contraseña</label>
             <input
-              type="password"
-              name="confirmPassword"
+              type={showConfirm ? 'text' : 'password'}
+              name="password_confirmation"
               value={password_confirmation}
               onChange={(e) => setPasswordConfirmation(e.target.value)}
               placeholder="Repetí tu contraseña"
-              className="w-full bg-[var(--Blue2)] border border-gray-700 rounded-md px-4 py-2 pr-10 text-gray-200"
+              className={`w-full bg-[var(--Blue2)] border rounded-md px-4 py-2 pr-10 text-gray-200 ${
+                fieldErrors.password_confirmation ? 'border-red-500' : 'border-gray-700'
+              }`}
+              aria-invalid={!!fieldErrors.password_confirmation}
+              aria-describedby={fieldErrors.password_confirmation ? 'err-passc' : undefined}
             />
             <button
               type="button"
-              onClick={() => setShowPassword((s) => !s)}
+              onClick={() => setShowConfirm((s) => !s)}
               className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-200"
+              aria-label={showConfirm ? 'Ocultar confirmación' : 'Mostrar confirmación'}
             >
-              {showPassword ? <FiEyeOff /> : <FiEye />}
+              {showConfirm ? <FiEyeOff /> : <FiEye />}
             </button>
+            {fieldErrors.password_confirmation && (
+              <p id="err-passc" className="text-red-500 text-xs mt-1">
+                {fieldErrors.password_confirmation}
+              </p>
+            )}
           </div>
 
           <button
             type="submit"
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 rounded-md transition"
+            disabled={submitting}
+            className={`w-full text-white font-semibold py-3 rounded-md transition ${
+              submitting ? 'bg-cyan-600 opacity-80 cursor-not-allowed' : 'bg-cyan-500 hover:bg-cyan-600'
+            }`}
           >
-            CREAR CUENTA
+            {submitting ? 'Creando...' : 'CREAR CUENTA'}
           </button>
         </form>
 
@@ -137,7 +265,7 @@ const Register: React.FC = () => {
           <div className="flex-grow h-px bg-gray-700" />
         </div>
 
-        {/* Social buttons */}
+        {/* Social buttons (mock) */}
         <div className="flex gap-4">
           <button className="flex-1 flex items-center justify-center bg-white bg-opacity-10 hover:bg-opacity-20 border border-gray-700 rounded-md py-2 space-x-2 transition">
             <FaGoogle className="text-red-400" />

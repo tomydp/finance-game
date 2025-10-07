@@ -6,3 +6,6 @@ export const login    = (data: any) => API.post('/login', data);
 export const getProfile  = () => API.get('/profile'); // si cambias a GET
 export const updateProfile = (data: any) => API.put('/profile', data);
 export const logout       = () => API.post('/logout');
+
+export const resendVerification = () => API.post('/email/verification-notification');
+

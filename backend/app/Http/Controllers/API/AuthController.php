@@ -29,12 +29,10 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        $token = $user->createToken('App')->plainTextToken;
+        $user->sendEmailVerificationNotification();
 
         return response()->json([
-            'name'  => $user->name,
-            'email' => $user->email,
-            'token' => $token,
+            'message' => 'Registro ok. Verificá tu email.'
         ], 201);
     }
 
@@ -53,6 +51,7 @@ class AuthController extends Controller
         return response()->json([
             'name'  => $user->name,
             'email' => $user->email,
+            'verified' => $user->hasVerifiedEmail(),
             'token' => $token,
         ]);
     }
