@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+// src/components/app/Perfil/pages/Perfil.tsx
+import React, { useState, useMemo } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { format, subDays } from "date-fns";
 
@@ -6,6 +7,7 @@ import { format, subDays } from "date-fns";
 import { usePerfilState } from "../hooks/usePerfilState";
 import type { Tab, UserSettings } from "../hooks/types";
 import { getProfile } from "../../../../services/authService";
+import { useUserStats } from "../hooks/useUserStats";
 
 // components
 import Avatar from "../components/Avatar";
@@ -14,10 +16,6 @@ import ActivityCalendar from "../components/ActivityCalendar";
 import FriendsList from "../components/FriendsList";
 import ConfiguracionTab from "../components/ConfiguracionTab";
 
-// ==== Datos simulados de usuario ====
-const userData = { xp: 230, xpNext: 500, lessonsCompleted: 12, streak: 5 };
-
-// ==== Avatares disponibles ====
 const avatars = [
   "/avatars/avatar1.png",
   "/avatars/avatar2.png",
@@ -35,11 +33,8 @@ const defaultSettings: UserSettings = {
   showAchievements: true,
 };
 
-// ==== Perfil Principal ====
 const Perfil: React.FC = () => {
   const [tab, setTab] = useState<Tab>("estadisticas");
-
-  // estado persistente del usuario
   const { user, setUser } = usePerfilState(defaultSettings);
 
   useEffect(() => {
@@ -59,6 +54,24 @@ const Perfil: React.FC = () => {
   const activityDates = Array.from({ length: userData.streak }, (_, i) =>
     format(subDays(today, i), "yyyy-MM-dd")
   );
+  // Demo activado: si no hay auth, muestra demo (incluye active_days de ejemplo)
+  const { loading, error, data, needsAuth, isDemo, refetch } = useUserStats(undefined, { demo: true });
+
+  const lessonsCompleted = data?.lessons_completed ?? 0;
+  const streakDays = data?.streak_days ?? 0;
+  const longestStreak = data?.longest_streak ?? 0;
+  const lastActiveAt = data?.last_active_at ?? null;
+
+  // Histórico: si vienen active_days los usamos; si no, hacemos fallback a la racha actual
+  const activityDates = useMemo(() => {
+    if (data?.active_days?.length) {
+      return [...data.active_days].sort(); // YYYY-MM-DD
+    }
+    const today = new Date();
+    return Array.from({ length: streakDays }, (_, i) =>
+      format(subDays(today, i), "yyyy-MM-dd")
+    );
+  }, [data?.active_days, streakDays]);
 
   const formatLabel = (word: string) =>
     word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
@@ -72,16 +85,17 @@ const Perfil: React.FC = () => {
         {/* Header */}
         <div className="bg-[var(--Blue2)] rounded-xl p-6 shadow-md flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">{user.name}</h2>
+            <h2 className="text-2xl font-bold">
+              {user.name} {isDemo && <span className="text-xs opacity-70">(demo)</span>}
+            </h2>
             <p className="text-gray-400 text-sm">Miembro desde {user.memberSince}</p>
             <div className="flex items-center gap-2 mt-2">
               <span className="bg-cyan-500 px-3 py-1 rounded-full text-sm">Nivel {user.level}</span>
               {user.showStreak && (
                 <span className="bg-purple-500 px-3 py-1 rounded-full text-sm">
-                  Racha: {userData.streak} días
+                  Racha: {loading ? "…" : `${streakDays} días`}
                 </span>
               )}
-              <span className="bg-gray-700 px-3 py-1 rounded-full text-sm">{userData.xp} XP</span>
             </div>
           </div>
           <div className="flex flex-col items-center gap-2">
@@ -94,11 +108,7 @@ const Perfil: React.FC = () => {
           {(["estadisticas", "amigos", "configuracion"] as Tab[]).map((t) => (
             <button
               key={t}
-              className={`pb-2 px-1 ${
-                tab === t
-                  ? "border-b-2 border-cyan-400 text-cyan-400"
-                  : "text-gray-400"
-              }`}
+              className={`pb-2 px-1 ${tab === t ? "border-b-2 border-cyan-400 text-cyan-400" : "text-gray-400"}`}
               onClick={() => setTab(t)}
             >
               {formatLabel(t)}
@@ -110,12 +120,38 @@ const Perfil: React.FC = () => {
         <div className="mt-6 space-y-8">
           {tab === "estadisticas" && (
             <>
-              <QuickStats
-                xp={userData.xp}
-                lessonsCompleted={userData.lessonsCompleted}
-                streak={userData.streak}
-              />
-              <ActivityCalendar activityDates={activityDates} />
+              {needsAuth && isDemo && (
+                <div>
+                  <p>Mostrando estadísticas de demo (iniciá sesión para ver tus datos reales).</p>
+                </div>
+              )}
+
+              {loading && (
+                <div>
+                  <p>Cargando estadísticas…</p>
+                  <QuickStats lessonsCompleted={0} streak={0} />
+                </div>
+              )}
+
+              {error && !isDemo && (
+                <div>
+                  <p>Ocurrió un error al cargar tus estadísticas.</p>
+                  <button onClick={refetch}>Reintentar</button>
+                </div>
+              )}
+
+              {!loading && (data || isDemo) && (
+                <>
+                  <QuickStats lessonsCompleted={lessonsCompleted} streak={streakDays} />
+
+                  {/* 👇 Ahora el calendario puede mostrar meses pasados */}
+                  <ActivityCalendar
+                    activityDates={activityDates}  // tu array YYYY-MM-DD (histórico)
+                    anchor="lastActive"            // arranca en el último mes con actividad
+                    clampToActivityRange={false}   // poné true si querés limitar a meses con actividad
+                  />
+                </>
+              )}
             </>
           )}
 
@@ -163,11 +199,7 @@ const Perfil: React.FC = () => {
                             : "border-transparent hover:border-gray-500"
                         }`}
                       >
-                        <img
-                          src={src}
-                          alt={`avatar-${i}`}
-                          className="w-16 h-16 rounded-full object-cover"
-                        />
+                        <img src={src} alt={`avatar-${i}`} className="w-16 h-16 rounded-full object-cover" />
                       </button>
                     ))}
                   </div>
@@ -183,9 +215,7 @@ const Perfil: React.FC = () => {
                     <div className="flex items-center justify-between bg-[var(--Blue2)] px-4 py-3 rounded-lg">
                       <span className="text-sm">Mostrar racha a amigos</span>
                       <button
-                        onClick={() =>
-                          setUser({ ...user, showStreak: !user.showStreak })
-                        }
+                        onClick={() => setUser({ ...user, showStreak: !user.showStreak })}
                         className={`w-12 h-6 flex items-center rounded-full p-1 transition ${
                           user.showStreak ? "bg-cyan-500" : "bg-gray-600"
                         }`}
@@ -203,10 +233,7 @@ const Perfil: React.FC = () => {
                       <span className="text-sm">Mostrar logros a amigos</span>
                       <button
                         onClick={() =>
-                          setUser({
-                            ...user,
-                            showAchievements: !user.showAchievements,
-                          })
+                          setUser({ ...user, showAchievements: !user.showAchievements })
                         }
                         className={`w-12 h-6 flex items-center rounded-full p-1 transition ${
                           user.showAchievements ? "bg-cyan-500" : "bg-gray-600"
@@ -225,14 +252,7 @@ const Perfil: React.FC = () => {
                 {/* Resetear ajustes */}
                 <button
                   onClick={() => {
-                    setUser({
-                      name: "Usuario Demo",
-                      level: 5,
-                      avatar: avatars[0],
-                      memberSince: "mayo 2023",
-                      showStreak: true,
-                      showAchievements: true,
-                    });
+                    setUser(defaultSettings);
                     localStorage.removeItem("settings");
                     toast("Configuración reseteada ✨");
                   }}
@@ -242,36 +262,14 @@ const Perfil: React.FC = () => {
                 </button>
               </div>
 
-              {/* Configuración avanzada */}
               <ConfiguracionTab />
             </>
           )}
         </div>
       </div>
 
-      {/* Sidebar gamer */}
+      {/* Sidebar gamer — SIN tarjeta de experiencia */}
       <aside className="w-80 bg-[var(--Blue2)] p-6 hidden lg:block space-y-6">
-        <div className="bg-[var(--Blue1)] p-4 rounded-lg shadow flex items-center gap-3">
-          <span className="text-cyan-400 text-xl">⭐</span>
-          <div>
-            <p className="text-gray-400 text-xs">Nivel</p>
-            <p className="font-bold">{user.level}</p>
-          </div>
-        </div>
-
-        <div className="bg-[var(--Blue1)] p-4 rounded-lg shadow">
-          <p className="text-gray-400 text-xs">Experiencia</p>
-          <p className="font-bold mb-2">
-            {userData.xp}/{userData.xpNext} XP
-          </p>
-          <div className="w-full bg-gray-700 h-3 rounded overflow-hidden">
-            <div
-              className="h-3 bg-gradient-to-r from-cyan-400 to-blue-500 rounded transition-all duration-700"
-              style={{ width: `${(userData.xp / userData.xpNext) * 100}%` }}
-            />
-          </div>
-        </div>
-
         <div className="mt-6">
           <button
             onClick={() => (window.location.href = "/login")}

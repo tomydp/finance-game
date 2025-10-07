@@ -59,4 +59,5 @@ export async function getExercises(lessonId: number) {
   }
 }
 
+/* ==== Exportación por defecto del cliente axios ==== */
 export default api;
