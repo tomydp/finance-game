@@ -6,7 +6,6 @@ use App\Http\Controllers\API\CourseApiController;
 use App\Http\Controllers\API\ExerciseApiController;
 use App\Http\Controllers\API\LessonApiController;
 use App\Http\Controllers\API\VerifyEmailController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\UserStatsController;
 
@@ -17,13 +16,9 @@ Route::get('email/verify/{id}/{hash}', [VerifyEmailController::class, 'verify'])
     ->middleware(['signed', 'throttle:6,1'])
     ->name('verification.verify.api');
 
-Route::post('email/verification-notification', function (Request $request) {
-    if ($request->user()->hasVerifiedEmail()) {
-        return response()->json(['message' => 'Tu email ya está verificado.'], 200);
-    }
-    $request->user()->sendEmailVerificationNotification();
-    return response()->json(['message' => 'Te reenviamos el correo de verificación.'], 200);
-})->middleware(['auth:sanctum', 'throttle:6,1'])->name('verification.send');
+Route::post('email/verification-notification', [VerifyEmailController::class, 'resend'])
+    ->middleware('throttle:6,1')
+    ->name('verification.send');
 
 Route::middleware(['auth:sanctum', 'email_verified_json'])->group(function () {
     Route::put('profile',  [AuthController::class, 'profile'])->name('api.profile');

@@ -1,5 +1,5 @@
 // src/components/auth/Login.tsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { FaGoogle, FaFacebook } from 'react-icons/fa';
 import { FiEye, FiEyeOff, FiArrowLeft } from 'react-icons/fi';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -9,6 +9,16 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const navState = location.state as any;
+
+  const getStoredUser = () => {
+    const raw = localStorage.getItem('user');
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  };
 
   // ?verified=1 | 0 en la URL (cuando el usuario hizo clic en el mail)
   const verifiedParam = useMemo<'ok' | 'fail' | null>(() => {
@@ -23,21 +33,60 @@ const Login: React.FC = () => {
   const fromRegister = Boolean(navState?.registered);
   const registeredEmail = navState?.email as string | undefined;
   const needVerify = Boolean(navState?.needVerify);
-  const showResendBlock = fromRegister || verifiedParam === 'fail' || needVerify;
+  const [forceNeedVerify, setForceNeedVerify] = useState(false);
+  const [overrideEmail, setOverrideEmail] = useState<string | undefined>(undefined);
+  const effectiveNeedVerify = needVerify || forceNeedVerify;
+  const emailForBanner = overrideEmail ?? registeredEmail;
+  const showResendBlock = fromRegister || verifiedParam === 'fail' || effectiveNeedVerify;
 
   // estado para reenvío de verificación
   const [resendMsg, setResendMsg] = useState<string | null>(null);
   const [resendOk, setResendOk] = useState<boolean | null>(null);
   const [resending, setResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   const handleResend = async () => {
+    if (cooldown > 0) {
+      return;
+    }
+
+    const targetEmail = token
+      ? undefined
+      : (emailForBanner ?? (email.trim() || undefined));
+
+    if (!token && !targetEmail) {
+      setResendOk(false);
+      setResendMsg('Ingresá tu email para reenviar el correo.');
+      return;
+    }
+
     try {
       setResending(true);
       setResendMsg(null);
-      const { data } = await resendVerification();
+      setResendOk(null);
+      const { data } = await resendVerification(targetEmail);
       setResendOk(true);
       setResendMsg(data?.message || 'Te reenviamos el correo de verificación.');
+      setCooldown(30);
     } catch (e: any) {
+      const status = e?.response?.status;
+      if (status === 429) {
+        setCooldown(30);
+      }
       setResendOk(false);
       setResendMsg(e?.response?.data?.message || 'Error al reenviar verificación');
     } finally {
@@ -103,16 +152,8 @@ const Login: React.FC = () => {
         setServerErrors([
           'Tu email no está verificado. Revisá tu casilla o reenviá el correo.'
         ]);
-        // aseguro que se muestre el bloque de reenvío
-        navigate('/login', {
-          replace: true,
-          state: {
-            registered: fromRegister,
-            email: trimmedEmail || registeredEmail,
-            needVerify: true,
-            from: navState?.from,
-          },
-        });
+        setForceNeedVerify(true);
+        setOverrideEmail(trimmedEmail || registeredEmail);
         // opcional: mostrar el bloque de “Reenviar verificación”
         // podés forzar la UI como si vinieras del registro:
         // navigate('/login', { replace: true, state: { registered: true, email } });
@@ -139,9 +180,8 @@ const Login: React.FC = () => {
   };
 
   // chequeo token
-  const userRaw = localStorage.getItem('user');
-  const token = userRaw ? JSON.parse(userRaw)?.token : null;
-  const hasToken = Boolean(token);
+  const storedUser = getStoredUser();
+  const token = storedUser?.token ?? null;
 
   return (
     <div className="relative min-h-screen bg-[var(--Blue1)] flex items-center justify-center px-4">
@@ -170,13 +210,13 @@ const Login: React.FC = () => {
           {/* Banner si venís del registro */}
           {fromRegister && (
             <div className="mb-2 rounded bg-cyan-900/40 border border-cyan-700 text-cyan-200 p-3 text-sm">
-              Te enviamos un correo de verificación{registeredEmail ? ` a ${registeredEmail}` : ''}. 
+              Te enviamos un correo de verificación{emailForBanner ? ` a ${emailForBanner}` : ''}. 
               Abrilo y hacé clic en el enlace para activar tu cuenta.
             </div>
           )}
-          {needVerify && !fromRegister && verifiedParam !== 'ok' && (
+          {effectiveNeedVerify && !fromRegister && verifiedParam !== 'ok' && (
             <div className="mb-2 rounded bg-cyan-900/40 border border-cyan-700 text-cyan-200 p-3 text-sm">
-              Necesitás verificar tu correo antes de continuar.{registeredEmail ? ` Verificá ${registeredEmail}.` : ''}
+              Necesitás verificar tu correo antes de continuar.{emailForBanner ? ` Verificá ${emailForBanner}.` : ''}
             </div>
           )}
 
@@ -208,15 +248,27 @@ const Login: React.FC = () => {
             <button
               type="button"
               onClick={handleResend}
-              disabled={!hasToken || resending}
+              disabled={resending || cooldown > 0 || (!token && !emailForBanner && !email.trim())}
               className={`w-full text-sm rounded-md px-3 py-2 transition ${
-                hasToken
-                  ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                  : 'bg-gray-800 text-gray-400 cursor-not-allowed'
+                resending || cooldown > 0 || (!token && !emailForBanner && !email.trim())
+                  ? 'bg-gray-800 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-700 hover:bg-gray-600 text-white'
               }`}
-              title={hasToken ? '' : 'Iniciá sesión para reenviar el correo'}
+              title={
+                resending
+                  ? 'Estamos reenviando el correo...'
+                  : cooldown > 0
+                    ? `Podés volver a intentarlo en ${cooldown}s`
+                    : !token && !emailForBanner && !email.trim()
+                      ? 'Ingresá tu correo para reenviar el email'
+                      : ''
+              }
             >
-              {resending ? 'Reenviando...' : 'Reenviar verificación'}
+              {resending
+                ? 'Reenviando...'
+                : cooldown > 0
+                  ? `Volver a intentar en ${cooldown}s`
+                  : 'Reenviar verificación'}
             </button>
             {resendMsg && (
               <div
