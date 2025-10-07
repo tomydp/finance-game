@@ -1,17 +1,28 @@
 import axios from 'axios';
 
-/* ==== Configuración base ==== */
 const api = axios.create({
   baseURL: 'http://localhost/api',
-  withCredentials: true,               // listo para Sanctum
 });
 
-/* ==== Tipos (borra si usas JS) ==== */
+// Interceptor → agrega Authorization automáticamente
+api.interceptors.request.use((config) => {
+  const userRaw = localStorage.getItem('user');
+  if (userRaw) {
+    try {
+      const user = JSON.parse(userRaw);
+      if (user?.token) {
+        config.headers = config.headers || {};
+        (config.headers as any).Authorization = `Bearer ${user.token}`;
+      }
+    } catch {}
+  }
+  return config;
+});
+
 export interface Course   { id: number; name: string; description: string; difficulty: string; }
 export interface Lesson   { id: number; title: string; order: number; }
 export interface Exercise { id: number; type: string; question: string; options: string[]; }
 
-/* ==== Funciones de acceso ==== */
 export async function getCourses() {
   try {
     const { data } = await api.get<Course[]>('/courses');
