@@ -1,4 +1,3 @@
-// src/components/app/Perfil/pages/Perfil.tsx
 import React, { useState, useMemo, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { format, subDays } from "date-fns";
@@ -6,8 +5,8 @@ import { format, subDays } from "date-fns";
 // hooks & types
 import { usePerfilState } from "../hooks/usePerfilState";
 import type { Tab, UserSettings } from "../hooks/types";
-import { getProfile } from "../../../../services/authService";
 import { useUserStats } from "../hooks/useUserStats";
+import api from "../../../../services/api";
 
 // components
 import Avatar from "../components/Avatar";
@@ -33,36 +32,85 @@ const defaultSettings: UserSettings = {
   showAchievements: true,
 };
 
+// Helper local para leer el usuario del storage sin services
+const readStoredUser = () => {
+  try {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 const Perfil: React.FC = () => {
   const [tab, setTab] = useState<Tab>("estadisticas");
   const { user, setUser } = usePerfilState(defaultSettings);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
+  // ---- Helper: trae el perfil probando varias rutas y sincroniza storage/UI ----
+  const fetchProfileFallback = async () => {
+    const current = readStoredUser();
+    const token = current?.token;
+    const candidates = ["/auth/show", "/profile", "/me", "/user", "/auth/me"];
+
+    let data: any = null;
+    for (const path of candidates) {
       try {
-        const { data } = await getProfile();
-        console.log("[Perfil] Datos del backend:", data);
+        const res = await api.get(path);
+        data = res.data;
+        break;
+      } catch (e: any) {
+        if (e?.response?.status === 404) continue;
+        throw e; // 401/500 etc.
+      }
+    }
+    if (!data) throw new Error("ME_ENDPOINT_NOT_FOUND");
+
+    // Merge al localStorage conservando token
+    const merged = { ...(current ?? {}), ...data, token };
+    localStorage.setItem("user", JSON.stringify(merged));
+
+    // Actualiza UI (nombre y "Miembro desde")
+    const memberSince = merged.created_at
+      ? new Date(merged.created_at).toLocaleDateString(undefined, {
+          month: "long",
+          year: "numeric",
+        })
+      : user.memberSince;
+
+    setUser((prev) => ({
+      ...prev,
+      name: merged.name || prev.name,
+      memberSince,
+    }));
+
+    return merged;
+  };
+
+  // ---- Cargar perfil real y sincronizar storage/UI ----
+  useEffect(() => {
+    (async () => {
+      try {
+        const merged = await fetchProfileFallback();
+        console.log("[Perfil] Perfil real:", merged);
       } catch (error) {
         console.log("[Perfil] Error al obtener perfil:", error);
       }
-    };
-
-    fetchProfile();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Demo activado: si no hay auth, muestra demo (incluye active_days de ejemplo)
-  const { loading, error, data, needsAuth, isDemo, refetch } = useUserStats(undefined, { demo: true });
+  // Stats reales (demo apagado)
+  const { loading, error, data, needsAuth, isDemo, refetch } = useUserStats(
+    undefined,
+    { demo: false }
+  );
 
+  // Fallbacks seguros si no hay datos
   const lessonsCompleted = data?.lessons_completed ?? 0;
   const streakDays = data?.streak_days ?? 0;
-  const longestStreak = data?.longest_streak ?? 0;
-  const lastActiveAt = data?.last_active_at ?? null;
 
-  // Histórico: si vienen active_days los usamos; si no, hacemos fallback a la racha actual
   const activityDates = useMemo(() => {
-    if (data?.active_days?.length) {
-      return [...data.active_days].sort(); // YYYY-MM-DD
-    }
+    if (data?.active_days?.length) return [...data.active_days].sort();
     const today = new Date();
     return Array.from({ length: streakDays }, (_, i) =>
       format(subDays(today, i), "yyyy-MM-dd")
@@ -71,6 +119,36 @@ const Perfil: React.FC = () => {
 
   const formatLabel = (word: string) =>
     word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+
+  const handleSaveName = async () => {
+    try {
+      const current = readStoredUser();
+      const email = current?.email ?? "";
+      await api.put("/profile", { name: user.name, email }); // backend requiere email
+      // sincronizo el storage para reflejar en Sidebar
+      if (current) {
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ ...current, name: user.name })
+        );
+      }
+      toast.success(`Nombre cambiado a: ${user.name}`);
+    } catch {
+      toast.error("No se pudo actualizar el nombre");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/logout");
+    } catch {}
+    localStorage.removeItem("user");
+    localStorage.removeItem("isAuthenticated");
+    window.location.href = "/login";
+  };
+
+  // Mostrar "(demo)" solo si no hay auth y el hook está en modo demo
+  const showDemoBadge = needsAuth && isDemo;
 
   return (
     <div className="flex bg-[var(--Blue1)] min-h-screen text-white">
@@ -82,11 +160,12 @@ const Perfil: React.FC = () => {
         <div className="bg-[var(--Blue2)] rounded-xl p-6 shadow-md flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold">
-              {user.name} {isDemo && <span className="text-xs opacity-70">(demo)</span>}
+              {user.name} {showDemoBadge && <span className="text-xs opacity-70">(demo)</span>}
             </h2>
-            <p className="text-gray-400 text-sm">Miembro desde {user.memberSince}</p>
             <div className="flex items-center gap-2 mt-2">
-              <span className="bg-cyan-500 px-3 py-1 rounded-full text-sm">Nivel {user.level}</span>
+              <span className="bg-cyan-500 px-3 py-1 rounded-full text-sm">
+                Nivel {user.level}
+              </span>
               {user.showStreak && (
                 <span className="bg-purple-500 px-3 py-1 rounded-full text-sm">
                   Racha: {loading ? "…" : `${streakDays} días`}
@@ -104,7 +183,9 @@ const Perfil: React.FC = () => {
           {(["estadisticas", "amigos", "configuracion"] as Tab[]).map((t) => (
             <button
               key={t}
-              className={`pb-2 px-1 ${tab === t ? "border-b-2 border-cyan-400 text-cyan-400" : "text-gray-400"}`}
+              className={`pb-2 px-1 ${
+                tab === t ? "border-b-2 border-cyan-400 text-cyan-400" : "text-gray-400"
+              }`}
               onClick={() => setTab(t)}
             >
               {formatLabel(t)}
@@ -116,35 +197,35 @@ const Perfil: React.FC = () => {
         <div className="mt-6 space-y-8">
           {tab === "estadisticas" && (
             <>
-              {needsAuth && isDemo && (
-                <div>
-                  <p>Mostrando estadísticas de demo (iniciá sesión para ver tus datos reales).</p>
+              {/* Nota: si querés un mensaje de error visible, lo mostramos arriba */}
+              {!loading && error && (
+                <div className="text-sm text-red-400">
+                  Ocurrió un error al cargar tus estadísticas.
+                  <button
+                    onClick={refetch}
+                    className="ml-2 underline text-red-300"
+                  >
+                    Reintentar
+                  </button>
                 </div>
               )}
 
-              {loading && (
+              {loading ? (
                 <div>
                   <p>Cargando estadísticas…</p>
                   <QuickStats lessonsCompleted={0} streak={0} />
                 </div>
-              )}
-
-              {error && !isDemo && (
-                <div>
-                  <p>Ocurrió un error al cargar tus estadísticas.</p>
-                  <button onClick={refetch}>Reintentar</button>
-                </div>
-              )}
-
-              {!loading && (data || isDemo) && (
+              ) : (
                 <>
-                  <QuickStats lessonsCompleted={lessonsCompleted} streak={streakDays} />
-
-                  {/* 👇 Ahora el calendario puede mostrar meses pasados */}
+                  {/* Siempre mostramos los widgets, con fallbacks a 0/[] si no hay datos */}
+                  <QuickStats
+                    lessonsCompleted={lessonsCompleted}
+                    streak={streakDays}
+                  />
                   <ActivityCalendar
-                    activityDates={activityDates}  // tu array YYYY-MM-DD (histórico)
-                    anchor="lastActive"            // arranca en el último mes con actividad
-                    clampToActivityRange={false}   // poné true si querés limitar a meses con actividad
+                    activityDates={activityDates}
+                    anchor="lastActive"
+                    clampToActivityRange={false}
                   />
                 </>
               )}
@@ -155,7 +236,6 @@ const Perfil: React.FC = () => {
 
           {tab === "configuracion" && (
             <>
-              {/* Configuración básica */}
               <div className="space-y-8">
                 {/* Nombre */}
                 <div>
@@ -171,7 +251,7 @@ const Perfil: React.FC = () => {
                       placeholder="Escribe tu nombre"
                     />
                     <button
-                      onClick={() => toast.success(`Nombre cambiado a: ${user.name}`)}
+                      onClick={handleSaveName}
                       className="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-600 font-semibold transition"
                     >
                       Guardar
@@ -195,7 +275,11 @@ const Perfil: React.FC = () => {
                             : "border-transparent hover:border-gray-500"
                         }`}
                       >
-                        <img src={src} alt={`avatar-${i}`} className="w-16 h-16 rounded-full object-cover" />
+                        <img
+                          src={src}
+                          alt={`avatar-${i}`}
+                          className="w-16 h-16 rounded-full object-cover"
+                        />
                       </button>
                     ))}
                   </div>
@@ -207,11 +291,12 @@ const Perfil: React.FC = () => {
                     Privacidad
                   </label>
                   <div className="flex flex-col gap-4">
-                    {/* Toggle Racha */}
                     <div className="flex items-center justify-between bg-[var(--Blue2)] px-4 py-3 rounded-lg">
                       <span className="text-sm">Mostrar racha a amigos</span>
                       <button
-                        onClick={() => setUser({ ...user, showStreak: !user.showStreak })}
+                        onClick={() =>
+                          setUser({ ...user, showStreak: !user.showStreak })
+                        }
                         className={`w-12 h-6 flex items-center rounded-full p-1 transition ${
                           user.showStreak ? "bg-cyan-500" : "bg-gray-600"
                         }`}
@@ -224,12 +309,14 @@ const Perfil: React.FC = () => {
                       </button>
                     </div>
 
-                    {/* Toggle Logros */}
                     <div className="flex items-center justify-between bg-[var(--Blue2)] px-4 py-3 rounded-lg">
                       <span className="text-sm">Mostrar logros a amigos</span>
                       <button
                         onClick={() =>
-                          setUser({ ...user, showAchievements: !user.showAchievements })
+                          setUser({
+                            ...user,
+                            showAchievements: !user.showAchievements,
+                          })
                         }
                         className={`w-12 h-6 flex items-center rounded-full p-1 transition ${
                           user.showAchievements ? "bg-cyan-500" : "bg-gray-600"
@@ -237,7 +324,9 @@ const Perfil: React.FC = () => {
                       >
                         <div
                           className={`bg-white w-4 h-4 rounded-full shadow-md transform transition ${
-                            user.showAchievements ? "translate-x-6" : "translate-x-0"
+                            user.showAchievements
+                              ? "translate-x-6"
+                              : "translate-x-0"
                           }`}
                         />
                       </button>
@@ -245,11 +334,12 @@ const Perfil: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Resetear ajustes */}
                 <button
                   onClick={() => {
+                    // Reseteo local (no toca BD)
                     setUser(defaultSettings);
-                    localStorage.removeItem("settings");
+                    const auth = readStoredUser();
+                    if (auth?.id) localStorage.removeItem(`profile:${auth.id}`);
                     toast("Configuración reseteada ✨");
                   }}
                   className="mt-6 px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-sm"
@@ -268,7 +358,7 @@ const Perfil: React.FC = () => {
       <aside className="w-80 bg-[var(--Blue2)] p-6 hidden lg:block space-y-6">
         <div className="mt-6">
           <button
-            onClick={() => (window.location.href = "/login")}
+            onClick={handleLogout}
             className="w-full bg-red-500 py-3 rounded-lg font-semibold hover:bg-red-600 transition"
           >
             Cerrar sesión
