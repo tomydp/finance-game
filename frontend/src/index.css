@@ -111,6 +111,20 @@
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.551 0.027 264.364);}
 
+    /* 🔒 Oculta el icono nativo de "mostrar contraseña" en inputs password */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-password-toggle-button,
+input[type="password"]::-webkit-clear-button,
+input[type="password"]::-webkit-reveal-button {
+  display: none !important;
+}
+
+
 @layer base {
   * {
     @apply border-border outline-ring/50;}

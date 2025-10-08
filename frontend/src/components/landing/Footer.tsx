@@ -11,7 +11,7 @@ const Footer: React.FC = () => (
           <img
             src="/Logo.png"
             alt="FinanceGame"
-            className="w-8 h-8 mr-2"
+            className="w-25 h-25 mr-2"
           />
           <span className="text-xl font-semibold text-cyan-400">
             Finance Game

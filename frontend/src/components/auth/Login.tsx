@@ -199,7 +199,7 @@ const Login: React.FC = () => {
           <img
             src="/Logo.png"
             alt="FinanceGame"
-            className="h-12 w-12"
+            className="h-50 w-50"
           />
         </div>
 
@@ -321,13 +321,14 @@ const Login: React.FC = () => {
               aria-describedby={fieldErrorPassword ? 'err-pass' : undefined}
             />
             <button
-              type="button"
-              onClick={() => setShowPassword((s) => !s)}
-              className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-200"
-              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-            >
-              {showPassword ? <FiEyeOff /> : <FiEye />}
-            </button>
+  type="button"
+  onClick={() => setShowPassword(!showPassword)}
+  className="absolute right-3 top-[68%] -translate-y-1/2 flex h-5 w-5 items-center justify-center leading-none text-gray-500 hover:text-gray-300 transition"
+  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+>
+  {showPassword ? <FiEyeOff size={50} /> : <FiEye size={50} />}
+</button>
+
             {fieldErrorPassword && (
               <p id="err-pass" className="text-red-500 text-xs mt-1">{fieldErrorPassword}</p>
             )}
