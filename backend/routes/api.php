@@ -37,6 +37,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::get('courses/{course}/progress', [CourseApiController::class, 'progress'])
                 ->whereNumber('course')->name('api.courses.progress');
+
+            Route::post('courses/{course}/complete', [CourseApiController::class, 'complete'])
+                ->whereNumber('course')->name('api.courses.complete');
         });
     });
 });

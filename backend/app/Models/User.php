@@ -24,6 +24,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
+        'has_membership',
     ];
 
     /**
@@ -46,6 +47,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'has_membership' => 'bool',
         ];
     }
 
@@ -57,6 +59,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function lessons()
     {
         return $this->belongsToMany(\App\Models\Lesson::class, 'lesson_user')
+            ->withPivot(['completed_at'])
+            ->withTimestamps();
+    }
+
+    public function courses()
+    {
+        return $this->belongsToMany(\App\Models\Course::class, 'course_user')
             ->withPivot(['completed_at'])
             ->withTimestamps();
     }

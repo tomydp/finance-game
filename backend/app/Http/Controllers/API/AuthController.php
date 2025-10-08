@@ -49,10 +49,13 @@ class AuthController extends Controller
         $token = $user->createToken('App')->plainTextToken;
 
         return response()->json([
-            'name'  => $user->name,
-            'email' => $user->email,
-            'verified' => $user->hasVerifiedEmail(),
-            'token' => $token,
+            'id'             => $user->id,
+            'name'           => $user->name,
+            'email'          => $user->email,
+            'verified'       => $user->hasVerifiedEmail(),
+            'email_verified' => $user->hasVerifiedEmail(),
+            'has_membership' => (bool) $user->has_membership,
+            'token'          => $token,
         ]);
     }
 
@@ -94,9 +97,12 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'name'     => $user->name,
-            'email'    => $user->email,
-            'verified' => $user->hasVerifiedEmail(),
+            'id'             => $user->id,
+            'name'           => $user->name,
+            'email'          => $user->email,
+            'verified'       => $user->hasVerifiedEmail(),
+            'email_verified' => $user->hasVerifiedEmail(),
+            'has_membership' => (bool) $user->has_membership,
         ]);
     }
 
