@@ -54,6 +54,7 @@ class AuthController extends Controller
             'email'          => $user->email,
             'verified'       => $user->hasVerifiedEmail(),
             'email_verified' => $user->hasVerifiedEmail(),
+            'has_membership' => (bool) $user->has_membership,
             'token'          => $token,
         ]);
     }
@@ -101,6 +102,7 @@ class AuthController extends Controller
             'email'          => $user->email,
             'verified'       => $user->hasVerifiedEmail(),
             'email_verified' => $user->hasVerifiedEmail(),
+            'has_membership' => (bool) $user->has_membership,
         ]);
     }
 

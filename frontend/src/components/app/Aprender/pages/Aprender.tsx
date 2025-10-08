@@ -15,6 +15,14 @@ const AprenderPage: React.FC = () => {
     cargarLecciones, handleRespuesta, handleNextAfterCompletion, getTipo,
   } = useAprenderState();
 
+  let sessionUser: any = null;
+  try {
+    sessionUser = JSON.parse(localStorage.getItem("user") || "null");
+  } catch {
+    sessionUser = null;
+  }
+  console.log("[Aprender] sesión de usuario", sessionUser);
+
   // ---- RENDER: Pantalla "Lección Completada" ----
   if (finLeccion && cursoActual) {
     const esUltima = finLeccion.lastLessonIndex + 1 >= lecciones.length;
