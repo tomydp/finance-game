@@ -10,10 +10,17 @@ use Illuminate\Http\Request;
 
 class LessonApiController extends Controller
 {
-    public function index(Course $course)
+    public function index(Request $request, Course $course)
     {
+        $user = $request->user('sanctum') ?? $request->user();
+    
         $lessons = $course->lessons()
             ->withCount('exercises')
+            ->when($user, function ($query) use ($user) {
+                $query->with(['users' => function ($relation) use ($user) {
+                    $relation->where('users.id', $user->id);
+                }]);
+            })
             ->orderBy('order')
             ->get();
     

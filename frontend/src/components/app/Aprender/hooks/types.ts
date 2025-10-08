@@ -15,6 +15,7 @@ export interface Module {
   estado: "activo" | "bloqueado" | "completo";
   icono: React.ReactNode;
   dificultad: string;
+  orden: number;
 }
 
 export type TipoEjercicio = "multiple_choice" | "fill_blank";

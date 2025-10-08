@@ -1,5 +1,5 @@
 // src/components/app/aprender/hooks/useAprenderState.ts
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaPiggyBank, FaUniversity, FaStar } from "react-icons/fa";
 import { GoDiamond } from "react-icons/go";
 import type { Leccion, Module, TipoEjercicio, Feedback, FinLeccion } from "./types";
@@ -26,9 +26,31 @@ const getTipo = (ej: any): TipoEjercicio => {
   return ej.options ? "multiple_choice" : "fill_blank";
 };
 
+const calcularEstadosModulos = (lista: Module[]) => {
+  const ordenados = [...lista].sort((a, b) => (a.orden ?? a.id) - (b.orden ?? b.id));
+  let anterioresCompletos = true;
+
+  return ordenados.map((mod) => {
+    const tieneLecciones = mod.totalLecciones > 0;
+    const completado = tieneLecciones ? mod.completadas >= mod.totalLecciones : false;
+
+    let estado: Module["estado"];
+    if (completado) {
+      estado = "completo";
+    } else if (anterioresCompletos) {
+      estado = "activo";
+    } else {
+      estado = "bloqueado";
+    }
+
+    anterioresCompletos = anterioresCompletos && (completado || !tieneLecciones);
+
+    return { ...mod, estado };
+  });
+};
+
 export function useAprenderState() {
-  const [fundamentos, setFundamentos] = useState<Module[]>([]);
-  const [inversiones, setInversiones] = useState<Module[]>([]);
+  const [modulos, setModulos] = useState<Module[]>([]);
   const [cursoActual, setCursoActual] = useState<Module | null>(null);
 
   const [lecciones, setLecciones] = useState<Leccion[]>([]);
@@ -42,6 +64,15 @@ export function useAprenderState() {
 
   const [mostrarModalPremium, setMostrarModalPremium] = useState(false);
   const [finLeccion, setFinLeccion] = useState<FinLeccion | null>(null);
+
+  const fundamentos = useMemo(
+    () => modulos.filter((m) => (m.dificultad || "").toLowerCase() === "facil"),
+    [modulos]
+  );
+  const inversiones = useMemo(
+    () => modulos.filter((m) => (m.dificultad || "").toLowerCase() !== "facil"),
+    [modulos]
+  );
 
   // ---------- Cursos ----------
   useEffect(() => {
@@ -63,7 +94,7 @@ export function useAprenderState() {
       const { data: json } = await api.get(`/courses`);
       const cursos = json.data;
 
-      const modulos: Module[] = await Promise.all(
+      const baseModulos: Module[] = await Promise.all(
         cursos.map(async (curso: any, index: number) => {
           console.log(`[Aprender] ↳ Cargando lecciones y progreso del curso ${curso.name} (#${curso.id})...`);
           const { data: j } = await api.get(`/courses/${curso.id}/lessons`);
@@ -87,16 +118,17 @@ export function useAprenderState() {
             titulo: curso.name,
             totalLecciones,
             completadas,
-            estado: index === 0 ? "activo" : "bloqueado",
+            estado: "bloqueado",
             icono: iconoPorDificultad(curso.difficulty),
             dificultad: curso.difficulty,
+            orden: typeof curso.order === "number" ? curso.order : index,
           } as Module;
         })
       );
 
-      setFundamentos(modulos.filter((m) => m.dificultad.toLowerCase() === "facil"));
-      setInversiones(modulos.filter((m) => m.dificultad.toLowerCase() !== "facil"));
-      console.log("[Aprender] 🧩 Módulos listos:", modulos);
+      const modulosCalculados = calcularEstadosModulos(baseModulos);
+      setModulos(modulosCalculados);
+      console.log("[Aprender] 🧩 Módulos listos:", modulosCalculados);
     };
 
     fetchCursos();
@@ -105,7 +137,10 @@ export function useAprenderState() {
   const cargarLecciones = async (curso: Module) => {
     console.log(`[Aprender] 🧠 Cargando lecciones del curso: ${curso.titulo} (#${curso.id})`);
     const { data: json } = await api.get(`/courses/${curso.id}/lessons`);
-    const lessons: Leccion[] = json.data;
+    const lessons: Leccion[] = (json.data || []).map((lesson: any) => ({
+      ...lesson,
+      completed: Boolean(lesson.completed),
+    }));
     console.log("[Aprender] ✅ Lecciones recibidas:", lessons);
 
     setCursoActual(curso);
@@ -144,17 +179,36 @@ export function useAprenderState() {
         const { data: prog } = await api.get(`/courses/${cursoActual.id}/progress`);
         const completadas = prog.lessons?.completed ?? 0;
         const totalLecciones = prog.lessons?.total ?? lecciones.length;
-  
-        console.log(`[Aprender] 🔁 Actualizando progreso del curso ${cursoActual.titulo}: ${completadas}/${totalLecciones}`);
-  
-        // actualizar el estado del curso en fundamentos/inversiones
-        const updateProgress = (modulos: Module[]) =>
-          modulos.map((m) =>
+
+        console.log(
+          `[Aprender] 🔁 Actualizando progreso del curso ${cursoActual.titulo}: ${completadas}/${totalLecciones}`
+        );
+
+        if (totalLecciones > 0 && completadas >= totalLecciones) {
+          try {
+            await api.post(`/courses/${cursoActual.id}/complete`, { force: true });
+            console.log(`[Aprender] 🏆 Curso ${cursoActual.titulo} marcado como completado.`);
+          } catch (err) {
+            console.warn(
+              `[Aprender] ⚠️ No se pudo marcar curso ${cursoActual.id} como completo`,
+              err
+            );
+          }
+        }
+
+        let refrescado: Module | null = null;
+        setModulos((prev) => {
+          const actualizados = prev.map((m) =>
             m.id === cursoActual.id ? { ...m, completadas, totalLecciones } : m
           );
-  
-        setFundamentos((prev) => updateProgress(prev));
-        setInversiones((prev) => updateProgress(prev));
+          const recalculados = calcularEstadosModulos(actualizados);
+          refrescado = recalculados.find((m) => m.id === cursoActual.id) ?? null;
+          return recalculados;
+        });
+
+        if (refrescado) {
+          setCursoActual(refrescado);
+        }
       }
   
       // 🔹 marcar la lección localmente
