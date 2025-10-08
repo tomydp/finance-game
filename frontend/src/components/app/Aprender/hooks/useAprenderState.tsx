@@ -62,6 +62,14 @@ export function useAprenderState() {
     const fetchCursos = async () => {
       const res = await fetch(`${API}/courses`);
       const json = await res.json();
+      let currentUser = null;
+      try {
+        currentUser = JSON.parse(localStorage.getItem("user") || "null");
+      } catch {
+        currentUser = null;
+      }
+      console.log("[Aprender] GET /courses →", json?.data);
+      console.log("[Aprender] current user →", currentUser);
       const cursos = json.data;
 
       const modulos: Module[] = await Promise.all(

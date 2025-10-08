@@ -60,4 +60,11 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withPivot(['completed_at'])
             ->withTimestamps();
     }
+
+    public function courses()
+    {
+        return $this->belongsToMany(\App\Models\Course::class, 'course_user')
+            ->withPivot(['completed_at'])
+            ->withTimestamps();
+    }
 }
