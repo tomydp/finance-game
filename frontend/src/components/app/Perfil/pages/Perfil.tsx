@@ -1,3 +1,4 @@
+// src/components/app/Perfil/pages/Perfil.tsx
 import React, { useState, useMemo, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { format, subDays } from "date-fns";
@@ -46,11 +47,18 @@ const Perfil: React.FC = () => {
   const [tab, setTab] = useState<Tab>("estadisticas");
   const { user, setUser } = usePerfilState(defaultSettings);
 
-  // ---- Helper: trae el perfil probando varias rutas y sincroniza storage/UI ----
+  // Estado local para el plan (Premium / Gratis)
+  const [isPremium, setIsPremium] = useState<boolean>(
+    () => Boolean(readStoredUser()?.has_membership)
+  );
+
+  // ---- Helper: trae el perfil probando rutas reales y sincroniza storage/UI ----
   const fetchProfileFallback = async () => {
     const current = readStoredUser();
     const token = current?.token;
-    const candidates = ["/auth/show", "/profile", "/me", "/user", "/auth/me"];
+
+    // Quitamos /auth/show para evitar el 404
+    const candidates = [ "/profile"];
 
     let data: any = null;
     for (const path of candidates) {
@@ -69,19 +77,12 @@ const Perfil: React.FC = () => {
     const merged = { ...(current ?? {}), ...data, token };
     localStorage.setItem("user", JSON.stringify(merged));
 
-    // Actualiza UI (nombre y "Miembro desde")
-    const memberSince = merged.created_at
-      ? new Date(merged.created_at).toLocaleDateString(undefined, {
-          month: "long",
-          year: "numeric",
-        })
-      : user.memberSince;
-
+    // Actualiza UI
     setUser((prev) => ({
       ...prev,
       name: merged.name || prev.name,
-      memberSince,
     }));
+    setIsPremium(Boolean(merged.has_membership));
 
     return merged;
   };
@@ -162,17 +163,19 @@ const Perfil: React.FC = () => {
             <h2 className="text-2xl font-bold">
               {user.name} {showDemoBadge && <span className="text-xs opacity-70">(demo)</span>}
             </h2>
+
+            {/* Línea debajo del nombre: estado de plan */}
             <div className="flex items-center gap-2 mt-2">
-              <span className="bg-cyan-500 px-3 py-1 rounded-full text-sm">
-                Nivel {user.level}
+              <span
+                className={`px-3 py-1 rounded-full text-sm ${
+                  isPremium ? "bg-yellow-400 text-black" : "bg-gray-600 text-white"
+                }`}
+              >
+                {isPremium ? "Premium" : "Usuario base"}
               </span>
-              {user.showStreak && (
-                <span className="bg-purple-500 px-3 py-1 rounded-full text-sm">
-                  Racha: {loading ? "…" : `${streakDays} días`}
-                </span>
-              )}
             </div>
           </div>
+
           <div className="flex flex-col items-center gap-2">
             <Avatar src={user.avatar} level={user.level} />
           </div>
@@ -197,14 +200,10 @@ const Perfil: React.FC = () => {
         <div className="mt-6 space-y-8">
           {tab === "estadisticas" && (
             <>
-              {/* Nota: si querés un mensaje de error visible, lo mostramos arriba */}
               {!loading && error && (
                 <div className="text-sm text-red-400">
                   Ocurrió un error al cargar tus estadísticas.
-                  <button
-                    onClick={refetch}
-                    className="ml-2 underline text-red-300"
-                  >
+                  <button onClick={refetch} className="ml-2 underline text-red-300">
                     Reintentar
                   </button>
                 </div>
@@ -217,11 +216,7 @@ const Perfil: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  {/* Siempre mostramos los widgets, con fallbacks a 0/[] si no hay datos */}
-                  <QuickStats
-                    lessonsCompleted={lessonsCompleted}
-                    streak={streakDays}
-                  />
+                  <QuickStats lessonsCompleted={lessonsCompleted} streak={streakDays} />
                   <ActivityCalendar
                     activityDates={activityDates}
                     anchor="lastActive"
@@ -294,9 +289,7 @@ const Perfil: React.FC = () => {
                     <div className="flex items-center justify-between bg-[var(--Blue2)] px-4 py-3 rounded-lg">
                       <span className="text-sm">Mostrar racha a amigos</span>
                       <button
-                        onClick={() =>
-                          setUser({ ...user, showStreak: !user.showStreak })
-                        }
+                        onClick={() => setUser({ ...user, showStreak: !user.showStreak })}
                         className={`w-12 h-6 flex items-center rounded-full p-1 transition ${
                           user.showStreak ? "bg-cyan-500" : "bg-gray-600"
                         }`}
@@ -313,10 +306,7 @@ const Perfil: React.FC = () => {
                       <span className="text-sm">Mostrar logros a amigos</span>
                       <button
                         onClick={() =>
-                          setUser({
-                            ...user,
-                            showAchievements: !user.showAchievements,
-                          })
+                          setUser({ ...user, showAchievements: !user.showAchievements })
                         }
                         className={`w-12 h-6 flex items-center rounded-full p-1 transition ${
                           user.showAchievements ? "bg-cyan-500" : "bg-gray-600"
@@ -324,9 +314,7 @@ const Perfil: React.FC = () => {
                       >
                         <div
                           className={`bg-white w-4 h-4 rounded-full shadow-md transform transition ${
-                            user.showAchievements
-                              ? "translate-x-6"
-                              : "translate-x-0"
+                            user.showAchievements ? "translate-x-6" : "translate-x-0"
                           }`}
                         />
                       </button>

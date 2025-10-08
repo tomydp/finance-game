@@ -88,17 +88,21 @@ export function useUserStats(
 
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    // TZ del navegador si no viene
-    let tz: string | undefined = customTz;
-    if (!tz) {
-      try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch {}
-    }
-
     const url = new URL(`${API}/user/stats`);
-    if (tz) url.searchParams.set("tz", tz);
 
     try {
-      const token = localStorage.getItem("token") || null;
+      // ✅ Leer token correctamente desde localStorage.user
+      let token: string | null = null;
+      try {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          token = parsed?.token ?? null;
+        }
+      } catch {
+        token = null;
+      }
+
       const headers: Record<string, string> = { Accept: "application/json" };
       if (token) headers.Authorization = `Bearer ${token}`;
 
@@ -113,16 +117,34 @@ export function useUserStats(
 
       if (res.status === 401 || res.status === 419) {
         if (demo) {
-          setState({ loading: false, error: null, data: demoData, needsAuth: true, isDemo: true });
+          setState({
+            loading: false,
+            error: null,
+            data: demoData,
+            needsAuth: true,
+            isDemo: true,
+          });
           return;
         }
-        setState({ loading: false, error: null, data: null, needsAuth: true, isDemo: false });
+        setState({
+          loading: false,
+          error: null,
+          data: null,
+          needsAuth: true,
+          isDemo: false,
+        });
         return;
       }
 
       if (!res.ok) {
         if (demo) {
-          setState({ loading: false, error: null, data: demoData, needsAuth: false, isDemo: true });
+          setState({
+            loading: false,
+            error: null,
+            data: demoData,
+            needsAuth: false,
+            isDemo: true,
+          });
           return;
         }
         const err = new Error(`HTTP ${res.status}`);
@@ -137,16 +159,31 @@ export function useUserStats(
         streak_days: json.streak_days,
       });
 
-      setState({ loading: false, error: null, data: json, needsAuth: false, isDemo: false });
+      setState({
+        loading: false,
+        error: null,
+        data: json,
+        needsAuth: false,
+        isDemo: false,
+      });
     } catch (err: any) {
       if (err?.name === "AbortError") return;
       if (demo) {
-        setState({ loading: false, error: null, data: demoData, needsAuth: false, isDemo: true });
+        setState({
+          loading: false,
+          error: null,
+          data: demoData,
+          needsAuth: false,
+          isDemo: true,
+        });
         return;
       }
       setState({
         loading: false,
-        error: err instanceof Error ? err : new Error("Error al cargar estadísticas"),
+        error:
+          err instanceof Error
+            ? err
+            : new Error("Error al cargar estadísticas"),
         data: null,
         needsAuth: false,
         isDemo: false,
