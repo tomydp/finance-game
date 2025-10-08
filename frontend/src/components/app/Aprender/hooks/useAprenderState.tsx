@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import { FaPiggyBank, FaUniversity, FaStar } from "react-icons/fa";
 import { GoDiamond } from "react-icons/go";
 import type { Leccion, Module, TipoEjercicio, Feedback, FinLeccion } from "./types";
-
-const API = "http://localhost/api";
+import api from "../../../../services/api";
 
 const normalizeBase = (s: string) =>
   String(s)
@@ -60,8 +59,7 @@ export function useAprenderState() {
     };
 
     const fetchCursos = async () => {
-      const res = await fetch(`${API}/courses`);
-      const json = await res.json();
+      const { data: json } = await api.get(`/courses`);
       let currentUser = null;
       try {
         currentUser = JSON.parse(localStorage.getItem("user") || "null");
@@ -74,8 +72,7 @@ export function useAprenderState() {
 
       const modulos: Module[] = await Promise.all(
         cursos.map(async (curso: any, index: number) => {
-          const r = await fetch(`${API}/courses/${curso.id}/lessons`);
-          const j = await r.json();
+          const { data: j } = await api.get(`/courses/${curso.id}/lessons`);
           const lecs: Leccion[] = j.data;
           const completadas = lecs.filter((l) => l.completed).length;
 
@@ -98,9 +95,8 @@ export function useAprenderState() {
     fetchCursos();
   }, []);
 
-  const cargarLecciones = async (curso: Module) => {
-    const res = await fetch(`${API}/courses/${curso.id}/lessons`);
-    const json = await res.json();
+    const cargarLecciones = async (curso: Module) => {
+    const { data: json } = await api.get(`/courses/${curso.id}/lessons`);
     const lessons: Leccion[] = json.data;
 
     setCursoActual(curso);
@@ -110,9 +106,8 @@ export function useAprenderState() {
     if (pendiente) await cargarEjercicios(pendiente);
   };
 
-  const cargarEjercicios = async (leccion: Leccion) => {
-    const res = await fetch(`${API}/lessons/${leccion.id}/exercises`);
-    const json = await res.json();
+    const cargarEjercicios = async (leccion: Leccion) => {
+    const { data: json } = await api.get(`/lessons/${leccion.id}/exercises`);
 
     setLeccionActual(leccion);
     setEjercicios(json.data || []);
@@ -124,7 +119,7 @@ export function useAprenderState() {
 
   const marcarLeccionComoCompletada = async (leccionId: number) => {
     try {
-      await fetch(`${API}/lessons/${leccionId}/complete`, { method: "POST" });
+      await api.post(`/lessons/${leccionId}/complete`);
     } catch {}
     setLecciones((prev) => prev.map((l) => (l.id === leccionId ? { ...l, completed: true } : l)));
   };

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class CourseApiController extends Controller
 {
@@ -46,7 +47,10 @@ class CourseApiController extends Controller
         $dir        = $validated['dir'] ?? 'asc';
         $status     = $validated['status'] ?? Course::STATUS_ACTIVO;
 
-        $user       = $request->user();
+        $user       = $this->resolveUser($request);
+        if ($user) {
+            $request->setUserResolver(fn () => $user);
+        }
         $userId     = $user?->id;
 
         $q = Course::query()
@@ -266,4 +270,27 @@ class CourseApiController extends Controller
     {
         //
     }
+
+    private function resolveUser(Request $request): ?\App\Models\User
+    {
+        $user = $request->user();
+        if ($user) {
+            return $user;
+        }
+
+        $token = $request->bearerToken();
+        if (!$token) {
+            return null;
+        }
+
+        $accessToken = PersonalAccessToken::findToken($token);
+        if (!$accessToken) {
+            return null;
+        }
+
+        $tokenable = $accessToken->tokenable;
+
+        return $tokenable instanceof \App\Models\User ? $tokenable : null;
+    }
+
 }

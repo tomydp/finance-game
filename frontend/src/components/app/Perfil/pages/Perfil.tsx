@@ -1,5 +1,5 @@
 // src/components/app/Perfil/pages/Perfil.tsx
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { format, subDays } from "date-fns";
 
@@ -50,10 +50,6 @@ const Perfil: React.FC = () => {
     fetchProfile();
   }, []);
 
-  const today = new Date();
-  const activityDates = Array.from({ length: userData.streak }, (_, i) =>
-    format(subDays(today, i), "yyyy-MM-dd")
-  );
   // Demo activado: si no hay auth, muestra demo (incluye active_days de ejemplo)
   const { loading, error, data, needsAuth, isDemo, refetch } = useUserStats(undefined, { demo: true });
 
