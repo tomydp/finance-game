@@ -59,27 +59,33 @@ export function useAprenderState() {
     };
 
     const fetchCursos = async () => {
+      console.log("[Aprender] 🔄 Cargando cursos...");
       const { data: json } = await api.get(`/courses`);
-      let currentUser = null;
-      try {
-        currentUser = JSON.parse(localStorage.getItem("user") || "null");
-      } catch {
-        currentUser = null;
-      }
-      console.log("[Aprender] GET /courses →", json?.data);
-      console.log("[Aprender] current user →", currentUser);
       const cursos = json.data;
 
       const modulos: Module[] = await Promise.all(
         cursos.map(async (curso: any, index: number) => {
+          console.log(`[Aprender] ↳ Cargando lecciones y progreso del curso ${curso.name} (#${curso.id})...`);
           const { data: j } = await api.get(`/courses/${curso.id}/lessons`);
           const lecs: Leccion[] = j.data;
-          const completadas = lecs.filter((l) => l.completed).length;
+
+          // 🔹 Pedimos progreso real desde backend
+          let completadas = 0;
+          let totalLecciones = lecs.length;
+
+          try {
+            const { data: prog } = await api.get(`/courses/${curso.id}/progress`);
+            completadas = prog.lessons?.completed ?? 0;
+            totalLecciones = prog.lessons?.total ?? lecs.length;
+            console.log(`[Aprender] Progreso → ${completadas}/${totalLecciones} lecciones completadas`);
+          } catch (err) {
+            console.warn(`[Aprender] ⚠️ No se pudo obtener progreso del curso ${curso.id}`, err);
+          }
 
           return {
             id: curso.id,
             titulo: curso.name,
-            totalLecciones: lecs.length,
+            totalLecciones,
             completadas,
             estado: index === 0 ? "activo" : "bloqueado",
             icono: iconoPorDificultad(curso.difficulty),
@@ -90,24 +96,32 @@ export function useAprenderState() {
 
       setFundamentos(modulos.filter((m) => m.dificultad.toLowerCase() === "facil"));
       setInversiones(modulos.filter((m) => m.dificultad.toLowerCase() !== "facil"));
+      console.log("[Aprender] 🧩 Módulos listos:", modulos);
     };
 
     fetchCursos();
   }, []);
 
-    const cargarLecciones = async (curso: Module) => {
+  const cargarLecciones = async (curso: Module) => {
+    console.log(`[Aprender] 🧠 Cargando lecciones del curso: ${curso.titulo} (#${curso.id})`);
     const { data: json } = await api.get(`/courses/${curso.id}/lessons`);
     const lessons: Leccion[] = json.data;
+    console.log("[Aprender] ✅ Lecciones recibidas:", lessons);
 
     setCursoActual(curso);
     setLecciones(lessons);
 
     const pendiente = lessons.find((l) => !l.completed) || lessons[0];
-    if (pendiente) await cargarEjercicios(pendiente);
+    if (pendiente) {
+      console.log("[Aprender] Próxima lección a iniciar:", pendiente.title);
+      await cargarEjercicios(pendiente);
+    }
   };
 
-    const cargarEjercicios = async (leccion: Leccion) => {
+  const cargarEjercicios = async (leccion: Leccion) => {
+    console.log(`[Aprender] 🧩 Cargando ejercicios de lección ${leccion.id}: ${leccion.title}`);
     const { data: json } = await api.get(`/lessons/${leccion.id}/exercises`);
+    console.log("[Aprender] ✅ Ejercicios recibidos:", json.data);
 
     setLeccionActual(leccion);
     setEjercicios(json.data || []);
@@ -118,10 +132,38 @@ export function useAprenderState() {
   };
 
   const marcarLeccionComoCompletada = async (leccionId: number) => {
+    console.log("[Aprender] → Marcando lección como completada:", leccionId);
+  
     try {
-      await api.post(`/lessons/${leccionId}/complete`);
-    } catch {}
-    setLecciones((prev) => prev.map((l) => (l.id === leccionId ? { ...l, completed: true } : l)));
+      const res = await api.post(`/lessons/${leccionId}/complete`, { force: true });
+      console.log("[Aprender] ✅ Respuesta de /complete:", res.data);
+  
+      // 🔹 Identificar curso actual
+      if (cursoActual) {
+        // pedir progreso actualizado del curso
+        const { data: prog } = await api.get(`/courses/${cursoActual.id}/progress`);
+        const completadas = prog.lessons?.completed ?? 0;
+        const totalLecciones = prog.lessons?.total ?? lecciones.length;
+  
+        console.log(`[Aprender] 🔁 Actualizando progreso del curso ${cursoActual.titulo}: ${completadas}/${totalLecciones}`);
+  
+        // actualizar el estado del curso en fundamentos/inversiones
+        const updateProgress = (modulos: Module[]) =>
+          modulos.map((m) =>
+            m.id === cursoActual.id ? { ...m, completadas, totalLecciones } : m
+          );
+  
+        setFundamentos((prev) => updateProgress(prev));
+        setInversiones((prev) => updateProgress(prev));
+      }
+  
+      // 🔹 marcar la lección localmente
+      setLecciones((prev) =>
+        prev.map((l) => (l.id === leccionId ? { ...l, completed: true } : l))
+      );
+    } catch (err: any) {
+      console.error("[Aprender] ❌ Error marcando como completada:", err.response?.data || err);
+    }
   };
 
   // ---------- Lógica de respuesta ----------
@@ -129,10 +171,13 @@ export function useAprenderState() {
     const ej = ejercicios[indiceEjercicio];
     if (!ej || !leccionActual || !cursoActual) return;
 
+    console.log("[Aprender] 🧠 Comprobando respuesta...");
     const correct = ej.correct_answer ?? ej.correct ?? "";
     const esCorrecto = toComparable(respuestaSeleccionada || "") === toComparable(String(correct));
 
     if (esCorrecto) {
+      console.log("[Aprender] ✅ Respuesta correcta para ejercicio", ej.id);
+
       setFeedback({
         tipo: "correcto",
         mensaje: "",
@@ -141,9 +186,10 @@ export function useAprenderState() {
           setRespuestaSeleccionada(null);
 
           if (indiceEjercicio + 1 < ejercicios.length) {
+            console.log("[Aprender] → Pasando al siguiente ejercicio");
             setIndiceEjercicio((i) => i + 1);
           } else {
-            // terminó la lección
+            console.log("[Aprender] 🏁 Lección completada:", leccionActual.title);
             marcarLeccionComoCompletada(leccionActual.id);
 
             const counts = ejercicios.reduce(
@@ -160,6 +206,12 @@ export function useAprenderState() {
             const idx = lecciones.findIndex((l) => l.id === leccionActual.id);
             const completedNow = lecciones.filter((l) => l.completed).length + 1;
 
+            console.log("[Aprender] 📊 Fin de lección:", {
+              completedNow,
+              totalLessons: lecciones.length,
+              course: cursoActual.titulo,
+            });
+
             setFinLeccion({
               ...counts,
               completedLessons: completedNow,
@@ -172,6 +224,7 @@ export function useAprenderState() {
         },
       });
     } else {
+      console.warn("[Aprender] ❌ Respuesta incorrecta para ejercicio", ej.id);
       const mensaje =
         ej.explanation_md && ej.explanation_md.trim() !== "" ? ej.explanation_md : "";
 
@@ -179,6 +232,7 @@ export function useAprenderState() {
         tipo: "incorrecto",
         mensaje,
         onContinue: () => {
+          console.log("[Aprender] ↩ Intentando nuevamente el ejercicio...");
           setFeedback(null);
           setRespuestaSeleccionada(null);
         },
@@ -190,11 +244,13 @@ export function useAprenderState() {
     if (!finLeccion || !cursoActual) return;
 
     const esUltima = finLeccion.lastLessonIndex + 1 >= lecciones.length;
+    console.log("[Aprender] ⏭ handleNextAfterCompletion → esÚltima:", esUltima);
 
     const esPrimerCurso = cursoActual.id === 1;
     const esPrimeraLeccion = finLeccion.lastLessonIndex === 0;
 
     if (esPrimerCurso && esPrimeraLeccion) {
+      console.log("[Aprender] ⚠️ Bloqueo premium: primera lección del primer curso.");
       setMostrarModalPremium(true);
       return;
     }
@@ -202,9 +258,10 @@ export function useAprenderState() {
     setFinLeccion(null);
     const next = lecciones[finLeccion.lastLessonIndex + 1];
     if (next && !esUltima) {
+      console.log("[Aprender] → Cargando próxima lección:", next.title);
       cargarEjercicios(next);
     } else {
-      // volver al listado
+      console.log("[Aprender] ✅ Curso finalizado o sin más lecciones.");
       setCursoActual(null);
       setLeccionActual(null);
       setEjercicios([]);
