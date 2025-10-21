@@ -3,6 +3,8 @@
 use App\Http\Controllers\API\VerifyEmailController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Backoffice\PodcastController;
+use App\Http\Controllers\Backoffice\PodcastEpisodeController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\ExerciseController;
@@ -46,6 +48,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     // Analytics (Livewire)
     Route::get('/analytics', fn () => view('analytics.index'))->name('analytics.index');
+
+    Route::prefix('backoffice')
+        ->name('backoffice.')
+        ->scopeBindings()
+        ->group(function () {
+            Route::apiResource('podcasts', PodcastController::class);
+            Route::apiResource('podcasts.episodes', PodcastEpisodeController::class);
+        });
 });
 
 require __DIR__ . '/auth.php';
