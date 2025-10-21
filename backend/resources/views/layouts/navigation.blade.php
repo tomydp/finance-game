@@ -49,6 +49,13 @@
             class="block px-4 py-2">
             {{ __('Estadísticas') }}
             </x-nav-link>
+            
+            <x-nav-link 
+            :href="route('podcasts.index')" 
+            :active="request()->routeIs('podcasts.index')" 
+            class="block px-4 py-2">
+            {{ __('Podcasts') }}
+            </x-nav-link>
     </aside>
 
     {{-- Contenido principal --}}

@@ -53,8 +53,16 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         ->name('backoffice.')
         ->scopeBindings()
         ->group(function () {
-            Route::apiResource('podcasts', PodcastController::class);
-            Route::apiResource('podcasts.episodes', PodcastEpisodeController::class);
+            Route::get('/podcasts', fn () => view('podcasts.index'))->name('podcasts.index');
+            Route::get('/podcasts/{podcast}/episodes', fn (\App\Models\Podcast $podcast) => view('podcasts.episodes', ['podcast' => $podcast]))
+                ->name('podcasts.episodes');
+
+            Route::prefix('api')
+                ->name('api.')
+                ->group(function () {
+                    Route::apiResource('podcasts', PodcastController::class);
+                    Route::apiResource('podcasts.episodes', PodcastEpisodeController::class);
+                });
         });
 });
 
