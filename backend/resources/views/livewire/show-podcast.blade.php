@@ -51,7 +51,6 @@
                                 @php
                                     $statusClasses = [
                                         'draft'     => 'bg-gray-100 text-gray-700',
-                                        'scheduled' => 'bg-amber-100 text-amber-700',
                                         'published' => 'bg-emerald-100 text-emerald-700',
                                         'private'   => 'bg-indigo-100 text-indigo-700',
                                     ];

@@ -18,7 +18,6 @@ return new class extends Migration
 
             $table->string('title');
             $table->string('slug');
-            $table->text('summary')->nullable(); // Resumen corto
             $table->longText('description_md')->nullable();
             $table->longText('transcript_md')->nullable(); // Transcripción
 
@@ -26,9 +25,8 @@ return new class extends Migration
             $table->integer('duration_seconds')->unsigned()->nullable();
 
             // Control editorial
-            $table->enum('status', ['draft', 'scheduled', 'published', 'private'])->default('draft');
+            $table->enum('status', ['draft', 'published', 'private'])->default('draft');
             $table->timestamp('published_at')->nullable();
-            $table->timestamp('scheduled_for')->nullable();
 
             // Auditoría
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();

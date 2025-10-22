@@ -45,18 +45,6 @@
                             </div>
 
                             <div class="grid grid-cols-12 gap-3">
-                                <label class="col-span-12 text-sm sm:col-span-3">Resumen</label>
-                                <div class="col-span-12 sm:col-span-9">
-                                    <textarea
-                                        wire:model="summary"
-                                        rows="3"
-                                        class="w-full rounded border p-2 @error('summary') border-red-500 ring-1 ring-red-500 @enderror"
-                                    ></textarea>
-                                    @error('summary') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-12 gap-3">
                                 <label class="col-span-12 text-sm sm:col-span-3">Descripción (Markdown)</label>
                                 <div class="col-span-12 sm:col-span-9">
                                     <textarea
@@ -81,14 +69,25 @@
                             </div>
 
                             <div class="grid grid-cols-12 gap-3">
-                                <label class="col-span-12 text-sm sm:col-span-3">Audio URL</label>
-                                <div class="col-span-12 sm:col-span-9">
+                                <label class="col-span-12 text-sm sm:col-span-3">Audio</label>
+                                <div class="col-span-12 sm:col-span-9 space-y-2">
                                     <input
                                         type="text"
                                         wire:model="audio_url"
                                         class="w-full rounded border p-2 @error('audio_url') border-red-500 ring-1 ring-red-500 @enderror"
                                     />
                                     @error('audio_url') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+
+                                    <div>
+                                        <label class="block text-sm text-gray-600">o sube un archivo nuevo</label>
+                                        <input
+                                            type="file"
+                                            wire:model="audioUpload"
+                                            accept="audio/*"
+                                            class="w-full rounded border p-2 @error('audioUpload') border-red-500 ring-1 ring-red-500 @enderror"
+                                        />
+                                        @error('audioUpload') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                    </div>
                                 </div>
                             </div>
 
@@ -132,17 +131,6 @@
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-12 gap-3">
-                                <label class="col-span-12 text-sm sm:col-span-3">Programar para</label>
-                                <div class="col-span-12 sm:col-span-9">
-                                    <input
-                                        type="datetime-local"
-                                        wire:model="scheduled_for"
-                                        class="w-full rounded border p-2 @error('scheduled_for') border-red-500 ring-1 ring-red-500 @enderror"
-                                    />
-                                    @error('scheduled_for') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                                </div>
-                            </div>
 
                             <div class="grid grid-cols-12 gap-3">
                                 <label class="col-span-12 text-sm sm:col-span-3">Cursos vinculados</label>

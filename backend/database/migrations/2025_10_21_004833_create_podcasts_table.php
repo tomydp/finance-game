@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->longText('description_md')->nullable();
             $table->string('cover_image_url')->nullable(); // Portada del show
-            $table->enum('status', ['draft', 'scheduled', 'published', 'private'])->default('draft');
+            $table->enum('status', ['draft', 'published', 'private'])->default('draft');
 
             // Auditoría (quién lo creó)
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();

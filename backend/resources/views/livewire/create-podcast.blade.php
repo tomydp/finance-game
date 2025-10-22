@@ -61,7 +61,7 @@
 
                             <div class="grid grid-cols-12 items-start gap-3">
                                 <label class="col-span-12 mt-2 text-sm sm:col-span-3">Portada (URL)</label>
-                                <div class="col-span-12 sm:col-span-9">
+                                <div class="col-span-12 sm:col-span-9 space-y-2">
                                     <input
                                         type="text"
                                         wire:model="cover_image_url"
@@ -69,6 +69,17 @@
                                         placeholder="https://..."
                                     />
                                     @error('cover_image_url') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+
+                                    <div>
+                                        <label class="block text-sm text-gray-600">o sube un archivo</label>
+                                        <input
+                                            type="file"
+                                            wire:model="coverImageUpload"
+                                            accept="image/*"
+                                            class="w-full rounded border p-2 @error('coverImageUpload') border-red-500 ring-1 ring-red-500 @enderror"
+                                        />
+                                        @error('coverImageUpload') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                    </div>
                                 </div>
                             </div>
 

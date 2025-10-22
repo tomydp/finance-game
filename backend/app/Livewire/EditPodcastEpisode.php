@@ -6,11 +6,15 @@ use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\PodcastEpisode;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class EditPodcastEpisode extends Component
 {
+    use WithFileUploads;
+
     public int $podcastId;
     public int $episodeId;
 
@@ -18,14 +22,13 @@ class EditPodcastEpisode extends Component
 
     public string $title = '';
     public string $slug = '';
-    public ?string $summary = null;
     public ?string $description_md = null;
     public ?string $transcript_md = null;
-    public string $audio_url = '';
+    public ?string $audio_url = null;
+    public $audioUpload = null;
     public ?int $duration_seconds = null;
     public string $status = PodcastEpisode::STATUS_DRAFT;
     public ?string $published_at = null;
-    public ?string $scheduled_for = null;
 
     public array $selectedCourses = [];
     public array $selectedLessons = [];
@@ -54,14 +57,13 @@ class EditPodcastEpisode extends Component
                     ->ignore($this->episodeId)
                     ->where(fn ($q) => $q->where('podcast_id', $this->podcastId)),
             ],
-            'summary'          => ['nullable', 'string'],
             'description_md'   => ['nullable', 'string'],
             'transcript_md'    => ['nullable', 'string'],
-            'audio_url'        => ['required', 'string', 'max:2048'],
+            'audio_url'        => ['nullable', 'string', 'max:2048'],
+            'audioUpload'      => ['nullable', 'file', 'mimetypes:audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,audio/x-wav,audio/flac', 'max:102400'],
             'duration_seconds' => ['nullable', 'integer', 'min:0'],
             'status'           => ['required', Rule::in(PodcastEpisode::STATUSES)],
             'published_at'     => ['nullable', 'date'],
-            'scheduled_for'    => ['nullable', 'date'],
             'selectedCourses'  => ['array'],
             'selectedCourses.*'=> ['integer', 'exists:courses,id'],
             'selectedLessons'  => ['array'],
@@ -74,6 +76,7 @@ class EditPodcastEpisode extends Component
         $this->loadFromDb();
         $this->resetErrorBag();
         $this->resetValidation();
+        $this->audioUpload = null;
         $this->isOpen = true;
     }
 
@@ -81,6 +84,7 @@ class EditPodcastEpisode extends Component
     {
         $this->resetErrorBag();
         $this->resetValidation();
+        $this->audioUpload = null;
         $this->isOpen = false;
     }
 
@@ -91,21 +95,34 @@ class EditPodcastEpisode extends Component
         $episode = PodcastEpisode::where('podcast_id', $this->podcastId)
             ->findOrFail($this->episodeId);
 
+        $audioUrl = $data['audio_url'] ?? $episode->audio_url;
+
+        if ($this->audioUpload) {
+            $path = $this->audioUpload->store('podcasts/episodes/audio', 'public');
+            $audioUrl = Storage::disk('public')->url($path);
+            $this->audioUpload = null;
+        }
+
+        if (!$audioUrl) {
+            $this->addError('audio_url', 'Debes proporcionar un archivo o una URL de audio.');
+            return;
+        }
+
         $episode->update([
             'title'            => $data['title'],
             'slug'             => $data['slug'],
-            'summary'          => $data['summary'] ?? null,
             'description_md'   => $data['description_md'] ?? null,
             'transcript_md'    => $data['transcript_md'] ?? null,
-            'audio_url'        => $data['audio_url'],
+            'audio_url'        => $audioUrl,
             'duration_seconds' => $data['duration_seconds'] ?? null,
             'status'           => $data['status'],
             'published_at'     => $this->normalizeDate($data['published_at'] ?? null),
-            'scheduled_for'    => $this->normalizeDate($data['scheduled_for'] ?? null),
         ]);
 
         $episode->courses()->sync($this->normalizeIds($data['selectedCourses'] ?? []));
         $episode->lessons()->sync($this->normalizeIds($data['selectedLessons'] ?? []));
+
+        $this->audio_url = $audioUrl;
 
         $this->dispatch('podcastEpisodeUpdated', id: $episode->id);
         $this->closeModal();
@@ -119,7 +136,6 @@ class EditPodcastEpisode extends Component
 
         $this->title = $episode->title;
         $this->slug = $episode->slug;
-        $this->summary = $episode->summary;
         $this->description_md = $episode->description_md;
         $this->transcript_md = $episode->transcript_md;
         $this->audio_url = $episode->audio_url;
@@ -127,9 +143,6 @@ class EditPodcastEpisode extends Component
         $this->status = $episode->status;
         $this->published_at = $episode->published_at
             ? $episode->published_at->format('Y-m-d\TH:i')
-            : null;
-        $this->scheduled_for = $episode->scheduled_for
-            ? $episode->scheduled_for->format('Y-m-d\TH:i')
             : null;
 
         $this->selectedCourses = $episode->courses->pluck('id')->all();

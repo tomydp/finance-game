@@ -13,13 +13,11 @@ class PodcastEpisode extends Model
     use SoftDeletes;
 
     public const STATUS_DRAFT     = 'draft';
-    public const STATUS_SCHEDULED = 'scheduled';
     public const STATUS_PUBLISHED = 'published';
     public const STATUS_PRIVATE   = 'private';
 
     public const STATUSES = [
         self::STATUS_DRAFT,
-        self::STATUS_SCHEDULED,
         self::STATUS_PUBLISHED,
         self::STATUS_PRIVATE,
     ];
@@ -28,14 +26,12 @@ class PodcastEpisode extends Model
         'podcast_id',
         'title',
         'slug',
-        'summary',
         'description_md',
         'transcript_md',
         'audio_url',
         'duration_seconds',
         'status',
         'published_at',
-        'scheduled_for',
         'created_by',
     ];
 
@@ -43,7 +39,6 @@ class PodcastEpisode extends Model
         'duration_seconds' => 'integer',
         'status'           => 'string',
         'published_at'     => 'datetime',
-        'scheduled_for'    => 'datetime',
     ];
 
     public function podcast()
@@ -92,7 +87,7 @@ class PodcastEpisode extends Model
 
         return $query->where(function (Builder $builder) use ($term) {
             $builder->whereRaw('LOWER(title) LIKE ?', ['%'.$term.'%'])
-                ->orWhereRaw('LOWER(summary) LIKE ?', ['%'.$term.'%']);
+                ->orWhereRaw('LOWER(description_md) LIKE ?', ['%'.$term.'%']);
         });
     }
 }

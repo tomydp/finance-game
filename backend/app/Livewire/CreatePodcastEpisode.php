@@ -7,25 +7,28 @@ use App\Models\Lesson;
 use App\Models\Podcast;
 use App\Models\PodcastEpisode;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class CreatePodcastEpisode extends Component
 {
+    use WithFileUploads;
+
     public Podcast $podcast;
 
     public bool $showModal = false;
 
     public string $title = '';
     public string $slug = '';
-    public ?string $summary = null;
     public ?string $description_md = null;
     public ?string $transcript_md = null;
-    public string $audio_url = '';
+    public ?string $audio_url = null;
+    public $audioUpload = null;
     public ?int $duration_seconds = null;
     public string $status = PodcastEpisode::STATUS_DRAFT;
     public ?string $published_at = null;
-    public ?string $scheduled_for = null;
 
     public array $selectedCourses = [];
     public array $selectedLessons = [];
@@ -53,14 +56,13 @@ class CreatePodcastEpisode extends Component
                     fn ($q) => $q->where('podcast_id', $this->podcast->id)
                 ),
             ],
-            'summary'          => ['nullable', 'string'],
             'description_md'   => ['nullable', 'string'],
             'transcript_md'    => ['nullable', 'string'],
-            'audio_url'        => ['required', 'string', 'max:2048'],
+            'audio_url'        => ['nullable', 'string', 'max:2048'],
+            'audioUpload'      => ['nullable', 'file', 'mimetypes:audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,audio/x-wav,audio/flac', 'max:102400'],
             'duration_seconds' => ['nullable', 'integer', 'min:0'],
             'status'           => ['required', Rule::in(PodcastEpisode::STATUSES)],
             'published_at'     => ['nullable', 'date'],
-            'scheduled_for'    => ['nullable', 'date'],
             'selectedCourses'  => ['array'],
             'selectedCourses.*'=> ['integer', 'exists:courses,id'],
             'selectedLessons'  => ['array'],
@@ -80,6 +82,7 @@ class CreatePodcastEpisode extends Component
     {
         $this->resetErrorBag();
         $this->resetValidation();
+        $this->audioUpload = null;
         $this->showModal = false;
     }
 
@@ -87,18 +90,29 @@ class CreatePodcastEpisode extends Component
     {
         $data = $this->validate();
 
+        $audioUrl = $data['audio_url'] ?? null;
+
+        if ($this->audioUpload) {
+            $path = $this->audioUpload->store('podcasts/episodes/audio', 'public');
+            $audioUrl = Storage::disk('public')->url($path);
+            $this->audioUpload = null;
+        }
+
+        if (!$audioUrl) {
+            $this->addError('audio_url', 'Debes proporcionar un archivo o una URL de audio.');
+            return;
+        }
+
         $episode = PodcastEpisode::create([
             'podcast_id'       => $this->podcast->id,
             'title'            => $data['title'],
             'slug'             => $data['slug'],
-            'summary'          => $data['summary'] ?? null,
             'description_md'   => $data['description_md'] ?? null,
             'transcript_md'    => $data['transcript_md'] ?? null,
-            'audio_url'        => $data['audio_url'],
+            'audio_url'        => $audioUrl,
             'duration_seconds' => $data['duration_seconds'] ?? null,
             'status'           => $data['status'],
             'published_at'     => $this->normalizeDate($data['published_at'] ?? null),
-            'scheduled_for'    => $this->normalizeDate($data['scheduled_for'] ?? null),
             'created_by'       => auth()->id(),
         ]);
 
@@ -120,14 +134,13 @@ class CreatePodcastEpisode extends Component
     {
         $this->title = '';
         $this->slug = '';
-        $this->summary = null;
         $this->description_md = null;
         $this->transcript_md = null;
-        $this->audio_url = '';
+        $this->audio_url = null;
+        $this->audioUpload = null;
         $this->duration_seconds = null;
         $this->status = PodcastEpisode::STATUS_DRAFT;
         $this->published_at = null;
-        $this->scheduled_for = null;
         $this->selectedCourses = [];
         $this->selectedLessons = [];
     }

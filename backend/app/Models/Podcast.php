@@ -13,13 +13,11 @@ class Podcast extends Model
     use SoftDeletes;
 
     public const STATUS_DRAFT     = 'draft';
-    public const STATUS_SCHEDULED = 'scheduled';
     public const STATUS_PUBLISHED = 'published';
     public const STATUS_PRIVATE   = 'private';
 
     public const STATUSES = [
         self::STATUS_DRAFT,
-        self::STATUS_SCHEDULED,
         self::STATUS_PUBLISHED,
         self::STATUS_PRIVATE,
     ];

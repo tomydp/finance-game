@@ -46,8 +46,13 @@
                                 <div class="flex flex-col">
                                     <span class="font-semibold text-gray-900">{{ $episode->title }}</span>
                                     <span class="text-sm text-gray-500">{{ $episode->slug }}</span>
-                                    @if($episode->summary)
-                                        <span class="mt-1 text-xs text-gray-500">{{ \Illuminate\Support\Str::limit($episode->summary, 80) }}</span>
+                                    @php
+                                        $descriptionPreview = $episode->description_md
+                                            ? \Illuminate\Support\Str::limit(strip_tags($episode->description_md), 80)
+                                            : null;
+                                    @endphp
+                                    @if($descriptionPreview)
+                                        <span class="mt-1 text-xs text-gray-500">{{ $descriptionPreview }}</span>
                                     @endif
                                 </div>
                             </td>
@@ -55,7 +60,6 @@
                                 @php
                                     $statusClasses = [
                                         'draft'     => 'bg-gray-100 text-gray-700',
-                                        'scheduled' => 'bg-amber-100 text-amber-700',
                                         'published' => 'bg-emerald-100 text-emerald-700',
                                         'private'   => 'bg-indigo-100 text-indigo-700',
                                     ];

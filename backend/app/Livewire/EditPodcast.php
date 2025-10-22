@@ -4,11 +4,15 @@ namespace App\Livewire;
 
 use App\Models\Podcast;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class EditPodcast extends Component
 {
+    use WithFileUploads;
+
     public int $podcastId;
     public bool $isOpen = false;
 
@@ -18,6 +22,7 @@ class EditPodcast extends Component
     public ?string $cover_image_url = null;
     public string $status = Podcast::STATUS_DRAFT;
     public ?string $published_at = null;
+    public $coverImageUpload = null;
 
     public array $statusOptions = Podcast::STATUSES;
 
@@ -29,17 +34,18 @@ class EditPodcast extends Component
     protected function rules(): array
     {
         return [
-            'title'           => ['required', 'string', 'max:255'],
-            'slug'            => [
+            'title'            => ['required', 'string', 'max:255'],
+            'slug'             => [
                 'required',
                 'string',
                 'max:255',
                 Rule::unique('podcasts', 'slug')->ignore($this->podcastId),
             ],
-            'description_md'  => ['nullable', 'string'],
-            'cover_image_url' => ['nullable', 'string', 'max:2048'],
-            'status'          => ['required', Rule::in(Podcast::STATUSES)],
-            'published_at'    => ['nullable', 'date'],
+            'description_md'   => ['nullable', 'string'],
+            'cover_image_url'  => ['nullable', 'string', 'max:2048'],
+            'coverImageUpload' => ['nullable', 'image', 'max:2048'],
+            'status'           => ['required', Rule::in(Podcast::STATUSES)],
+            'published_at'     => ['nullable', 'date'],
         ];
     }
 
@@ -48,6 +54,7 @@ class EditPodcast extends Component
         $this->loadFromDb();
         $this->resetErrorBag();
         $this->resetValidation();
+        $this->coverImageUpload = null;
         $this->isOpen = true;
     }
 
@@ -55,6 +62,7 @@ class EditPodcast extends Component
     {
         $this->resetErrorBag();
         $this->resetValidation();
+        $this->coverImageUpload = null;
         $this->isOpen = false;
     }
 
@@ -62,14 +70,24 @@ class EditPodcast extends Component
     {
         $data = $this->validate();
 
+        $coverUrl = $data['cover_image_url'] ?? $this->cover_image_url;
+
+        if ($this->coverImageUpload) {
+            $path = $this->coverImageUpload->store('podcasts/covers', 'public');
+            $coverUrl = Storage::disk('public')->url($path);
+            $this->coverImageUpload = null;
+        }
+
         Podcast::whereKey($this->podcastId)->update([
             'title'           => $data['title'],
             'slug'            => $data['slug'],
             'description_md'  => $data['description_md'] ?? null,
-            'cover_image_url' => $data['cover_image_url'] ?? null,
+            'cover_image_url' => $coverUrl,
             'status'          => $data['status'],
             'published_at'    => $this->normalizeDate($data['published_at'] ?? null),
         ]);
+
+        $this->cover_image_url = $coverUrl;
 
         $this->dispatch('podcastUpdated', id: $this->podcastId);
         $this->closeModal();

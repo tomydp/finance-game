@@ -85,7 +85,7 @@ class ShowPodcastEpisodes extends Component
             $term = '%'.mb_strtolower($this->search).'%';
             $query->where(function (Builder $builder) use ($term) {
                 $builder->whereRaw('LOWER(title) LIKE ?', [$term])
-                    ->orWhereRaw('LOWER(summary) LIKE ?', [$term]);
+                    ->orWhereRaw('LOWER(description_md) LIKE ?', [$term]);
             });
         }
 
