@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\LessonUser;
 use App\Http\Resources\LessonCollection;
 use App\Models\Course;
 use App\Models\Lesson;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class LessonApiController extends Controller
 {
@@ -40,6 +42,13 @@ class LessonApiController extends Controller
         $done  = $lesson->completedExercises($user->id);
 
         // Si hay ejercicios y NO todos correctos, bloquear
+        Log::debug('Lesson Complete Debug', [
+            'user_id' => $user->id,
+            'lesson_id' => $lesson->id,
+            'total_exercises' => $total,
+            'completed_exercises' => $done,
+            'condition_check' => ($total > 0 && !$force && $done < $total)
+        ]);
         if ($total > 0 && !$force && $done < $total) {
             return response()->json([
                 'ok'       => false,
@@ -70,11 +79,10 @@ class LessonApiController extends Controller
     public function completar($lessonId, Request $request)
 {
     $userId = $request->input('user_id');
-
     LessonUser::updateOrCreate(
-        ['user_id' => $userId, 'lesson_id' => $lessonId],
-        ['completed_at' => now()]
-    );
+    ['user_id' => $userId, 'lesson_id' => $lessonId],
+    ['completed_at' => now()]
+);
 
     return response()->json(['message' => 'Lección marcada como completada']);
 }
