@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import QuestionCard from "../../../ui/QuestionCard";
 import LessonCompleted from "../../../ui/LessonCompleted"
 import { useAprenderState } from "../hooks/useAprenderState";
 import type { Module } from "../hooks/types";
+import StorePage from "../../Store";
 
 const AprenderPage: React.FC = () => {
   const {
@@ -12,7 +13,7 @@ const AprenderPage: React.FC = () => {
     respuestaSeleccionada, setRespuestaSeleccionada,
     feedback, finLeccion, mostrarModalPremium,
     setCursoActual, setMostrarModalPremium, setFinLeccion,
-    cargarLecciones, handleRespuesta, handleNextAfterCompletion, getTipo,
+    cargarLecciones, handleRespuesta, getTipo,
   } = useAprenderState();
 
   let sessionUser: any = null;
@@ -22,6 +23,22 @@ const AprenderPage: React.FC = () => {
     sessionUser = null;
   }
   console.log("[Aprender] sesión de usuario", sessionUser);
+  const hasMembership = Boolean(sessionUser?.has_membership);
+  const [showStore, setShowStore] = useState(false);
+
+  if (showStore) {
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setShowStore(false)}
+          className="absolute top-4 left-4 z-50 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-600 transition"
+        >
+          ← Volver a cursos
+        </button>
+        <StorePage />
+      </div>
+    );
+  }
 
   // ---- RENDER: Pantalla "Lección Completada" ----
   if (finLeccion && cursoActual) {
@@ -32,8 +49,13 @@ const AprenderPage: React.FC = () => {
       const esPrimeraLeccion = finLeccion.lastLessonIndex === 0;
 
       if (esPrimerCurso && esPrimeraLeccion) {
-        setMostrarModalPremium(true);
-        return;
+        if (!hasMembership) {
+          setMostrarModalPremium(false);
+          setFinLeccion(null);
+          setCursoActual(null);
+          setShowStore(true);
+          return;
+        }
       }
 
       setFinLeccion(null);
@@ -147,11 +169,52 @@ const AprenderPage: React.FC = () => {
   // ---- RENDER: Vista de cursos (con el mismo markup/clases) ----
   const renderModulo = (m: Module) => {
     const porcentaje = Math.round((m.completadas / Math.max(1, m.totalLecciones)) * 100);
+    const esPrimerCurso = m.id === 1;
+    const requierePremium =
+      esPrimerCurso && !hasMembership && m.completadas > 0 && m.completadas < m.totalLecciones;
+
+    const estadoVisual: Module["estado"] = requierePremium ? "bloqueado" : m.estado;
+
+    const buttonLabel =
+      requierePremium
+        ? "PREMIUM"
+        : estadoVisual === "completo"
+        ? "COMPLETO"
+        : estadoVisual === "bloqueado"
+        ? "BLOQUEADO"
+        : "CONTINUAR";
+
+    const buttonClasses =
+      estadoVisual === "completo"
+        ? "bg-green-500 cursor-default"
+        : requierePremium
+        ? "bg-slate-700 hover:bg-slate-600"
+        : estadoVisual === "bloqueado"
+        ? "bg-slate-700 cursor-not-allowed"
+        : "bg-cyan-500 hover:bg-cyan-600";
+
+    const handleContinuar = () => {
+      if (requierePremium) {
+        setMostrarModalPremium(false);
+        setShowStore(true);
+        setCursoActual(null);
+        return;
+      }
+
+      if (estadoVisual === "bloqueado") {
+        return;
+      }
+
+      setMostrarModalPremium(false);
+      setShowStore(false);
+      cargarLecciones(m);
+    };
+
     return (
       <div
         key={m.id}
         className={`rounded-lg p-4 ${
-          m.estado === "bloqueado" ? "bg-[#1a1f2e] opacity-60" : "bg-[#121c30]"
+          estadoVisual === "bloqueado" ? "bg-[#1a1f2e] opacity-60" : "bg-[#121c30]"
         }`}
       >
         <div className="flex items-center gap-3 mb-2">
@@ -159,7 +222,9 @@ const AprenderPage: React.FC = () => {
           <div>
             <h3 className="font-bold">{m.titulo}</h3>
             <p className="text-sm text-gray-400">
-              {m.estado === "bloqueado"
+              {requierePremium
+                ? "Requiere membresía Premium"
+                : estadoVisual === "bloqueado"
                 ? "Bloqueado"
                 : `${m.completadas}/${m.totalLecciones} lecciones`}
             </p>
@@ -171,20 +236,10 @@ const AprenderPage: React.FC = () => {
           </div>
         )}
         <button
-          onClick={() => cargarLecciones(m)}
-          className={`w-full py-2 rounded font-semibold text-sm ${
-            m.estado === "bloqueado"
-              ? "bg-slate-700 cursor-not-allowed"
-              : m.estado === "completo"
-              ? "bg-green-500 cursor-default"
-              : "bg-cyan-500 hover:bg-cyan-600"
-          }`}
+          onClick={handleContinuar}
+          className={`w-full py-2 rounded font-semibold text-sm transition ${buttonClasses}`}
         >
-          {m.estado === "completo"
-            ? "COMPLETO"
-            : m.estado === "bloqueado"
-            ? "BLOQUEADO"
-            : "CONTINUAR"}
+          {buttonLabel}
         </button>
       </div>
     );
