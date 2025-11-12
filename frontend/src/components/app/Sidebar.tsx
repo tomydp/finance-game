@@ -22,11 +22,12 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { to: '/app/aprender', label: 'Aprender',  icon: FaHome,           enabled: true  },
-  { to: '/app/sonidos',  label: 'Sonidos',   icon: FaMusic,          enabled: true  },
+ 
   // ✅ Renombrado + habilitado + nueva ruta
   { to: '/app/ranking',  label: 'Ranking',   icon: FaTrophy,         enabled: true  },
   { to: '/app/desafios', label: 'Desafíos',  icon: FaBolt,           enabled: true  },
   { to: '/app/tienda',   label: 'Tienda',    icon: FaShoppingCart,   enabled: true  },
+  { to: '/app/sonidos',  label: 'Podcast',   icon: FaMusic,          enabled: true  },
   { to: '/app/perfil',   label: 'Perfil',    icon: FaUser,           enabled: true  },
   { to: '/app/mas',      label: 'Más',       icon: FaEllipsisH,      enabled: true  },
 ];

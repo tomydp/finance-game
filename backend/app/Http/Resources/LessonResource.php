@@ -10,20 +10,42 @@ class LessonResource extends JsonResource
     {
         $totalExercises = (int) ($this->exercises_count ?? 0);
 
-        $user = $request->user();
-        $completed = $user
+        $user = $request->user('sanctum') ?? $request->user();
+        $completedExercises = $user
             ? (int) $this->completedExercises($user->id) // usa la relación hasManyThrough
             : null;
+
+        $progressPercent = ($user && $totalExercises > 0 && $completedExercises !== null)
+            ? (int) round(($completedExercises / max(1, $totalExercises)) * 100)
+            : null;
+
+        $completed = false;
+        if ($user) {
+            if ($this->relationLoaded('users')) {
+                $existing = $this->users->firstWhere('id', $user->id);
+                $completed = (bool) ($existing?->pivot?->completed_at);
+            }
+
+            if (!$completed) {
+                $completed = $this->users()
+                    ->where('users.id', $user->id)
+                    ->wherePivotNotNull('completed_at')
+                    ->exists();
+            }
+
+            if (!$completed && $totalExercises > 0 && $completedExercises !== null) {
+                $completed = $completedExercises >= $totalExercises;
+            }
+        }
 
         return [
             'id'                 => $this->id,
             'title'              => $this->title,
             'order'              => (int) $this->order,
             'exercises_count'    => $totalExercises,
-            'completed_exercises'=> $user ? $completed : null,
-            'progress_percent'   => ($user && $totalExercises > 0)
-                ? (int) round(($completed / $totalExercises) * 100)
-                : null,
+            'completed'          => $completed,
+            'completed_exercises'=> $user ? $completedExercises : null,
+            'progress_percent'   => $progressPercent,
         ];
     }
 }
