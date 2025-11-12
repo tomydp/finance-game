@@ -16,7 +16,7 @@ const Navbar: React.FC = () => {
         <img
           src="/Logo.png"
           alt="FinanceGame"
-          className="h-8 w-8"
+          className="h-25 w-25"
         />
         <span className="text-xl font-semibold text-cyan-400">
           FinanceGame

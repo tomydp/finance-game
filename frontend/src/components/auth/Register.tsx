@@ -127,7 +127,7 @@ const Register: React.FC = () => {
           <img
             src="/Logo.png"
             alt="FinanceGame"
-            className="h-12 w-12"
+            className="h-45 w-45"
           />
         </div>
 
@@ -186,69 +186,74 @@ const Register: React.FC = () => {
             )}
           </div>
 
-          {/* Contraseña */}
-          <div className="relative">
-            <label className="block text-sm text-gray-300 mb-1">Contraseña</label>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Tu contraseña"
-              className={`w-full bg-[var(--Blue2)] border rounded-md px-4 py-2 pr-10 text-gray-200 ${
-                fieldErrors.password ? 'border-red-500' : 'border-gray-700'
-              }`}
-              aria-invalid={!!fieldErrors.password}
-              aria-describedby={fieldErrors.password ? 'err-pass' : undefined}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((s) => !s)}
-              className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-200"
-              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-            >
-              {showPassword ? <FiEyeOff /> : <FiEye />}
-            </button>
-            {fieldErrors.password && (
-              <p id="err-pass" className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>
-            )}
-            {/* pista opcional de seguridad */}
-            {!fieldErrors.password && password.length > 0 && !isStrongPassword(password) && (
-              <p className="text-xs text-gray-400 mt-1">
-                Requiere: 8+ caracteres, mayúscula, minúscula y número.
-              </p>
-            )}
-          </div>
+         {/* Contraseña */}
+<div className="relative">
+  <label className="block text-sm text-gray-300 mb-1">Contraseña</label>
+  <input
+    type={showPassword ? 'text' : 'password'}
+    name="password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    placeholder="Tu contraseña"
+    className={`w-full bg-[var(--Blue2)] border rounded-md px-4 py-2 pr-10 text-gray-200 transition-all duration-150 ${
+      fieldErrors.password ? 'border-red-500' : 'border-gray-700 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50'
+    }`}
+    aria-invalid={!!fieldErrors.password}
+    aria-describedby={fieldErrors.password ? 'err-pass' : undefined}
+  />
 
-          {/* Confirmación de contraseña */}
-          <div className="relative">
-            <label className="block text-sm text-gray-300 mb-1">Confirmar contraseña</label>
-            <input
-              type={showConfirm ? 'text' : 'password'}
-              name="password_confirmation"
-              value={password_confirmation}
-              onChange={(e) => setPasswordConfirmation(e.target.value)}
-              placeholder="Repetí tu contraseña"
-              className={`w-full bg-[var(--Blue2)] border rounded-md px-4 py-2 pr-10 text-gray-200 ${
-                fieldErrors.password_confirmation ? 'border-red-500' : 'border-gray-700'
-              }`}
-              aria-invalid={!!fieldErrors.password_confirmation}
-              aria-describedby={fieldErrors.password_confirmation ? 'err-passc' : undefined}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirm((s) => !s)}
-              className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-200"
-              aria-label={showConfirm ? 'Ocultar confirmación' : 'Mostrar confirmación'}
-            >
-              {showConfirm ? <FiEyeOff /> : <FiEye />}
-            </button>
-            {fieldErrors.password_confirmation && (
-              <p id="err-passc" className="text-red-500 text-xs mt-1">
-                {fieldErrors.password_confirmation}
-              </p>
-            )}
-          </div>
+  <button
+    type="button"
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute right-3 top-[62%] -translate-y-1/2 flex h-5 w-5 items-center justify-center leading-none text-gray-500 hover:text-gray-300 transition"
+    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+  >
+    {showPassword ? <FiEyeOff size={50} /> : <FiEye size={50} />}
+  </button>
+
+  {/* Espaciado fijo para evitar que salte al aparecer la pista o error */}
+  <div className="h-2">
+    {fieldErrors.password ? (
+      <p id="err-pass" className="text-red-500 text-xs">{fieldErrors.password}</p>
+    ) : password.length > 0 && !isStrongPassword(password) ? (
+      <p className="text-xs text-gray-400">Requiere: 8+ caracteres, mayúscula, minúscula y número.</p>
+    ) : null}
+  </div>
+</div>
+
+
+{/* Confirmar contraseña */}
+<div className="relative">
+  <label className="block text-sm text-gray-300 mb-1">Confirmar contraseña</label>
+  <input
+    type={showConfirm ? 'text' : 'password'}
+    name="password_confirmation"
+    value={password_confirmation}
+    onChange={(e) => setPasswordConfirmation(e.target.value)}
+    placeholder="Repetí tu contraseña"
+    className={`w-full bg-[var(--Blue2)] border rounded-md px-4 py-2 pr-10 text-gray-200 ${
+      fieldErrors.password_confirmation ? 'border-red-500' : 'border-gray-700'
+    } focus:outline-none focus:ring-2 focus:ring-cyan-500`}
+    aria-invalid={!!fieldErrors.password_confirmation}
+    aria-describedby={fieldErrors.password_confirmation ? 'err-passc' : undefined}
+  />
+
+ <button
+  type="button"
+  onClick={() => setShowConfirm(!showConfirm)}
+  className="absolute right-3 top-[68%] -translate-y-1/2 flex h-5 w-5 items-center justify-center leading-none text-gray-500 hover:text-gray-300 transition"
+  aria-label={showConfirm ? 'Ocultar confirmación' : 'Mostrar confirmación'}
+>
+  {showConfirm ? <FiEyeOff size={50} /> : <FiEye size={50} />}
+</button>
+
+
+
+  {fieldErrors.password_confirmation && (
+    <p id="err-passc" className="text-red-500 text-xs mt-1">{fieldErrors.password_confirmation}</p>
+  )}
+</div>
+
 
           <button
             type="submit"
